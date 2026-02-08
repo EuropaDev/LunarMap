@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Satellite Tracker</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="lang-selector">
+    <select class="lang-btn" id="langSelect" onchange="changeLang()">
+        <option value="en" selected>🇬🇧 English</option>
+        <option value="tr">🇹🇷 Türkçe</option>
+    </select>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-title" id="satName">-</div>
+        <button class="close-btn" onclick="closeSidebar()">×</button>
+    </div>
+    <div class="sidebar-content">
+        <div class="sat-image-container">
+            <img class="sat-image" id="satImage" alt="Satellite">
+            <div class="image-loading" id="imageLoading">Loading...</div>
+        </div>
+        <div class="sat-info-item">
+            <div class="info-label">Type</div>
+            <div class="info-value" id="satType">-</div>
+        </div>
+        <div class="sat-info-item">
+            <div class="info-label">Orbit</div>
+            <div class="info-value" id="satOrbit">-</div>
+        </div>
+        <div class="sat-info-item">
+            <div class="info-label">Latitude</div>
+            <div class="info-value" id="satLat">-</div>
+        </div>
+        <div class="sat-info-item">
+            <div class="info-label">Longitude</div>
+            <div class="info-value" id="satLng">-</div>
+        </div>
+        <div class="sat-info-item">
+            <div class="info-label">Altitude (km)</div>
+            <div class="info-value" id="satAlt">-</div>
+        </div>
+        <div class="sat-info-item">
+            <div class="info-label">Velocity (km/s)</div>
+            <div class="info-value" id="satVel">-</div>
+        </div>
+    </div>
+</div>
+
+<div class="info-panel">
+    <div class="info-title">Live Tracking</div>
+    <div class="info-stat">
+        <span class="stat-label">Satellites</span>
+        <span class="stat-value" id="info">---</span>
+    </div>
+    <div class="legend">
+        <div class="legend-item"><div class="legend-icon" style="background:#ef4444"></div><span>VLEO</span></div>
+        <div class="legend-item"><div class="legend-icon" style="background:#f97316"></div><span>LEO</span></div>
+        <div class="legend-item"><div class="legend-icon" style="background:#eab308"></div><span>MEO</span></div>
+        <div class="legend-item"><div class="legend-icon" style="background:#22c55e"></div><span>HEO</span></div>
+        <div class="legend-item"><div class="legend-icon" style="background:#3b82f6"></div><span>GEO</span></div>
+        <div class="legend-item"><div class="legend-icon" style="background:#a855f7"></div><span>Beyond</span></div>
+    </div>
+</div>
+
+<div class="controls">
+    <button class="control-btn" onclick="map.zoomIn()" title="Zoom In">+</button>
+    <button class="control-btn" onclick="map.zoomOut()" title="Zoom Out">−</button>
+    <button class="control-btn" onclick="goToLocation()" title="My Location">📍</button>
+    <button class="control-btn" id="labelBtn" onclick="toggleLabels()" title="Toggle Labels">🏷️</button>
+    <button class="control-btn" id="gridBtn" onclick="toggleGrid()" title="Toggle Grid">🌐</button>
+    <button class="control-btn" id="borderBtn" onclick="toggleBorders()" title="Toggle Borders">🗺️</button>
+    <button class="control-btn" id="mapBtn" onclick="cycleMapStyle()" title="Map Style">🎨</button>
+    <button class="control-btn" id="cloudBtn" onclick="toggleClouds()" title="Toggle Clouds">☁️</button>
+    <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+<div id="map"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
