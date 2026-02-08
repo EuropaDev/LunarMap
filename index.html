@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Satellite Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="style.css">
@@ -16,6 +17,23 @@
 </div>
 
 <div class="version">Alpha 0.3</div>
+
+<div class="controls">
+    <button class="control-btn" onclick="map.zoomIn()" title="Zoom In">+</button>
+    <button class="control-btn" onclick="map.zoomOut()" title="Zoom Out">−</button>
+    <button class="control-btn" onclick="goToLocation()" title="My Location">📍</button>
+    <button class="control-btn" id="labelBtn" onclick="toggleLabels()" title="Toggle Labels">🏷️</button>
+    <button class="control-btn" id="gridBtn" onclick="toggleGrid()" title="Toggle Grid">🌐</button>
+    <button class="control-btn" id="borderBtn" onclick="toggleBorders()" title="Toggle Borders">🗺️</button>
+    <button class="control-btn" id="mapBtn" onclick="cycleMapStyle()" title="Map Style">🎨</button>
+    <button class="control-btn" id="cloudBtn" onclick="toggleClouds()" title="Toggle Clouds">☁️</button>
+    <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+</div>
+
+<div class="search-panel">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search satellites...">
+    <div class="search-results" id="searchResults"></div>
+</div>
 
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -88,16 +106,16 @@
     </div>
 </div>
 
-<div class="controls">
-    <button class="control-btn" onclick="map.zoomIn()" title="Zoom In">+</button>
-    <button class="control-btn" onclick="map.zoomOut()" title="Zoom Out">−</button>
-    <button class="control-btn" onclick="goToLocation()" title="My Location">📍</button>
-    <button class="control-btn" id="labelBtn" onclick="toggleLabels()" title="Toggle Labels">🏷️</button>
-    <button class="control-btn" id="gridBtn" onclick="toggleGrid()" title="Toggle Grid">🌐</button>
-    <button class="control-btn" id="borderBtn" onclick="toggleBorders()" title="Toggle Borders">🗺️</button>
-    <button class="control-btn" id="mapBtn" onclick="cycleMapStyle()" title="Map Style">🎨</button>
-    <button class="control-btn" id="cloudBtn" onclick="toggleClouds()" title="Toggle Clouds">☁️</button>
-    <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+<div class="timewarp-panel">
+    <div class="timewarp-title">Time Warp</div>
+    <div class="timewarp-controls">
+        <button class="timewarp-btn" onclick="setTimeWarp(0)">⏸️</button>
+        <button class="timewarp-btn active" onclick="setTimeWarp(1)">1x</button>
+        <button class="timewarp-btn" onclick="setTimeWarp(10)">10x</button>
+        <button class="timewarp-btn" onclick="setTimeWarp(100)">100x</button>
+        <button class="timewarp-btn" onclick="setTimeWarp(1000)">1000x</button>
+    </div>
+    <div class="timewarp-date" id="timeDisplay">-</div>
 </div>
 
 <div class="tooltip" id="tooltip"></div>
