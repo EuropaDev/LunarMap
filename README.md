@@ -1,0 +1,1 @@
+This repository contains the source code for a web-based project developed using HTML and CSS. The primary objective of this project is to establish a functional website structure deployed via GitHub Pages.
