@@ -8,7 +8,8 @@ const translations = {
         longitude: 'Longitude',
         altitude: 'Altitude (km)',
         velocity: 'Velocity (km/s)',
-        loading: 'Loading...'
+        loading: 'Loading...',
+        searchPlaceholder: 'Search satellites...'
     },
     tr: {
         liveTracking: 'Canlı Takip',
@@ -19,7 +20,8 @@ const translations = {
         longitude: 'Boylam',
         altitude: 'Yükseklik (km)',
         velocity: 'Hız (km/s)',
-        loading: 'Yükleniyor...'
+        loading: 'Yükleniyor...',
+        searchPlaceholder: 'Uydu ara...'
     }
 };
 
@@ -29,6 +31,7 @@ function changeLang() {
     currentLang = document.getElementById('langSelect').value;
     document.querySelector('.info-title').innerText = translations[currentLang].liveTracking;
     document.querySelector('.stat-label').innerText = translations[currentLang].satellites;
+    document.getElementById('searchInput').placeholder = translations[currentLang].searchPlaceholder;
 }
 
 const satelliteImages = {
@@ -44,6 +47,9 @@ let showLabels = true, showGrid = false, showBorders = false, showClouds = false
 let cloudLayer = null, gridLayer = null, borderLayer = null, userMarker = null;
 let mapStyle = 0, baseLayers = [], currentBaseLayer = null;
 let userLocation = null;
+let allSatellites = [];
+let timeWarp = 1;
+let simulationTime = new Date();
 
 const map = L.map('map', {
     center: [20, 0],
@@ -70,6 +76,24 @@ baseLayers[2] = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 
 currentBaseLayer = baseLayers[0];
 currentBaseLayer.addTo(map);
+
+function setTimeWarp(speed) {
+    timeWarp = speed;
+    document.querySelectorAll('.timewarp-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+function updateTimeDisplay() {
+    const options = {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    };
+    document.getElementById('timeDisplay').innerText = simulationTime.toLocaleString('en-US', options);
+}
 
 function cycleMapStyle() {
     map.removeLayer(currentBaseLayer);
@@ -153,6 +177,47 @@ function goToLocation() {
     }
 }
 
+// Search functionality
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (query.length < 2) {
+        searchResults.classList.remove('show');
+        return;
+    }
+
+    const filtered = allSatellites.filter(sat => 
+        sat.name.toLowerCase().includes(query)
+    ).slice(0, 10);
+
+    if (filtered.length > 0) {
+        searchResults.innerHTML = filtered.map(sat => 
+            `<div class="search-result-item" onclick="selectSatellite('${sat.name.replace(/'/g, "\\'")}')">${sat.name}</div>`
+        ).join('');
+        searchResults.classList.add('show');
+    } else {
+        searchResults.classList.remove('show');
+    }
+});
+
+document.addEventListener('click', (e) => {
+    if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.classList.remove('show');
+    }
+});
+
+function selectSatellite(name) {
+    const sat = allSatellites.find(s => s.name === name);
+    if (sat) {
+        openSatelliteInfo(sat);
+        searchResults.classList.remove('show');
+        searchInput.value = '';
+    }
+}
+
 function getOrbitColor(alt) {
     if (alt < 400) return '#ef4444';
     if (alt < 2000) return '#f97316';
@@ -213,12 +278,11 @@ function openSatelliteInfo(sat) {
 
 function updateSatellitePosition() {
     if (!selectedSat) return;
-    const now = new Date();
-    const p = getPos(selectedSat.satrec, now);
+    const p = getPos(selectedSat.satrec, simulationTime);
     if (p) {
         document.getElementById('satLat').innerText = p.lat.toFixed(4) + '°';
         document.getElementById('satLng').innerText = p.lng.toFixed(4) + '°';
-        const pv = satellite.propagate(selectedSat.satrec, now);
+        const pv = satellite.propagate(selectedSat.satrec, simulationTime);
         if (pv.position) {
             const alt = Math.sqrt(pv.position.x ** 2 + pv.position.y ** 2 + pv.position.z ** 2) - 6371;
             document.getElementById('satAlt').innerText = alt.toFixed(2);
@@ -248,12 +312,11 @@ const NightLayer = L.Layer.extend({
     _draw() {
         const s = map.getSize(), ctx = this._c.getContext('2d');
         ctx.clearRect(0, 0, s.x, s.y);
-        const now = new Date();
         for (let y = 0; y < s.y; y += 6) {
             for (let x = 0; x < s.x; x += 6) {
                 const ll = map.containerPointToLatLng([x, y]);
                 if (!ll || ll.lat > 85 || ll.lat < -85) continue;
-                const pos = SunCalc.getPosition(now, ll.lat, ll.lng);
+                const pos = SunCalc.getPosition(simulationTime, ll.lat, ll.lng);
                 const alt = pos.altitude * 180 / Math.PI;
                 let d = 0;
                 if (alt < -18) d = 0.5;
@@ -325,11 +388,10 @@ const Layer = L.Layer.extend({
         if (!this._d) return;
         const s = map.getSize(), ctx = this._c.getContext('2d');
         ctx.clearRect(0, 0, s.x, s.y);
-        const now = new Date();
         satPositions.clear();
 
         this._d.forEach(sat => {
-            const p = getPos(sat.satrec, now);
+            const p = getPos(sat.satrec, simulationTime);
             if (!p) return;
             let lng = p.lng;
             while (lng > 180) lng -= 360;
@@ -407,8 +469,17 @@ fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
             }
         }
         layer._d = data;
+        allSatellites = data;
         document.getElementById('info').innerText = data.length;
-        setInterval(() => { layer._draw(); updateSatellitePosition() }, 150);
+        
+        setInterval(() => {
+            if (timeWarp > 0) {
+                simulationTime = new Date(simulationTime.getTime() + timeWarp * 150);
+                updateTimeDisplay();
+            }
+            layer._draw();
+            updateSatellitePosition();
+        }, 150);
     });
 
 function getPos(satrec, date) {
@@ -419,3 +490,5 @@ function getPos(satrec, date) {
         return { lat: satellite.degreesLat(g.latitude), lng: satellite.degreesLong(g.longitude) };
     } catch (e) { return null; }
 }
+
+updateTimeDisplay();
