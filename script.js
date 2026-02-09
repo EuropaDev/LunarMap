@@ -511,6 +511,16 @@ function showContact() {
     alert('Contact:\n\nFor questions and feedback, please visit our GitHub repository or contact us via email.');
     toggleMenu();
 }
+// ... (önceki tüm kod aynı)
+
+function toggleMenu() {
+    const menuSidebar = document.getElementById('menuSidebar');
+    const menuToggle = document.querySelector('.menu-toggle');
+    menuSidebar.classList.toggle('active');
+    menuToggle.classList.toggle('active');
+}
+
+// ... (geri kalan kod aynı)
 // ISS için:
 if (sat.type === 'iss') {
     ctx.save();
