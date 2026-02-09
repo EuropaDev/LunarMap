@@ -511,15 +511,39 @@ function showContact() {
     alert('Contact:\n\nFor questions and feedback, please visit our GitHub repository or contact us via email.');
     toggleMenu();
 }
-
-// Click outside menu to close
-document.addEventListener('click', (e) => {
-    const menuPanel = document.getElementById('menuPanel');
-    const menuToggle = document.querySelector('.menu-toggle');
-    
-    if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target) && menuPanel.classList.contains('show')) {
-        toggleMenu();
-    }
-});
-
-// ... (geri kalan kod aynı kalacak)
+// ISS için:
+if (sat.type === 'iss') {
+    ctx.save();
+    ctx.translate(pt.x, pt.y);
+    ctx.font = '24px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(167,139,250,0.8)';
+    ctx.shadowBlur = 10;
+    ctx.fillText('🛰️', 0, 0);
+    ctx.restore();
+}
+// Tiangong için:
+else if (sat.type === 'tiangong') {
+    ctx.save();
+    ctx.translate(pt.x, pt.y);
+    ctx.font = '24px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(192,132,252,0.8)';
+    ctx.shadowBlur = 10;
+    ctx.fillText('🛰️', 0, 0);
+    ctx.restore();
+}
+// Hubble için:
+else if (sat.type === 'hubble') {
+    ctx.save();
+    ctx.translate(pt.x, pt.y);
+    ctx.font = '24px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(129,140,248,0.8)';
+    ctx.shadowBlur = 10;
+    ctx.fillText('🛰️', 0, 0);
+    ctx.restore();
+}
