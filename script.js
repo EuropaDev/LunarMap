@@ -492,3 +492,34 @@ function getPos(satrec, date) {
 }
 
 updateTimeDisplay();
+// ... (önceki tüm kod aynı kalacak)
+
+// Menu fonksiyonları ekle
+function toggleMenu() {
+    const menuPanel = document.getElementById('menuPanel');
+    const menuToggle = document.querySelector('.menu-toggle');
+    menuPanel.classList.toggle('show');
+    menuToggle.classList.toggle('active');
+}
+
+function showHelp() {
+    alert('Satellite Tracker v0.3\n\nControls:\n- Click satellites to view details\n- Use time warp to speed up simulation\n- Search for specific satellites\n- Toggle layers with buttons on the left');
+    toggleMenu();
+}
+
+function showContact() {
+    alert('Contact:\n\nFor questions and feedback, please visit our GitHub repository or contact us via email.');
+    toggleMenu();
+}
+
+// Click outside menu to close
+document.addEventListener('click', (e) => {
+    const menuPanel = document.getElementById('menuPanel');
+    const menuToggle = document.querySelector('.menu-toggle');
+    
+    if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target) && menuPanel.classList.contains('show')) {
+        toggleMenu();
+    }
+});
+
+// ... (geri kalan kod aynı kalacak)
