@@ -35,6 +35,30 @@
     <div class="search-results" id="searchResults"></div>
 </div>
 
+<button class="menu-toggle" onclick="toggleMenu()">
+    <div class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+</button>
+
+<div class="menu-panel" id="menuPanel">
+    <button class="menu-item" onclick="showHelp()">
+        <span>❓</span>
+        <span>Help</span>
+    </button>
+    <button class="menu-item" onclick="showContact()">
+        <span>📧</span>
+        <span>Contact</span>
+    </button>
+    <div class="menu-divider"></div>
+    <div class="menu-badges">
+        <img src="80x15.png" alt="Badge 1" class="menu-badge">
+        <img src="80x15cld.png" alt="Badge 2" class="menu-badge">
+    </div>
+</div>
+
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="sidebar-title" id="satName">-</div>
@@ -73,36 +97,17 @@
 </div>
 
 <div class="info-panel">
-    <div class="info-title">Live Tracking</div>
     <div class="info-stat">
-        <span class="stat-label">Satellites</span>
         <span class="stat-value" id="info">---</span>
+        <span class="stat-label">SAT</span>
     </div>
     <div class="legend">
-        <div class="legend-item">
-            <div class="legend-icon" style="background:#ef4444"></div>
-            <span>VLEO</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-icon" style="background:#f97316"></div>
-            <span>LEO</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-icon" style="background:#eab308"></div>
-            <span>MEO</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-icon" style="background:#22c55e"></div>
-            <span>HEO</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-icon" style="background:#3b82f6"></div>
-            <span>GEO</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-icon" style="background:#a855f7"></div>
-            <span>Beyond</span>
-        </div>
+        <div class="legend-dot" style="background:#ef4444" title="VLEO"></div>
+        <div class="legend-dot" style="background:#f97316" title="LEO"></div>
+        <div class="legend-dot" style="background:#eab308" title="MEO"></div>
+        <div class="legend-dot" style="background:#22c55e" title="HEO"></div>
+        <div class="legend-dot" style="background:#3b82f6" title="GEO"></div>
+        <div class="legend-dot" style="background:#a855f7" title="Beyond"></div>
     </div>
 </div>
 
