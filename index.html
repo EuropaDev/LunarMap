@@ -18,6 +18,76 @@
 
 <div class="version">Alpha 0.3</div>
 
+<button class="menu-toggle" onclick="toggleMenu()">
+    <div class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+</button>
+
+<div class="menu-sidebar" id="menuSidebar">
+    <div class="menu-header">
+        <h2>Menu</h2>
+        <button class="close-btn" onclick="toggleMenu()">×</button>
+    </div>
+    
+    <div class="menu-content">
+        <div class="menu-section">
+            <h3>Controls</h3>
+            <div class="control-list">
+                <div class="control-item">
+                    <span class="control-icon">🖱️</span>
+                    <span>Click satellite to view details</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">🔍</span>
+                    <span>Search satellites by name</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">⏱️</span>
+                    <span>Time Warp: Speed up simulation</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">🌐</span>
+                    <span>Toggle grid lines</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">🗺️</span>
+                    <span>Toggle country borders</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">☁️</span>
+                    <span>Toggle cloud layer</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">🎨</span>
+                    <span>Cycle map styles</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <h3>Contact</h3>
+            <div class="contact-info">
+                <p>For questions and feedback:</p>
+                <a href="mailto:contact@example.com" class="contact-link">📧 contact@example.com</a>
+                <a href="https://github.com" target="_blank" class="contact-link">💻 GitHub</a>
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <h3>Powered By</h3>
+            <div class="menu-badges">
+                <img src="80x15.png" alt="Badge 1" class="menu-badge">
+                <a href="https://claude.ai" target="_blank">
+                    <img src="80x15cld.png" alt="Claude AI" class="menu-badge">
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="controls">
     <button class="control-btn" onclick="map.zoomIn()" title="Zoom In">+</button>
     <button class="control-btn" onclick="map.zoomOut()" title="Zoom Out">−</button>
@@ -33,30 +103,6 @@
 <div class="search-panel">
     <input type="text" class="search-input" id="searchInput" placeholder="Search satellites...">
     <div class="search-results" id="searchResults"></div>
-</div>
-
-<button class="menu-toggle" onclick="toggleMenu()">
-    <div class="hamburger">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
-</button>
-
-<div class="menu-panel" id="menuPanel">
-    <button class="menu-item" onclick="showHelp()">
-        <span>❓</span>
-        <span>Help</span>
-    </button>
-    <button class="menu-item" onclick="showContact()">
-        <span>📧</span>
-        <span>Contact</span>
-    </button>
-    <div class="menu-divider"></div>
-    <div class="menu-badges">
-        <img src="80x15.png" alt="Badge 1" class="menu-badge">
-        <img src="80x15cld.png" alt="Badge 2" class="menu-badge">
-    </div>
 </div>
 
 <div class="sidebar" id="sidebar">
