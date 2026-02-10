@@ -27,13 +27,6 @@ const translations = {
 
 let currentLang = 'en';
 
-function changeLang() {
-    currentLang = document.getElementById('langSelect').value;
-    document.querySelector('.info-title').innerText = translations[currentLang].liveTracking;
-    document.querySelector('.stat-label').innerText = translations[currentLang].satellites;
-    document.getElementById('searchInput').placeholder = translations[currentLang].searchPlaceholder;
-}
-
 const satelliteImages = {
     iss: 'https://upload.wikimedia.org/wikipedia/commons/0/04/International_Space_Station_after_undocking_of_STS-132.jpg',
     tiangong: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Tiangong_space_station.png/800px-Tiangong_space_station.png',
@@ -50,6 +43,7 @@ let userLocation = null;
 let allSatellites = [];
 let timeWarp = 1;
 let simulationTime = new Date();
+let realStartTime = new Date();
 
 const map = L.map('map', {
     center: [20, 0],
@@ -77,10 +71,44 @@ baseLayers[2] = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 currentBaseLayer = baseLayers[0];
 currentBaseLayer.addTo(map);
 
+function toggleMenu() {
+    const menuSidebar = document.getElementById('menuSidebar');
+    const menuToggle = document.querySelector('.menu-toggle');
+    const menuOverlay = document.getElementById('menuOverlay');
+    
+    menuSidebar.classList.toggle('active');
+    menuToggle.classList.toggle('active');
+    menuOverlay.classList.toggle('active');
+}
+
+function toggleSection(sectionId) {
+    const section = document.getElementById(sectionId + 'Section');
+    const button = event.currentTarget;
+    
+    section.classList.toggle('active');
+    button.classList.toggle('active');
+}
+
 function setTimeWarp(speed) {
+    const previousWarp = timeWarp;
     timeWarp = speed;
-    document.querySelectorAll('.timewarp-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // Aktif butonu güncelle
+    document.querySelectorAll('.timewarp-btn').forEach(btn => {
+        if (!btn.classList.contains('timewarp-reset')) {
+            btn.classList.remove('active');
+        }
+    });
     event.target.classList.add('active');
+    
+    // Zaman sıfırlamasını ayarla
+    realStartTime = new Date();
+}
+
+function resetTime() {
+    simulationTime = new Date();
+    realStartTime = new Date();
+    updateTimeDisplay();
 }
 
 function updateTimeDisplay() {
@@ -243,12 +271,14 @@ function toggleFullscreen() {
 
 function closeSidebar() {
     document.getElementById('sidebar').classList.remove('active');
+    document.getElementById('sidebarOverlay').classList.remove('active');
     selectedSat = null;
 }
 
 function openSatelliteInfo(sat) {
     selectedSat = sat;
     document.getElementById('sidebar').classList.add('active');
+    document.getElementById('sidebarOverlay').classList.add('active');
     document.getElementById('satName').innerText = sat.name;
 
     const imgElement = document.getElementById('satImage');
@@ -404,31 +434,20 @@ const Layer = L.Layer.extend({
             if (sat.type !== 'normal') {
                 ctx.save();
                 ctx.translate(pt.x, pt.y);
-                ctx.shadowBlur = 10;
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
                 if (sat.type === 'iss') {
                     ctx.shadowColor = 'rgba(167,139,250,0.8)';
-                    ctx.fillStyle = '#a78bfa';
-                    ctx.fillRect(-26, -12, 8, 24);
-                    ctx.fillRect(18, -12, 8, 24);
-                    ctx.fillStyle = '#e0e7ff';
-                    ctx.fillRect(-12, -6, 24, 12);
                 } else if (sat.type === 'tiangong') {
                     ctx.shadowColor = 'rgba(192,132,252,0.8)';
-                    ctx.fillStyle = '#c084fc';
-                    ctx.fillRect(-24, -11, 7, 22);
-                    ctx.fillRect(17, -11, 7, 22);
-                    ctx.fillStyle = '#f3e8ff';
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, 9, 7, 0, 0, Math.PI * 2);
-                    ctx.fill();
                 } else {
                     ctx.shadowColor = 'rgba(129,140,248,0.8)';
-                    ctx.fillStyle = '#818cf8';
-                    ctx.fillRect(-20, -10, 6, 20);
-                    ctx.fillRect(14, -10, 6, 20);
-                    ctx.fillStyle = '#c7d2fe';
-                    ctx.fillRect(-10, -5, 20, 10);
                 }
+                
+                ctx.shadowBlur = 10;
+                ctx.fillText('🛰️', 0, 0);
                 ctx.restore();
             } else {
                 const alt = satAltitudes.get(sat.name) || 0;
@@ -474,7 +493,8 @@ fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
         
         setInterval(() => {
             if (timeWarp > 0) {
-                simulationTime = new Date(simulationTime.getTime() + timeWarp * 150);
+                const elapsed = new Date().getTime() - realStartTime.getTime();
+                simulationTime = new Date(realStartTime.getTime() + elapsed * timeWarp);
                 updateTimeDisplay();
             }
             layer._draw();
@@ -492,68 +512,3 @@ function getPos(satrec, date) {
 }
 
 updateTimeDisplay();
-// ... (önceki tüm kod aynı kalacak)
-
-// Menu fonksiyonları ekle
-function toggleMenu() {
-    const menuPanel = document.getElementById('menuPanel');
-    const menuToggle = document.querySelector('.menu-toggle');
-    menuPanel.classList.toggle('show');
-    menuToggle.classList.toggle('active');
-}
-
-function showHelp() {
-    alert('Satellite Tracker v0.3\n\nControls:\n- Click satellites to view details\n- Use time warp to speed up simulation\n- Search for specific satellites\n- Toggle layers with buttons on the left');
-    toggleMenu();
-}
-
-function showContact() {
-    alert('Contact:\n\nFor questions and feedback, please visit our GitHub repository or contact us via email.');
-    toggleMenu();
-}
-// ... (önceki tüm kod aynı)
-
-function toggleMenu() {
-    const menuSidebar = document.getElementById('menuSidebar');
-    const menuToggle = document.querySelector('.menu-toggle');
-    menuSidebar.classList.toggle('active');
-    menuToggle.classList.toggle('active');
-}
-
-// ... (geri kalan kod aynı)
-// ISS için:
-if (sat.type === 'iss') {
-    ctx.save();
-    ctx.translate(pt.x, pt.y);
-    ctx.font = '24px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(167,139,250,0.8)';
-    ctx.shadowBlur = 10;
-    ctx.fillText('🛰️', 0, 0);
-    ctx.restore();
-}
-// Tiangong için:
-else if (sat.type === 'tiangong') {
-    ctx.save();
-    ctx.translate(pt.x, pt.y);
-    ctx.font = '24px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(192,132,252,0.8)';
-    ctx.shadowBlur = 10;
-    ctx.fillText('🛰️', 0, 0);
-    ctx.restore();
-}
-// Hubble için:
-else if (sat.type === 'hubble') {
-    ctx.save();
-    ctx.translate(pt.x, pt.y);
-    ctx.font = '24px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(129,140,248,0.8)';
-    ctx.shadowBlur = 10;
-    ctx.fillText('🛰️', 0, 0);
-    ctx.restore();
-}
