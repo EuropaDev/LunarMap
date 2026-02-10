@@ -615,3 +615,106 @@ window.addEventListener('load', () => {
     
     updateGitHubButton();
 });
+// ... (önceki tüm kod aynı kalacak, sadece en sona bunları ekle)
+
+// Çeviri dropdown toggle
+function toggleTranslate() {
+    const dropdown = document.getElementById('translateDropdown');
+    dropdown.classList.toggle('show');
+}
+
+// Dışarı tıklanınca çeviri menüsünü kapat
+document.addEventListener('click', (e) => {
+    const langSelector = document.querySelector('.lang-selector');
+    const dropdown = document.getElementById('translateDropdown');
+    
+    if (!langSelector.contains(e.target) && dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
+    }
+});
+
+// GitHub OAuth konfigürasyonu
+const GITHUB_CLIENT_ID = 'YOUR_GITHUB_CLIENT_ID'; // Buraya GitHub OAuth App Client ID'nizi koyun
+const REDIRECT_URI = window.location.origin + window.location.pathname;
+
+function githubLogin() {
+    const user = localStorage.getItem('github_user');
+    
+    if (user) {
+        // Çıkış yap
+        if (confirm('Do you want to sign out?')) {
+            localStorage.removeItem('github_user');
+            localStorage.removeItem('github_token');
+            updateGitHubButton();
+        }
+    } else {
+        // GitHub OAuth'a yönlendir
+        const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=user:email`;
+        window.location.href = authUrl;
+    }
+}
+
+function updateGitHubButton() {
+    const btn = document.getElementById('githubBtn');
+    const text = document.getElementById('githubText');
+    const user = localStorage.getItem('github_user');
+    
+    if (user) {
+        const userData = JSON.parse(user);
+        btn.classList.add('logged-in');
+        text.innerText = userData.login || 'Signed in';
+    } else {
+        btn.classList.remove('logged-in');
+        text.innerText = 'Sign in with GitHub';
+    }
+}
+
+// Sayfa yüklendiğinde GitHub callback'i kontrol et
+window.addEventListener('load', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    
+    if (code) {
+        // GitHub'dan gelen kod ile token al (Bu kısım backend gerektirir)
+        // Şimdilik basit bir simülasyon yapıyoruz
+        fetch(`https://github.com/login/oauth/access_token`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                client_id: GITHUB_CLIENT_ID,
+                client_secret: 'YOUR_CLIENT_SECRET', // Bu güvenli değil, backend kullanın!
+                code: code,
+                redirect_uri: REDIRECT_URI
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.access_token) {
+                localStorage.setItem('github_token', data.access_token);
+                
+                // Kullanıcı bilgilerini al
+                return fetch('https://api.github.com/user', {
+                    headers: {
+                        'Authorization': `token ${data.access_token}`
+                    }
+                });
+            }
+        })
+        .then(res => res.json())
+        .then(userData => {
+            localStorage.setItem('github_user', JSON.stringify(userData));
+            updateGitHubButton();
+            
+            // URL'den code parametresini temizle
+            window.history.replaceState({}, document.title, window.location.pathname);
+        })
+        .catch(err => {
+            console.error('GitHub auth error:', err);
+        });
+    }
+    
+    updateGitHubButton();
+});
