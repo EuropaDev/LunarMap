@@ -1,21 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="logo.png"> </head>
     <meta charset="utf-8">
+    <link rel="icon" type="image/png" href="logo.png"> </head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Satellite Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="style.css">
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,tr,es,fr,de,it,pt,ru,zh-CN,ja,ko,ar,hi,pl,nl,sv,no,da,fi,cs,el,he,id,th,vi,uk,ro,hu',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </head>
 <body>
 
-<div class="lang-selector">
-    <select class="lang-btn" id="langSelect" onchange="changeLang()">
-        <option value="en" selected>🇬🇧 English</option>
-        <option value="tr">🇹🇷 Türkçe</option>
-    </select>
-</div>
+<div class="lang-selector" id="google_translate_element"></div>
 
 <div class="version">Alpha 0.3</div>
 
@@ -27,6 +33,8 @@
     </div>
 </button>
 
+<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+
 <div class="menu-sidebar" id="menuSidebar">
     <div class="menu-header">
         <h2>Menu</h2>
@@ -34,8 +42,11 @@
     </div>
     
     <div class="menu-content">
-        <div class="menu-section">
-            <h3>Controls</h3>
+        <button class="menu-section-btn" onclick="toggleSection('controls')">
+            <span>🎮 Controls</span>
+            <span class="arrow">▼</span>
+        </button>
+        <div class="menu-section" id="controlsSection">
             <div class="control-list">
                 <div class="control-item">
                     <span class="control-icon">🖱️</span>
@@ -68,16 +79,26 @@
             </div>
         </div>
 
-        <div class="menu-section">
-            <h3>Contact</h3>
+        <button class="menu-section-btn" onclick="toggleSection('contact')">
+            <span>📧 Contact</span>
+            <span class="arrow">▼</span>
+        </button>
+        <div class="menu-section" id="contactSection">
             <div class="contact-info">
-                <p>For questions and feedback:</p>
-                <a href="mailto:contact@example.com" class="contact-link">📧 contact@example.com</a>
-                <a href="https://github.com" target="_blank" class="contact-link">💻 GitHub</a>
+                <a href="mailto:contact.maps@gmail.com" class="contact-link">
+                    <span>📧</span>
+                    <span>contact.maps@gmail.com</span>
+                </a>
+                <a href="https://github.com/EuropaDev/LunarMap" target="_blank" class="contact-link">
+                    <span>💻</span>
+                    <span>GitHub Repository</span>
+                </a>
             </div>
         </div>
 
-        <div class="menu-section">
+        <div class="menu-divider"></div>
+
+        <div class="menu-section-static">
             <h3>Powered By</h3>
             <div class="menu-badges">
                 <img src="80x15.png" alt="Badge 1" class="menu-badge">
@@ -105,6 +126,8 @@
     <input type="text" class="search-input" id="searchInput" placeholder="Search satellites...">
     <div class="search-results" id="searchResults"></div>
 </div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -166,6 +189,7 @@
         <button class="timewarp-btn" onclick="setTimeWarp(10)">10x</button>
         <button class="timewarp-btn" onclick="setTimeWarp(100)">100x</button>
         <button class="timewarp-btn" onclick="setTimeWarp(1000)">1000x</button>
+        <button class="timewarp-btn timewarp-reset" onclick="resetTime()">🔄</button>
     </div>
     <div class="timewarp-date" id="timeDisplay">-</div>
 </div>
