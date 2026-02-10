@@ -21,17 +21,30 @@
 </head>
 <body>
 
-<div class="lang-selector" id="google_translate_element"></div>
+<div class="lang-selector">
+    <button class="lang-btn" onclick="toggleTranslate()">
+        <span>🌐</span>
+    </button>
+    <div class="translate-dropdown" id="translateDropdown">
+        <div id="google_translate_element"></div>
+    </div>
+</div>
 
 <div class="version">Alpha 0.3</div>
 
-<button class="menu-toggle" onclick="toggleMenu()">
-    <div class="hamburger">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
-</button>
+<div class="top-right-controls">
+    <button class="github-login" onclick="githubLogin()" id="githubBtn">
+        <span>💻</span>
+        <span id="githubText">Sign in with GitHub</span>
+    </button>
+    <button class="menu-toggle" onclick="toggleMenu()">
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </button>
+</div>
 
 <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 
@@ -105,6 +118,10 @@
                 <a href="https://claude.ai" target="_blank">
                     <img src="80x15cld.png" alt="Claude AI" class="menu-badge">
                 </a>
+            </div>
+            <div class="translate-credit">
+                <img src="https://www.gstatic.com/images/branding/googlelogo/1x/googlelogo_color_42x16dp.png" alt="Google">
+                <span>Translated by Google</span>
             </div>
         </div>
     </div>
