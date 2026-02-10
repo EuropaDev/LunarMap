@@ -945,7 +945,7 @@ body {
         left: auto;
     }
 }
-/* ... önceki CSS aynı kalacak, sadece bu kısımları güncelle/ekle ... */
+/* Önceki CSS'e EKLE */
 
 .lang-selector {
     position: absolute;
@@ -954,27 +954,66 @@ body {
     z-index: 1000;
 }
 
+.lang-btn {
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #cbd5e1;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+}
+
+.lang-btn:hover {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: rgba(148, 163, 184, 0.3);
+}
+
+.translate-dropdown {
+    position: absolute;
+    top: 52px;
+    left: 0;
+    background: rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    display: none;
+    min-width: 200px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.translate-dropdown.show {
+    display: block;
+}
+
 #google_translate_element {
     background: transparent;
 }
 
 .goog-te-combo {
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(10px);
+    background: rgba(30, 41, 59, 0.5);
     border: 1px solid rgba(148, 163, 184, 0.1);
-    border-radius: 8px;
+    border-radius: 6px;
     color: #cbd5e1;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     outline: none;
-    padding: 10px 12px;
+    padding: 8px 12px;
+    width: 100%;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    transition: all 0.2s;
 }
 
 .goog-te-combo:hover {
-    background: rgba(30, 41, 59, 0.95);
+    background: rgba(30, 41, 59, 0.8);
     border-color: rgba(148, 163, 184, 0.3);
 }
 
@@ -991,19 +1030,6 @@ body {
     margin: 0 !important;
 }
 
-/* Google Translate banner'ı gizle */
-.goog-te-banner-frame {
-    display: none !important;
-}
-
-body {
-    top: 0 !important;
-}
-
-.skiptranslate {
-    display: block !important;
-}
-
 .top-right-controls {
     position: absolute;
     top: 16px;
@@ -1018,15 +1044,16 @@ body {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(148, 163, 184, 0.1);
     border-radius: 8px;
-    padding: 10px;
+    padding: 8px 16px;
     color: #cbd5e1;
+    font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 8px;
     transition: all 0.2s;
-    width: 44px;
-    height: 44px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 500;
 }
 
 .github-login:hover {
@@ -1037,12 +1064,6 @@ body {
 .github-login.logged-in {
     background: rgba(34, 197, 94, 0.2);
     border-color: rgba(34, 197, 94, 0.3);
-    color: #22c55e;
-}
-
-.github-login svg {
-    width: 20px;
-    height: 20px;
 }
 
 .menu-toggle {
@@ -1050,4 +1071,45 @@ body {
     height: 44px;
 }
 
-/* ... geri kalan CSS aynı ... */
+.translate-credit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(30, 41, 59, 0.3);
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.translate-credit img {
+    height: 16px;
+}
+
+.translate-credit span {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+/* Mobil responsive güncellemeler */
+@media (max-width: 768px) {
+    .top-right-controls {
+        top: 8px;
+        right: 8px;
+    }
+
+    .github-login span {
+        display: none;
+    }
+
+    .github-login {
+        width: 44px;
+        height: 44px;
+        padding: 8px;
+        justify-content: center;
+    }
+
+    .translate-dropdown {
+        right: 0;
+        left: auto;
+    }
+}
