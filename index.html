@@ -232,5 +232,50 @@
 </script>
 <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 <script src="script.js"></script>
+    <div id="custom-header">
+    <img src="logo.png" alt="Logo" class="header-logo">
+    <span class="header-title">SatMap</span>
+</div>
+
+<style>
+    #custom-header {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000; /* Haritanın üstünde kalması için */
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.15); /* Yarı şeffaf cam efekti */
+        backdrop-filter: blur(10px);
+        padding: 8px 20px;
+        border-radius: 50px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        pointer-events: none; /* Harita tıklamalarını engellememesi için */
+        user-select: none;
+    }
+
+    .header-logo {
+        height: 40px; /* Logo boyutu */
+        width: auto;
+        margin-right: 12px;
+        filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+    }
+
+    .header-title {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 24px;
+        font-weight: 800;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        /* Şekil şükül efektleri: */
+        background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+    }
+</style>
 </body>
 </html>
