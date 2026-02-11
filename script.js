@@ -447,87 +447,125 @@ const NightLayer = L.Layer.extend({
                 if (d > 0) {
                     ctx.fillStyle = `rgba(10,14,39,${d})`;
                     ctx.fillRect(x, y, 6, 6);
+// ============================================
+// LOAD TLE DATA
+// ============================================
+
+console.log('📡 Fetching TLE data...');
+
+fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
+    .then(r => {
+        console.log('📡 Response status:', r.status);
+        return r.text();
+    })
+    .then(tle => {
+        console.log('📡 TLE data received, length:', tle.length);
+        
+        const lines = tle.trim().split('\n');
+        const data = [];
+        
+        console.log('📡 Total lines:', lines.length);
+        
+        for (let i = 0; i < lines.length; i += 3) {
+            if (i + 2 >= lines.length) break;
+            
+            const name = lines[i].trim();
+            const line1 = lines[i + 1].trim();
+            const line2 = lines[i + 2].trim();
+            
+            if (!name || !line1 || !line2) continue;
+            if (!line1.startsWith('1 ') || !line2.startsWith('2 ')) continue;
+            
+            let type = 'normal';
+            let isTrain = false;
+
+            if (name.includes('ISS') && !name.includes('PROGRESS') && !name.includes('DRAGON')) {
+                type = 'iss';
+            } else if (name.includes('TIANGONG')) {
+                type = 'tiangong';
+            } else if (name.includes('HUBBLE') || name.includes('HST')) {
+                type = 'hubble';
+            } else if (name.includes('STARLINK') && name.match(/STARLINK-\d{4,}/)) {
+                isTrain = true;
+            }
+
+            try {
+                const satrec = satellite.twoline2satrec(line1, line2);
+                
+                if (satrec && satrec.error === 0) {
+                    data.push({ satrec, type, name, isTrain });
+                    
+                    const pv = satellite.propagate(satrec, new Date());
+                    if (pv && pv.position && !pv.error) {
+                        const alt = Math.sqrt(pv.position.x ** 2 + pv.position.y ** 2 + pv.position.z ** 2) - 6371;
+                        satAltitudes.set(name, alt);
+                    }
                 }
+            } catch (e) {
+                console.error('❌ Error parsing satellite:', name, e);
             }
         }
         
-        ctx.filter = 'blur(12px)';
-        ctx.drawImage(this._c, 0, 0);
-        ctx.filter = 'none';
-    }
-});
-
-new NightLayer().addTo(map);
-console.log('✅ Night layer added');
-
-// ============================================
-// SATELLITE LAYER
-// ============================================
-
-const Layer = L.Layer.extend({
-    onAdd(m) {
-        this._c = L.DomUtil.create('canvas', 'leaflet-layer');
-        this._c.style.cssText = 'position:absolute;top:0;left:0;cursor:pointer';
-        m.getPanes().overlayPane.appendChild(this._c);
-        m.on('moveend zoomend viewreset', () => this._reset());
-        this._c.addEventListener('click', e => this._onClick(e));
-        this._c.addEventListener('mousemove', e => this._onMouseMove(e));
-        this._c.addEventListener('mouseout', () => document.getElementById('tooltip').style.display = 'none');
-        this._reset();
-    },
-    
-    _reset() {
-        const s = map.getSize();
-        const tl = map.containerPointToLayerPoint([0, 0]);
-        this._c.style.transform = `translate(${tl.x}px,${tl.y}px)`;
-        this._c.width = s.x;
-        this._c.height = s.y;
-        this._draw();
-    },
-    
-    _onMouseMove(e) {
-        if (!this._d || !showLabels) return;
-        
-        const rect = this._c.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        let found = null;
-        
-        this._d.forEach(sat => {
-            const pos = satPositions.get(sat.name);
-            if (pos && Math.sqrt((pos.x - x) ** 2 + (pos.y - y) ** 2) < (sat.type !== 'normal' ? 20 : 6)) {
-                found = { name: sat.name, mx: e.clientX, my: e.clientY };
-            }
-        });
-        
-        const tooltip = document.getElementById('tooltip');
-        if (found) {
-            tooltip.innerText = found.name;
-            tooltip.style.left = (found.mx + 15) + 'px';
-            tooltip.style.top = (found.my - 10) + 'px';
-            tooltip.style.display = 'block';
-        } else {
-            tooltip.style.display = 'none';
+        if (data.length === 0) {
+            console.error('❌ No satellites loaded! Check TLE format.');
+            return;
         }
-    },
-    
-    _onClick(e) {
-        if (!this._d) return;
         
-        const rect = this._c.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        layer._d = data;
+        allSatellites = data;
+        document.getElementById('info').innerText = data.length;
         
-        this._d.forEach(sat => {
-            const pos = satPositions.get(sat.name);
-            if (pos && Math.sqrt((pos.x - x) ** 2 + (pos.y - y) ** 2) < (sat.type !== 'normal' ? 20 : 6)) {
-                openSatelliteInfo(sat);
+        console.log(`✅ Loaded ${data.length} satellites`);
+        console.log(`   - ISS: ${data.filter(s => s.type === 'iss').length}`);
+        console.log(`   - Tiangong: ${data.filter(s => s.type === 'tiangong').length}`);
+        console.log(`   - Hubble: ${data.filter(s => s.type === 'hubble').length}`);
+        console.log(`   - Starlink trains: ${data.filter(s => s.isTrain).length}`);
+        
+        // Force initial draw
+        setTimeout(() => {
+            layer._draw();
+            console.log('✅ Initial draw completed');
+        }, 500);
+        
+        // Start animation loop
+        setInterval(() => {
+            if (timeWarp > 0) {
+                const elapsed = new Date().getTime() - realStartTime.getTime();
+                simulationTime = new Date(realStartTime.getTime() + elapsed * timeWarp);
+                updateTimeDisplay();
             }
-        });
-    },
-    
-    _draw() {
-        if (!this._d) return;
+            layer._draw();
+            updateSatellitePosition();
+        }, 150);
+        
+        console.log('✅ Animation loop started');
+    })
+    .catch(err => {
+        console.error('❌ TLE fetch error:', err);
+        document.getElementById('info').innerText = 'ERR';
+    });
+```
+
+**GitHub Commit Açıklaması:**
+```
+🐛 Fix: TLE data parsing and satellite rendering issue
+
+- Fixed TLE line validation (check for '1 ' and '2 ' prefixes)
+- Added satrec.error checking to filter invalid satellites
+- Added trim() to handle whitespace in TLE data
+- Added boundary check for array length
+- Added initial draw with 500ms delay
+- Added error handling for satellite.twoline2satrec()
+- Improved console logging for debugging
+- Fixed issue where only 12 satellites were loading instead of 8000+
+
+Changes:
+- script.js lines 450-530: TLE fetch and parse logic
+```
+
+**Kısa Açıklama:**
+```
+Fix satellite loading bug - improved TLE parsing and validation
         
         const s = map.getSize();
         const ctx = this._c.getContext('2d');
