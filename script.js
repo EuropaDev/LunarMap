@@ -10,7 +10,7 @@ const satelliteImages = {
     iss: 'https://upload.wikimedia.org/wikipedia/commons/0/04/International_Space_Station_after_undocking_of_STS-132.jpg',
     tiangong: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Tiangong_space_station.png/800px-Tiangong_space_station.png',
     hubble: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/HST-SM4.jpeg',
-    starlink: 'https://images.unsplash.com/photo-1581822261290-991b38693d1b?w=800&q=80',
+    starlink: 'https://upload.wikimedia.org/wikipedia/commons/9/91/Starlink_Mission_%2847926144123%29.jpg',
     normal: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/International_Space_Station.svg/800px-International_Space_Station.svg.png'
 };
 
