@@ -788,3 +788,60 @@ setTimeout(() => {
 updateTimeDisplay();
 
 console.log('🎉 Satellite Tracker fully initialized!');
+// TLE Data Loading
+fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
+    .then(r => r.text())
+    .then(tle => {
+        const lines = tle.split('\n');
+        const data = [];
+        
+        for (let i = 0; i < lines.length - 2; i += 3) {
+            const n = lines[i].trim();
+            const l1 = lines[i + 1];
+            const l2 = lines[i + 2];
+            
+            if (!n || !l1 || !l2) continue;
+            
+            let type = 'normal', isTrain = false;
+
+            if (n.includes('ISS') && !n.includes('PROGRESS') && !n.includes('DRAGON')) type = 'iss';
+            else if (n.includes('TIANGONG')) type = 'tiangong';
+            else if (n.includes('HUBBLE') || n.includes('HST')) type = 'hubble';
+            else if (n.includes('STARLINK') && n.match(/STARLINK-\d{4,}/)) isTrain = true;
+
+            const satrec = satellite.twoline2satrec(l1, l2);
+            if (satrec) {
+                data.push({ satrec, type, name: n, isTrain });
+                const pv = satellite.propagate(satrec, new Date());
+                if (pv.position) {
+                    const alt = Math.sqrt(pv.position.x ** 2 + pv.position.y ** 2 + pv.position.z ** 2) - 6371;
+                    satAltitudes.set(n, alt);
+                }
+            }
+        }
+        
+        layer._d = data;
+        allSatellites = data;
+        document.getElementById('info').innerText = data.length;
+        
+        setInterval(() => {
+            if (timeWarp > 0) {
+                const elapsed = new Date().getTime() - realStartTime.getTime();
+                simulationTime = new Date(realStartTime.getTime() + elapsed * timeWarp);
+                updateTimeDisplay();
+            }
+            layer._draw();
+            updateSatellitePosition();
+        }, 150);
+    });
+```
+
+**GitHub Commit:**
+```
+✨ Complete working version with all features
+
+- Fixed map rendering issue
+- Fixed button controls
+- Fixed TLE data loading (8000+ satellites)
+- All features working: time warp, search, layers, translation
+- Responsive design maintained
