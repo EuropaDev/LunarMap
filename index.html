@@ -2,39 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <link rel="icon" type="image/png" href="logo.png"> </head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Satellite Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="style.css">
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'en,tr,es,fr,de,it,pt,ru,zh-CN,ja,ko,ar,hi,pl,nl,sv,no,da,fi,cs,el,he,id,th,vi,uk,ro,hu',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false
-            }, 'google_translate_element');
-        }
-    </script>
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </head>
 <body>
 
-<div class="lang-selector" id="google_translate_element"></div>
+<!-- Google Translate Widget -->
+<div class="lang-selector">
+    <div id="google_translate_element"></div>
+</div>
 
+<!-- Version Badge -->
 <div class="version">Alpha 0.3</div>
 
-<button class="menu-toggle" onclick="toggleMenu()">
-    <div class="hamburger">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
-</button>
+<!-- Top Right Controls -->
+<div class="top-right-controls">
+    <button class="github-login" onclick="githubLogin()" id="githubBtn" title="Sign in with GitHub">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+    </button>
+    <button class="menu-toggle" onclick="toggleMenu()">
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </button>
+</div>
 
+<!-- Menu Overlay -->
 <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 
+<!-- Left Menu Sidebar -->
 <div class="menu-sidebar" id="menuSidebar">
     <div class="menu-header">
         <h2>Menu</h2>
@@ -42,6 +44,7 @@
     </div>
     
     <div class="menu-content">
+        <!-- Controls Section -->
         <button class="menu-section-btn" onclick="toggleSection('controls')">
             <span>🎮 Controls</span>
             <span class="arrow">▼</span>
@@ -79,6 +82,7 @@
             </div>
         </div>
 
+        <!-- Contact Section -->
         <button class="menu-section-btn" onclick="toggleSection('contact')">
             <span>📧 Contact</span>
             <span class="arrow">▼</span>
@@ -98,6 +102,7 @@
 
         <div class="menu-divider"></div>
 
+        <!-- Powered By Section -->
         <div class="menu-section-static">
             <h3>Powered By</h3>
             <div class="menu-badges">
@@ -106,15 +111,20 @@
                     <img src="80x15cld.png" alt="Claude AI" class="menu-badge">
                 </a>
             </div>
+            <div class="translate-credit">
+                <img src="https://www.gstatic.com/images/branding/googlelogo/1x/googlelogo_color_42x16dp.png" alt="Google">
+                <span>Translated by Google</span>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Left Control Buttons -->
 <div class="controls">
     <button class="control-btn" onclick="map.zoomIn()" title="Zoom In">+</button>
     <button class="control-btn" onclick="map.zoomOut()" title="Zoom Out">−</button>
     <button class="control-btn" onclick="goToLocation()" title="My Location">📍</button>
-    <button class="control-btn" id="labelBtn" onclick="toggleLabels()" title="Toggle Labels">🏷️</button>
+    <button class="control-btn active" id="labelBtn" onclick="toggleLabels()" title="Toggle Labels">🏷️</button>
     <button class="control-btn" id="gridBtn" onclick="toggleGrid()" title="Toggle Grid">🌐</button>
     <button class="control-btn" id="borderBtn" onclick="toggleBorders()" title="Toggle Borders">🗺️</button>
     <button class="control-btn" id="mapBtn" onclick="cycleMapStyle()" title="Map Style">🎨</button>
@@ -122,13 +132,16 @@
     <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
 </div>
 
+<!-- Search Panel -->
 <div class="search-panel">
     <input type="text" class="search-input" id="searchInput" placeholder="Search satellites...">
     <div class="search-results" id="searchResults"></div>
 </div>
 
+<!-- Satellite Info Sidebar Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
+<!-- Satellite Info Sidebar -->
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="sidebar-title" id="satName">-</div>
@@ -136,7 +149,7 @@
     </div>
     <div class="sidebar-content">
         <div class="sat-image-container">
-            <img class="sat-image" id="satImage" alt="Satellite">
+            <img class="sat-image" id="satImage" alt="Satellite" style="display:none;">
             <div class="image-loading" id="imageLoading">Loading...</div>
         </div>
         <div class="sat-info-item">
@@ -166,6 +179,7 @@
     </div>
 </div>
 
+<!-- Info Panel (Right Middle) -->
 <div class="info-panel">
     <div class="info-stat">
         <span class="stat-value" id="info">---</span>
@@ -181,6 +195,7 @@
     </div>
 </div>
 
+<!-- Time Warp Panel (Bottom Right) -->
 <div class="timewarp-panel">
     <div class="timewarp-title">Time Warp</div>
     <div class="timewarp-controls">
@@ -194,12 +209,27 @@
     <div class="timewarp-date" id="timeDisplay">-</div>
 </div>
 
+<!-- Tooltip -->
 <div class="tooltip" id="tooltip"></div>
+
+<!-- Map Container -->
 <div id="map"></div>
 
+<!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
+<script type="text/javascript">
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: 'en,tr,es,fr,de,it,pt,ru,zh-CN,ja,ko,ar,hi,pl,nl,sv,no,da,fi,cs,el,he,id,th,vi,uk,ro,hu',
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false
+        }, 'google_translate_element');
+    }
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 <script src="script.js"></script>
 </body>
 </html>
