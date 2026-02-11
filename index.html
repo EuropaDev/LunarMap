@@ -2,23 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <link rel="icon" type="image/png" href="logo120x120.png"> </head>
+        <link rel="icon" type="image/png" href="logo120x120.png"> </head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAPSAT | Satellite Tracker</title>
+    <title>Satellite Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- Google Translate Widget -->
 <div class="lang-selector">
     <div id="google_translate_element"></div>
 </div>
 
-<!-- Version Badge -->
-<div class="version">Alpha 4.4</div>
+<div class="version">Alpha 0.3</div>
 
-<!-- Top Right Controls -->
 <div class="top-right-controls">
     <button class="github-login" onclick="githubLogin()" id="githubBtn" title="Sign in with GitHub">
         <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
@@ -34,10 +31,8 @@
     </button>
 </div>
 
-<!-- Menu Overlay -->
 <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 
-<!-- Left Menu Sidebar -->
 <div class="menu-sidebar" id="menuSidebar">
     <div class="menu-header">
         <h2>Menu</h2>
@@ -45,7 +40,6 @@
     </div>
     
     <div class="menu-content">
-        <!-- Controls Section -->
         <button class="menu-section-btn" onclick="toggleSection('controls')">
             <span>🎮 Controls</span>
             <span class="arrow">▼</span>
@@ -83,7 +77,6 @@
             </div>
         </div>
 
-        <!-- Contact Section -->
         <button class="menu-section-btn" onclick="toggleSection('contact')">
             <span>📧 Contact</span>
             <span class="arrow">▼</span>
@@ -92,7 +85,7 @@
             <div class="contact-info">
                 <a href="mailto:contact.maps@gmail.com" class="contact-link">
                     <span>📧</span>
-                    <span>contact.mapsat@gmail.com</span>
+                    <span>contact.maps@gmail.com</span>
                 </a>
                 <a href="https://github.com/EuropaDev/LunarMap" target="_blank" class="contact-link">
                     <span>💻</span>
@@ -103,7 +96,6 @@
 
         <div class="menu-divider"></div>
 
-        <!-- Powered By Section -->
         <div class="menu-section-static">
             <h3>Powered By</h3>
             <div class="menu-badges">
@@ -120,7 +112,6 @@
     </div>
 </div>
 
-<!-- Left Control Buttons -->
 <div class="controls">
     <button class="control-btn" onclick="map.zoomIn()" title="Zoom In">+</button>
     <button class="control-btn" onclick="map.zoomOut()" title="Zoom Out">−</button>
@@ -133,16 +124,13 @@
     <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
 </div>
 
-<!-- Search Panel -->
 <div class="search-panel">
     <input type="text" class="search-input" id="searchInput" placeholder="Search satellites...">
     <div class="search-results" id="searchResults"></div>
 </div>
 
-<!-- Satellite Info Sidebar Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- Satellite Info Sidebar -->
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="sidebar-title" id="satName">-</div>
@@ -180,7 +168,6 @@
     </div>
 </div>
 
-<!-- Info Panel (Right Middle) -->
 <div class="info-panel">
     <div class="info-stat">
         <span class="stat-value" id="info">---</span>
@@ -196,7 +183,6 @@
     </div>
 </div>
 
-<!-- Time Warp Panel (Bottom Right) -->
 <div class="timewarp-panel">
     <div class="timewarp-title">Time Warp</div>
     <div class="timewarp-controls">
@@ -210,13 +196,9 @@
     <div class="timewarp-date" id="timeDisplay">-</div>
 </div>
 
-<!-- Tooltip -->
 <div class="tooltip" id="tooltip"></div>
-
-<!-- Map Container -->
 <div id="map"></div>
 
-<!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
@@ -232,48 +214,5 @@
 </script>
 <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 <script src="script.js"></script>
-    <div id="custom-header-unique">
-    <img src="logo120x120.png" alt="Logo" class="header-logo-unique">
-    <span class="header-title-unique">MapSat</span>
-</div>
-
-<style>
-    /* ID ve Class isimlerini çakışma olmaması için özelleştirdim */
-    #custom-header-unique {
-        position: fixed !important; /* Absolute yerine Fixed kullanarak ekrana sabitledik */
-        top: 30px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        z-index: 99999 !important; /* En üstte olduğundan emin oluyoruz */
-        display: flex !important;
-        align-items: center !important;
-        pointer-events: none;
-        white-space: nowrap; /* Satır kaymasını önler */
-    }
-
-    .header-logo-unique {
-        height: 30px !important;
-        width: auto !important;
-        margin-right: 15px !important;
-        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8)) !important;
-    }
-
-    .header-title-unique {
-        font-family: 'Arial Black', sans-serif !important;
-        font-size: 26px !important;
-        font-weight: 900 !important;
-        color: #ffffff !important;
-        text-transform: uppercase !important;
-        letter-spacing: 4px !important;
-        
-        /* Glow (Parlama) Efekti */
-        text-shadow: 
-            0 0 10px rgba(0, 150, 255, 1),
-            0 0 20px rgba(0, 150, 255, 0.8),
-            0 0 30px rgba(0, 150, 255, 0.6) !important;
-        
-        line-height: 1 !important;
-    }
-</style>
 </body>
 </html>
