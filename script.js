@@ -42,7 +42,7 @@ const map = L.map('map', {
     center: [20, 0],
     zoom: 3,
     minZoom: 2,
-    maxZoom: 8,
+    maxZoom: 10,
     maxBounds: [[-85, -180], [85, 180]],
     maxBoundsViscosity: 1.0,
     zoomControl: false
