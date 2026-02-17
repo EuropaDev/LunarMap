@@ -299,7 +299,7 @@ function selectSatellite(name) {
     const sat = allSatellites.find(s => s.name === name);
     if (sat) {
         const p = getPos(sat.satrec, simulationTime);
-        if (p) map.flyTo([p.lat, p.lng], 5, { duration: 1.5 });
+        if (p) map.flyTo([p.lat, p.lng], 8, { duration: 1.5 });
         openSatelliteInfo(sat);
         searchResults.classList.remove('show');
         searchInput.value = '';
