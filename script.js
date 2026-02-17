@@ -2,18 +2,6 @@
 // SATELLITE TRACKER - MAIN SCRIPT
 // Debug: All console logs active
 // ============================================
-// @ts-check
-/** @type {any} */
-let layer = null;
-/** @type {any} */
-let selectedSat = null;
-/** @type {Map<string, {x:number, y:number}>} */
-let satPositions = new Map();
-/** @type {Map<string, number>} */
-let satAltitudes = new Map();
-/** @type {any[]} */
-let allSatellites = [];
-
 console.log('🛰️ Satellite Tracker v0.3 - Initializing...');
 
 // Satellite image URLs
