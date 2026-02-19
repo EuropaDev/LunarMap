@@ -445,54 +445,54 @@ const Layer = L.Layer.extend({
         });
     },
     
-    _draw() {
-        if (!this._d || this._d.length === 0) return;
+_draw() {
+    if (!this._d || this._d.length === 0) return;
+    
+    const s = map.getSize();
+    const ctx = this._c.getContext('2d');
+    ctx.clearRect(0, 0, s.x, s.y);
+    satPositions.clear();
+
+    this._d.forEach(sat => {
+        const p = getPos(sat.satrec, simulationTime);
+        if (!p) return;
         
-        const s = map.getSize();
-        const ctx = this._c.getContext('2d');
-        ctx.clearRect(0, 0, s.x, s.y);
-        satPositions.clear();
+        let lng = p.lng;
+        while (lng > 180) lng -= 360;
+        while (lng < -180) lng += 360;
+        
+        const pt = map.latLngToContainerPoint([p.lat, lng]);
+        if (pt.x < -50 || pt.x > s.x + 50 || pt.y < -50 || pt.y > s.y + 50) return;
 
-        const colorGroups = new Map();
+        satPositions.set(sat.name, { x: pt.x, y: pt.y });
 
-        this._d.forEach(sat => {
-            const p = getPos(sat.satrec, simulationTime);
-            if (!p) return;
+        if (sat.type !== 'normal') {
+            ctx.save();
+            ctx.translate(pt.x, pt.y);
+            ctx.font = '24px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             
-            let lng = p.lng;
-            while (lng > 180) lng -= 360;
-            while (lng < -180) lng += 360;
-            
-            const pt = map.latLngToContainerPoint([p.lat, lng]);
-            if (pt.x < -50 || pt.x > s.x + 50 || pt.y < -50 || pt.y > s.y + 50) return;
-
-            satPositions.set(sat.name, { x: pt.x, y: pt.y });
-
-            if (sat.type !== 'normal') {
-                ctx.save();
-                ctx.translate(pt.x, pt.y);
-                ctx.font = '24px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                
-                if (sat.type === 'iss') {
-                    ctx.shadowColor = 'rgba(167,139,250,0.8)';
-                } else if (sat.type === 'tiangong') {
-                    ctx.shadowColor = 'rgba(192,132,252,0.8)';
-                } else {
-                    ctx.shadowColor = 'rgba(129,140,248,0.8)';
-                }
-                
-                ctx.shadowBlur = 10;
-                ctx.fillText('🛰️', 0, 0);
-                ctx.restore();
+            if (sat.type === 'iss') {
+                ctx.shadowColor = 'rgba(167,139,250,0.8)';
+            } else if (sat.type === 'tiangong') {
+                ctx.shadowColor = 'rgba(192,132,252,0.8)';
             } else {
-                const alt = satAltitudes.get(sat.name) || 0;
-                const color = getOrbitColor(alt);
-                if (!colorGroups.has(color)) colorGroups.set(color, []);
-                colorGroups.get(color).push(pt);
+                ctx.shadowColor = 'rgba(129,140,248,0.8)';
             }
-        });
+            
+            ctx.shadowBlur = 10;
+            ctx.fillText('🛰️', 0, 0);
+            ctx.restore();
+        } else {
+            const alt = satAltitudes.get(sat.name) || 0;
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 1, 0, Math.PI * 2);
+            ctx.fillStyle = getOrbitColor(alt);
+            ctx.fill();
+        }
+    });
+}
         
         colorGroups.forEach((points, color) => {
             ctx.fillStyle = color;
