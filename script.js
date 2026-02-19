@@ -1,6 +1,8 @@
 // ============================================
-// SATELLITE TRACKER - OPTIMIZED
+// SATELLITE TRACKER - DEBUGGED & OPTIMIZED
 // ============================================
+
+console.log('🛰️ Starting Satellite Tracker...');
 
 const satelliteImages = {
     iss: 'https://upload.wikimedia.org/wikipedia/commons/0/04/International_Space_Station_after_undocking_of_STS-132.jpg',
@@ -17,7 +19,6 @@ let satAltitudes = new Map();
 let showLabels = true;
 let showGrid = false;
 let showBorders = false;
-let cloudLayer = null;
 let gridLayer = null;
 let borderLayer = null;
 let userMarker = null;
@@ -30,6 +31,9 @@ let timeWarp = 1;
 let simulationTime = new Date();
 let realStartTime = new Date();
 
+console.log('✅ Variables initialized');
+
+// Initialize map
 const map = L.map('map', {
     center: [20, 0],
     zoom: 3,
@@ -40,6 +44,9 @@ const map = L.map('map', {
     zoomControl: false
 });
 
+console.log('✅ Map created');
+
+// Base layers
 baseLayers[0] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     noWrap: true,
     bounds: [[-85, -180], [85, 180]]
@@ -55,6 +62,12 @@ baseLayers[2] = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 
 currentBaseLayer = baseLayers[0];
 currentBaseLayer.addTo(map);
+
+console.log('✅ Base layer added');
+
+// ============================================
+// UI FUNCTIONS
+// ============================================
 
 function toggleMenu() {
     const menuSidebar = document.getElementById('menuSidebar');
@@ -87,6 +100,8 @@ function setTimeWarp(speed) {
     if (event && event.target) {
         event.target.classList.add('active');
     }
+    
+    console.log('⏱️ Time warp:', speed);
 }
 
 function resetTime() {
@@ -100,6 +115,7 @@ function resetTime() {
     document.querySelectorAll('.timewarp-btn')[1].classList.add('active');
     
     updateTimeDisplay();
+    console.log('🔄 Time reset');
 }
 
 function updateTimeDisplay() {
@@ -119,11 +135,13 @@ function cycleMapStyle() {
     mapStyle = (mapStyle + 1) % 3;
     currentBaseLayer = baseLayers[mapStyle];
     currentBaseLayer.addTo(map);
+    console.log('🗺️ Map style:', mapStyle);
 }
 
 function toggleLabels() {
     showLabels = !showLabels;
     document.getElementById('labelBtn').classList.toggle('active', showLabels);
+    console.log('🏷️ Labels:', showLabels);
 }
 
 function toggleGrid() {
@@ -152,6 +170,8 @@ function toggleGrid() {
     } else {
         if (gridLayer) map.removeLayer(gridLayer);
     }
+    
+    console.log('🌐 Grid:', showGrid);
 }
 
 function toggleBorders() {
@@ -169,6 +189,8 @@ function toggleBorders() {
     } else {
         if (borderLayer) map.removeLayer(borderLayer);
     }
+    
+    console.log('🗺️ Borders:', showBorders);
 }
 
 function goToLocation() {
@@ -187,6 +209,8 @@ function goToLocation() {
                     iconAnchor: [8, 8]
                 })
             }).addTo(map);
+            
+            console.log('📍 Location:', lat, lng);
         });
     }
 }
@@ -198,6 +222,10 @@ function toggleFullscreen() {
         document.exitFullscreen();
     }
 }
+
+// ============================================
+// SEARCH
+// ============================================
 
 const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
@@ -238,12 +266,19 @@ function selectSatellite(name) {
     const sat = allSatellites.find(s => s.name === name);
     if (sat) {
         const p = getPos(sat.satrec, simulationTime);
-        if (p) map.flyTo([p.lat, p.lng], 10, { duration: 1.5 });
+        if (p) {
+            map.flyTo([p.lat, p.lng], 10, { duration: 1.5 });
+        }
         openSatelliteInfo(sat);
         searchResults.classList.remove('show');
         searchInput.value = '';
+        console.log('🔍 Selected:', name);
     }
 }
+
+// ============================================
+// ORBIT HELPERS
+// ============================================
 
 function getOrbitColor(alt) {
     if (alt < 400) return '#ef4444';
@@ -262,6 +297,25 @@ function getOrbitName(alt) {
     if (alt > 35900) return 'Beyond GEO';
     return 'HEO';
 }
+
+function getPos(satrec, date) {
+    try {
+        const pv = satellite.propagate(satrec, date);
+        if (!pv.position) return null;
+        
+        const g = satellite.eciToGeodetic(pv.position, satellite.gstime(date));
+        return { 
+            lat: satellite.degreesLat(g.latitude), 
+            lng: satellite.degreesLong(g.longitude) 
+        };
+    } catch (e) {
+        return null;
+    }
+}
+
+// ============================================
+// SIDEBAR
+// ============================================
 
 function closeSidebar() {
     document.getElementById('sidebar').classList.remove('active');
@@ -331,6 +385,10 @@ function updateSatellitePosition() {
     }
 }
 
+// ============================================
+// NIGHT LAYER
+// ============================================
+
 const NightLayer = L.Layer.extend({
     onAdd(m) {
         this._c = L.DomUtil.create('canvas', 'leaflet-layer');
@@ -382,6 +440,11 @@ const NightLayer = L.Layer.extend({
 });
 
 new NightLayer().addTo(map);
+console.log('✅ Night layer added');
+
+// ============================================
+// SATELLITE LAYER
+// ============================================
 
 const Layer = L.Layer.extend({
     onAdd(m) {
@@ -445,69 +508,65 @@ const Layer = L.Layer.extend({
         });
     },
     
-_draw() {
-    if (!this._d || this._d.length === 0) return;
-    
-    const s = map.getSize();
-    const ctx = this._c.getContext('2d');
-    ctx.clearRect(0, 0, s.x, s.y);
-    satPositions.clear();
-
-    this._d.forEach(sat => {
-        const p = getPos(sat.satrec, simulationTime);
-        if (!p) return;
+    _draw() {
+        if (!this._d) return;
         
-        let lng = p.lng;
-        while (lng > 180) lng -= 360;
-        while (lng < -180) lng += 360;
-        
-        const pt = map.latLngToContainerPoint([p.lat, lng]);
-        if (pt.x < -50 || pt.x > s.x + 50 || pt.y < -50 || pt.y > s.y + 50) return;
+        const s = map.getSize();
+        const ctx = this._c.getContext('2d');
+        ctx.clearRect(0, 0, s.x, s.y);
+        satPositions.clear();
 
-        satPositions.set(sat.name, { x: pt.x, y: pt.y });
-
-        if (sat.type !== 'normal') {
-            ctx.save();
-            ctx.translate(pt.x, pt.y);
-            ctx.font = '24px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+        this._d.forEach(sat => {
+            const p = getPos(sat.satrec, simulationTime);
+            if (!p) return;
             
-            if (sat.type === 'iss') {
-                ctx.shadowColor = 'rgba(167,139,250,0.8)';
-            } else if (sat.type === 'tiangong') {
-                ctx.shadowColor = 'rgba(192,132,252,0.8)';
+            let lng = p.lng;
+            while (lng > 180) lng -= 360;
+            while (lng < -180) lng += 360;
+            
+            const pt = map.latLngToContainerPoint([p.lat, lng]);
+            if (pt.x < -50 || pt.x > s.x + 50 || pt.y < -50 || pt.y > s.y + 50) return;
+
+            satPositions.set(sat.name, { x: pt.x, y: pt.y });
+
+            if (sat.type !== 'normal') {
+                ctx.save();
+                ctx.translate(pt.x, pt.y);
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                if (sat.type === 'iss') {
+                    ctx.shadowColor = 'rgba(167,139,250,0.8)';
+                } else if (sat.type === 'tiangong') {
+                    ctx.shadowColor = 'rgba(192,132,252,0.8)';
+                } else {
+                    ctx.shadowColor = 'rgba(129,140,248,0.8)';
+                }
+                
+                ctx.shadowBlur = 10;
+                ctx.fillText('🛰️', 0, 0);
+                ctx.restore();
             } else {
-                ctx.shadowColor = 'rgba(129,140,248,0.8)';
-            }
-            
-            ctx.shadowBlur = 10;
-            ctx.fillText('🛰️', 0, 0);
-            ctx.restore();
-        } else {
-            const alt = satAltitudes.get(sat.name) || 0;
-            ctx.beginPath();
-            ctx.arc(pt.x, pt.y, 1, 0, Math.PI * 2);
-            ctx.fillStyle = getOrbitColor(alt);
-            ctx.fill();
-        }
-    });
-}
-        
-        colorGroups.forEach((points, color) => {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            points.forEach(pt => {
-                ctx.moveTo(pt.x + 1, pt.y);
+                const alt = satAltitudes.get(sat.name) || 0;
+                ctx.beginPath();
                 ctx.arc(pt.x, pt.y, 1, 0, Math.PI * 2);
-            });
-            ctx.fill();
+                ctx.fillStyle = getOrbitColor(alt);
+                ctx.fill();
+            }
         });
     }
 });
 
 layer = new Layer();
 layer.addTo(map);
+console.log('✅ Satellite layer added');
+
+// ============================================
+// LOAD TLE DATA
+// ============================================
+
+console.log('📡 Fetching TLE...');
 
 fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
     .then(r => {
@@ -515,6 +574,8 @@ fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
         return r.text();
     })
     .then(tle => {
+        console.log('📡 TLE received, length:', tle.length);
+        
         const lines = tle.split('\n');
         const data = [];
         
@@ -532,26 +593,28 @@ fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
             else if (n.includes('HUBBLE') || n.includes('HST')) type = 'hubble';
             else if (n.includes('STARLINK') && n.match(/STARLINK-\d{4,}/)) isTrain = true;
 
-            const satrec = satellite.twoline2satrec(l1, l2);
-            if (satrec) {
-                data.push({ satrec, type, name: n, isTrain });
-                const pv = satellite.propagate(satrec, new Date());
-                if (pv.position) {
-                    const alt = Math.sqrt(pv.position.x ** 2 + pv.position.y ** 2 + pv.position.z ** 2) - 6371;
-                    satAltitudes.set(n, alt);
+            try {
+                const satrec = satellite.twoline2satrec(l1, l2);
+                if (satrec) {
+                    data.push({ satrec, type, name: n, isTrain });
+                    const pv = satellite.propagate(satrec, new Date());
+                    if (pv.position) {
+                        const alt = Math.sqrt(pv.position.x ** 2 + pv.position.y ** 2 + pv.position.z ** 2) - 6371;
+                        satAltitudes.set(n, alt);
+                    }
                 }
+            } catch (e) {
+                // Skip invalid
             }
-        }
-        
-        if (data.length === 0) {
-            document.getElementById('info').innerText = 'ERR';
-            return;
         }
         
         layer._d = data;
         allSatellites = data;
         document.getElementById('info').innerText = data.length;
         
+        console.log('✅ Loaded', data.length, 'satellites');
+        
+        // Animation loop
         const drawLoop = () => {
             if (timeWarp > 0) {
                 const elapsed = Date.now() - realStartTime.getTime();
@@ -563,26 +626,18 @@ fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
             requestAnimationFrame(drawLoop);
         };
         requestAnimationFrame(drawLoop);
+        
+        console.log('✅ Animation started');
     })
     .catch(err => {
+        console.error('❌ TLE error:', err);
         document.getElementById('info').innerText = 'ERR';
         setTimeout(() => location.reload(), 5000);
     });
 
-function getPos(satrec, date) {
-    try {
-        const pv = satellite.propagate(satrec, date);
-        if (!pv.position) return null;
-        
-        const g = satellite.eciToGeodetic(pv.position, satellite.gstime(date));
-        return { 
-            lat: satellite.degreesLat(g.latitude), 
-            lng: satellite.degreesLong(g.longitude) 
-        };
-    } catch (e) {
-        return null;
-    }
-}
+// ============================================
+// GITHUB AUTH
+// ============================================
 
 const GITHUB_CLIENT_ID = 'Ov23liGR0rMbfspzNYrn';
 const REDIRECT_URI = window.location.origin + window.location.pathname;
@@ -634,6 +689,7 @@ window.addEventListener('load', () => {
     updateGitHubButton();
 });
 
+// Google Translate cleanup
 setTimeout(() => {
     const elements = document.querySelectorAll('.goog-te-gadget span');
     elements.forEach(el => {
@@ -646,4 +702,5 @@ setTimeout(() => {
 }, 1500);
 
 updateTimeDisplay();
-```
+
+console.log('🎉 Ready!');
