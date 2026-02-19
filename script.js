@@ -576,23 +576,34 @@ fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
     .then(tle => {
         console.log('📡 TLE received, length:', tle.length);
         
-        const lines = tle.split('\n');
-        const data = [];
-        
-        for (let i = 0; i < lines.length - 2; i += 3) {
-            const n = lines[i].trim();
-            const l1 = lines[i + 1];
-            const l2 = lines[i + 2];
-            
-            if (!n || !l1 || !l2) continue;
-            
-            let type = 'normal', isTrain = false;
+const lines = tle.split('\n');
+const data = [];
+const specialSats = new Set(); // ISS, Hubble, Tiangong sadece 1 kez
 
-            if (n.includes('ISS') && !n.includes('PROGRESS') && !n.includes('DRAGON')) type = 'iss';
-            else if (n.includes('TIANGONG')) type = 'tiangong';
-            else if (n.includes('HUBBLE') || n.includes('HST')) type = 'hubble';
-            else if (n.includes('STARLINK') && n.match(/STARLINK-\d{4,}/)) isTrain = true;
+for (let i = 0; i < lines.length - 2; i += 3) {
+    const n = lines[i].trim();
+    const l1 = lines[i + 1];
+    const l2 = lines[i + 2];
+    
+    if (!n || !l1 || !l2) continue;
+    
+    let type = 'normal', isTrain = false;
 
+    if (n.includes('ISS') && !n.includes('PROGRESS') && !n.includes('DRAGON')) {
+        if (specialSats.has('iss')) continue; // Skip duplicate ISS
+        type = 'iss';
+        specialSats.add('iss');
+    } else if (n.includes('TIANGONG')) {
+        if (specialSats.has('tiangong')) continue; // Skip duplicate
+        type = 'tiangong';
+        specialSats.add('tiangong');
+    } else if (n.includes('HUBBLE') || n.includes('HST')) {
+        if (specialSats.has('hubble')) continue; // Skip duplicate
+        type = 'hubble';
+        specialSats.add('hubble');
+    } else if (n.includes('STARLINK') && n.match(/STARLINK-\d{4,}/)) {
+        isTrain = true;
+    }
             try {
                 const satrec = satellite.twoline2satrec(l1, l2);
                 if (satrec) {
