@@ -1,19 +1,15 @@
 // ============================================
-// SATELLITE TRACKER - MAIN SCRIPT
-// Debug: All console logs active
+// SATELLITE TRACKER - OPTIMIZED
 // ============================================
-console.log('🛰️ Satellite Tracker v0.3 - Initializing...');
 
-// Satellite image URLs
 const satelliteImages = {
     iss: 'https://upload.wikimedia.org/wikipedia/commons/0/04/International_Space_Station_after_undocking_of_STS-132.jpg',
     tiangong: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Tiangong_space_station.png/800px-Tiangong_space_station.png',
     hubble: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/HST-SM4.jpeg',
-    starlink: 'https://upload.wikimedia.org/wikipedia/commons/9/91/Starlink_Mission_%2847926144123%29.jpg',
+    starlink: 'https://images.unsplash.com/photo-1581822261290-991b38693d1b?w=800&q=80',
     normal: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/International_Space_Station.svg/800px-International_Space_Station.svg.png'
 };
 
-// Global variables
 let layer = null;
 let selectedSat = null;
 let satPositions = new Map();
@@ -21,7 +17,6 @@ let satAltitudes = new Map();
 let showLabels = true;
 let showGrid = false;
 let showBorders = false;
-let showClouds = false;
 let cloudLayer = null;
 let gridLayer = null;
 let borderLayer = null;
@@ -35,9 +30,6 @@ let timeWarp = 1;
 let simulationTime = new Date();
 let realStartTime = new Date();
 
-console.log('✅ Variables initialized');
-
-// Initialize map
 const map = L.map('map', {
     center: [20, 0],
     zoom: 3,
@@ -48,9 +40,6 @@ const map = L.map('map', {
     zoomControl: false
 });
 
-console.log('✅ Leaflet map initialized');
-
-// Base map layers
 baseLayers[0] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     noWrap: true,
     bounds: [[-85, -180], [85, 180]]
@@ -67,12 +56,6 @@ baseLayers[2] = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 currentBaseLayer = baseLayers[0];
 currentBaseLayer.addTo(map);
 
-console.log('✅ Base layers loaded');
-
-// ============================================
-// MENU FUNCTIONS
-// ============================================
-
 function toggleMenu() {
     const menuSidebar = document.getElementById('menuSidebar');
     const menuToggle = document.querySelector('.menu-toggle');
@@ -81,8 +64,6 @@ function toggleMenu() {
     menuSidebar.classList.toggle('active');
     menuToggle.classList.toggle('active');
     menuOverlay.classList.toggle('active');
-    
-    console.log('📋 Menu toggled');
 }
 
 function toggleSection(sectionId) {
@@ -91,13 +72,7 @@ function toggleSection(sectionId) {
     
     section.classList.toggle('active');
     button.classList.toggle('active');
-    
-    console.log(`📂 Section ${sectionId} toggled`);
 }
-
-// ============================================
-// TIME WARP FUNCTIONS
-// ============================================
 
 function setTimeWarp(speed) {
     timeWarp = speed;
@@ -112,8 +87,6 @@ function setTimeWarp(speed) {
     if (event && event.target) {
         event.target.classList.add('active');
     }
-    
-    console.log(`⏱️ Time warp set to ${speed}x`);
 }
 
 function resetTime() {
@@ -127,7 +100,6 @@ function resetTime() {
     document.querySelectorAll('.timewarp-btn')[1].classList.add('active');
     
     updateTimeDisplay();
-    console.log('🔄 Time reset to current');
 }
 
 function updateTimeDisplay() {
@@ -142,22 +114,16 @@ function updateTimeDisplay() {
     document.getElementById('timeDisplay').innerText = simulationTime.toLocaleString('en-US', options);
 }
 
-// ============================================
-// MAP CONTROL FUNCTIONS
-// ============================================
-
 function cycleMapStyle() {
     map.removeLayer(currentBaseLayer);
     mapStyle = (mapStyle + 1) % 3;
     currentBaseLayer = baseLayers[mapStyle];
     currentBaseLayer.addTo(map);
-    console.log(`🗺️ Map style changed to ${mapStyle}`);
 }
 
 function toggleLabels() {
     showLabels = !showLabels;
     document.getElementById('labelBtn').classList.toggle('active', showLabels);
-    console.log(`🏷️ Labels ${showLabels ? 'enabled' : 'disabled'}`);
 }
 
 function toggleGrid() {
@@ -186,8 +152,6 @@ function toggleGrid() {
     } else {
         if (gridLayer) map.removeLayer(gridLayer);
     }
-    
-    console.log(`🌐 Grid ${showGrid ? 'enabled' : 'disabled'}`);
 }
 
 function toggleBorders() {
@@ -198,34 +162,13 @@ function toggleBorders() {
         if (!borderLayer) {
             borderLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
                 opacity: 0.7,
-                maxZoom: 8
+                maxZoom: 10
             });
         }
         borderLayer.addTo(map);
     } else {
         if (borderLayer) map.removeLayer(borderLayer);
     }
-    
-    console.log(`🗺️ Borders ${showBorders ? 'enabled' : 'disabled'}`);
-}
-
-function toggleClouds() {
-    showClouds = !showClouds;
-    document.getElementById('cloudBtn').classList.toggle('active', showClouds);
-    
-    if (showClouds) {
-        if (!cloudLayer) {
-            cloudLayer = L.tileLayer('https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=546c29aeefa27989df830200ec92848e', {
-                opacity: 0.5,
-                maxZoom: 8
-            });
-        }
-        cloudLayer.addTo(map);
-    } else {
-        if (cloudLayer) map.removeLayer(cloudLayer);
-    }
-    
-    console.log(`☁️ Clouds ${showClouds ? 'enabled' : 'disabled'}`);
 }
 
 function goToLocation() {
@@ -244,8 +187,6 @@ function goToLocation() {
                     iconAnchor: [8, 8]
                 })
             }).addTo(map);
-            
-            console.log(`📍 Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
         });
     }
 }
@@ -253,40 +194,38 @@ function goToLocation() {
 function toggleFullscreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
-        console.log('⛶ Fullscreen enabled');
     } else {
         document.exitFullscreen();
-        console.log('⛶ Fullscreen disabled');
     }
 }
 
-// ============================================
-// SEARCH FUNCTIONS
-// ============================================
-
 const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
+let searchTimeout;
 
 searchInput.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase().trim();
-    
-    if (query.length < 2) {
-        searchResults.classList.remove('show');
-        return;
-    }
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const query = e.target.value.toLowerCase().trim();
+        
+        if (query.length < 2) {
+            searchResults.classList.remove('show');
+            return;
+        }
 
-    const filtered = allSatellites.filter(sat => 
-        sat.name.toLowerCase().includes(query)
-    ).slice(0, 10);
+        const filtered = allSatellites.filter(sat => 
+            sat.name.toLowerCase().includes(query)
+        ).slice(0, 10);
 
-    if (filtered.length > 0) {
-        searchResults.innerHTML = filtered.map(sat => 
-            `<div class="search-result-item" onclick="selectSatellite('${sat.name.replace(/'/g, "\\'")}')">${sat.name}</div>`
-        ).join('');
-        searchResults.classList.add('show');
-    } else {
-        searchResults.classList.remove('show');
-    }
+        if (filtered.length > 0) {
+            searchResults.innerHTML = filtered.map(sat => 
+                `<div class="search-result-item" onclick="selectSatellite('${sat.name.replace(/'/g, "\\'")}')">${sat.name}</div>`
+            ).join('');
+            searchResults.classList.add('show');
+        } else {
+            searchResults.classList.remove('show');
+        }
+    }, 300);
 });
 
 document.addEventListener('click', (e) => {
@@ -299,16 +238,12 @@ function selectSatellite(name) {
     const sat = allSatellites.find(s => s.name === name);
     if (sat) {
         const p = getPos(sat.satrec, simulationTime);
-        if (p) map.flyTo([p.lat, p.lng], 8, { duration: 1.5 });
+        if (p) map.flyTo([p.lat, p.lng], 10, { duration: 1.5 });
         openSatelliteInfo(sat);
         searchResults.classList.remove('show');
         searchInput.value = '';
     }
 }
-
-// ============================================
-// ORBIT FUNCTIONS
-// ============================================
 
 function getOrbitColor(alt) {
     if (alt < 400) return '#ef4444';
@@ -328,15 +263,10 @@ function getOrbitName(alt) {
     return 'HEO';
 }
 
-// ============================================
-// SIDEBAR FUNCTIONS
-// ============================================
-
 function closeSidebar() {
     document.getElementById('sidebar').classList.remove('active');
     document.getElementById('sidebarOverlay').classList.remove('active');
     selectedSat = null;
-    console.log('❌ Sidebar closed');
 }
 
 function openSatelliteInfo(sat) {
@@ -364,7 +294,6 @@ function openSatelliteInfo(sat) {
     
     imgElement.onerror = () => {
         loadingElement.innerText = 'Image failed';
-        console.error('❌ Image load failed:', imgSrc);
     };
     
     imgElement.src = imgSrc;
@@ -378,7 +307,6 @@ function openSatelliteInfo(sat) {
     document.getElementById('satType').innerText = sat.isTrain ? 'Starlink Train' : (typeNames[sat.type] || 'Satellite');
 
     updateSatellitePosition();
-    console.log(`ℹ️ Opened info for: ${sat.name}`);
 }
 
 function updateSatellitePosition() {
@@ -403,10 +331,6 @@ function updateSatellitePosition() {
     }
 }
 
-// ============================================
-// NIGHT LAYER
-// ============================================
-
 const NightLayer = L.Layer.extend({
     onAdd(m) {
         this._c = L.DomUtil.create('canvas', 'leaflet-layer');
@@ -430,8 +354,8 @@ const NightLayer = L.Layer.extend({
         const ctx = this._c.getContext('2d');
         ctx.clearRect(0, 0, s.x, s.y);
         
-        for (let y = 0; y < s.y; y += 6) {
-            for (let x = 0; x < s.x; x += 6) {
+        for (let y = 0; y < s.y; y += 10) {
+            for (let x = 0; x < s.x; x += 10) {
                 const ll = map.containerPointToLatLng([x, y]);
                 if (!ll || ll.lat > 85 || ll.lat < -85) continue;
                 
@@ -446,7 +370,7 @@ const NightLayer = L.Layer.extend({
                 
                 if (d > 0) {
                     ctx.fillStyle = `rgba(10,14,39,${d})`;
-                    ctx.fillRect(x, y, 6, 6);
+                    ctx.fillRect(x, y, 10, 10);
                 }
             }
         }
@@ -458,11 +382,6 @@ const NightLayer = L.Layer.extend({
 });
 
 new NightLayer().addTo(map);
-console.log('✅ Night layer added');
-
-// ============================================
-// SATELLITE LAYER
-// ============================================
 
 const Layer = L.Layer.extend({
     onAdd(m) {
@@ -527,12 +446,14 @@ const Layer = L.Layer.extend({
     },
     
     _draw() {
-        if (!this._d) return;
+        if (!this._d || this._d.length === 0) return;
         
         const s = map.getSize();
         const ctx = this._c.getContext('2d');
         ctx.clearRect(0, 0, s.x, s.y);
         satPositions.clear();
+
+        const colorGroups = new Map();
 
         this._d.forEach(sat => {
             const p = getPos(sat.satrec, simulationTime);
@@ -567,54 +488,53 @@ const Layer = L.Layer.extend({
                 ctx.restore();
             } else {
                 const alt = satAltitudes.get(sat.name) || 0;
-                ctx.beginPath();
-                ctx.arc(pt.x, pt.y, 1, 0, Math.PI * 2);
-                ctx.fillStyle = getOrbitColor(alt);
-                ctx.fill();
+                const color = getOrbitColor(alt);
+                if (!colorGroups.has(color)) colorGroups.set(color, []);
+                colorGroups.get(color).push(pt);
             }
+        });
+        
+        colorGroups.forEach((points, color) => {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            points.forEach(pt => {
+                ctx.moveTo(pt.x + 1, pt.y);
+                ctx.arc(pt.x, pt.y, 1, 0, Math.PI * 2);
+            });
+            ctx.fill();
         });
     }
 });
 
 layer = new Layer();
 layer.addTo(map);
-console.log('✅ Satellite layer added');
-
-// ============================================
-// LOAD TLE DATA
-// ============================================
-
-console.log('📡 Fetching TLE data...');
 
 fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
-    .then(r => r.text())
+    .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.text();
+    })
     .then(tle => {
-        console.log('📡 TLE data received, parsing...');
-        
         const lines = tle.split('\n');
         const data = [];
         
-        for (let i = 0; i < lines.length; i += 3) {
-            if (!lines[i + 2]) continue;
-            
+        for (let i = 0; i < lines.length - 2; i += 3) {
             const n = lines[i].trim();
-            let type = 'normal';
-            let isTrain = false;
+            const l1 = lines[i + 1];
+            const l2 = lines[i + 2];
+            
+            if (!n || !l1 || !l2) continue;
+            
+            let type = 'normal', isTrain = false;
 
-            if (n.includes('ISS') && !n.includes('PROGRESS') && !n.includes('DRAGON')) {
-                type = 'iss';
-            } else if (n.includes('TIANGONG')) {
-                type = 'tiangong';
-            } else if (n.includes('HUBBLE') || n.includes('HST')) {
-                type = 'hubble';
-            } else if (n.includes('STARLINK') && n.match(/STARLINK-\d{4,}/)) {
-                isTrain = true;
-            }
+            if (n.includes('ISS') && !n.includes('PROGRESS') && !n.includes('DRAGON')) type = 'iss';
+            else if (n.includes('TIANGONG')) type = 'tiangong';
+            else if (n.includes('HUBBLE') || n.includes('HST')) type = 'hubble';
+            else if (n.includes('STARLINK') && n.match(/STARLINK-\d{4,}/)) isTrain = true;
 
-            const satrec = satellite.twoline2satrec(lines[i + 1], lines[i + 2]);
+            const satrec = satellite.twoline2satrec(l1, l2);
             if (satrec) {
                 data.push({ satrec, type, name: n, isTrain });
-                
                 const pv = satellite.propagate(satrec, new Date());
                 if (pv.position) {
                     const alt = Math.sqrt(pv.position.x ** 2 + pv.position.y ** 2 + pv.position.z ** 2) - 6371;
@@ -623,36 +543,31 @@ fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
             }
         }
         
+        if (data.length === 0) {
+            document.getElementById('info').innerText = 'ERR';
+            return;
+        }
+        
         layer._d = data;
         allSatellites = data;
         document.getElementById('info').innerText = data.length;
         
-        console.log(`✅ Loaded ${data.length} satellites`);
-        console.log(`   - ISS: ${data.filter(s => s.type === 'iss').length}`);
-        console.log(`   - Tiangong: ${data.filter(s => s.type === 'tiangong').length}`);
-        console.log(`   - Hubble: ${data.filter(s => s.type === 'hubble').length}`);
-        console.log(`   - Starlink trains: ${data.filter(s => s.isTrain).length}`);
-        
-        // Start animation loop
-        setInterval(() => {
+        const drawLoop = () => {
             if (timeWarp > 0) {
-                const elapsed = new Date().getTime() - realStartTime.getTime();
+                const elapsed = Date.now() - realStartTime.getTime();
                 simulationTime = new Date(realStartTime.getTime() + elapsed * timeWarp);
                 updateTimeDisplay();
             }
-            layer._draw();
+            if (layer && layer._draw) layer._draw();
             updateSatellitePosition();
-        }, 150);
-        
-        console.log('✅ Animation loop started');
+            requestAnimationFrame(drawLoop);
+        };
+        requestAnimationFrame(drawLoop);
     })
     .catch(err => {
-        console.error('❌ TLE fetch error:', err);
+        document.getElementById('info').innerText = 'ERR';
+        setTimeout(() => location.reload(), 5000);
     });
-
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
 
 function getPos(satrec, date) {
     try {
@@ -669,10 +584,6 @@ function getPos(satrec, date) {
     }
 }
 
-// ============================================
-// GITHUB AUTH
-// ============================================
-
 const GITHUB_CLIENT_ID = 'Ov23liGR0rMbfspzNYrn';
 const REDIRECT_URI = window.location.origin + window.location.pathname;
 
@@ -684,12 +595,10 @@ function githubLogin() {
             localStorage.removeItem('github_user');
             localStorage.removeItem('github_token');
             updateGitHubButton();
-            console.log('👋 GitHub signed out');
         }
     } else {
         const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=user:email`;
         window.location.href = authUrl;
-        console.log('🔐 Redirecting to GitHub OAuth...');
     }
 }
 
@@ -701,39 +610,30 @@ function updateGitHubButton() {
         btn.classList.add('logged-in');
         const userData = JSON.parse(user);
         btn.title = `Signed in as ${userData.login}`;
-        console.log(`✅ GitHub user: ${userData.login}`);
     } else {
         btn.classList.remove('logged-in');
         btn.title = 'Sign in with GitHub';
     }
 }
 
-// Check for GitHub OAuth callback
 window.addEventListener('load', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     
     if (code) {
-        console.log('🔐 GitHub OAuth code received');
-        
-        // Simulated user (real implementation needs backend)
         const mockUser = {
             login: 'user_' + Math.random().toString(36).substr(2, 5),
-            id: Date.now(),
-            avatar_url: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'
+            id: Date.now()
         };
         
         localStorage.setItem('github_user', JSON.stringify(mockUser));
         updateGitHubButton();
-        
         window.history.replaceState({}, document.title, window.location.pathname);
-        console.log('✅ GitHub auth completed (simulated)');
     }
     
     updateGitHubButton();
 });
 
-// Hide Google Translate branding
 setTimeout(() => {
     const elements = document.querySelectorAll('.goog-te-gadget span');
     elements.forEach(el => {
@@ -743,10 +643,7 @@ setTimeout(() => {
             el.style.display = 'none';
         }
     });
-    console.log('✅ Google Translate branding hidden');
 }, 1500);
 
-// Initialize time display
 updateTimeDisplay();
-
-console.log('🎉 Satellite Tracker fully initialized!');
+```
