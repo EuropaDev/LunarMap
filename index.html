@@ -2,34 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <link rel="icon" type="image/png" href="logo120x120.png"> </head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Satellite Tracker</title>
+    <title>MAPSAT | Satellite Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- Dynamic Light -->
-<div id="dynamicLight" class="fixed w-96 h-96 rounded-full pointer-events-none z-0 blur-3xl opacity-20" style="background: radial-gradient(circle, rgba(167,139,250,0.6) 0%, transparent 70%);"></div>
-
-<!-- Language Selector -->
-<div class="absolute top-4 left-4 z-[1000]">
-    <select id="langSelect" onchange="changeLanguage()" class="bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg px-3 py-2 text-space-300 text-sm">
-        <option value="en">🇬🇧 English</option>
-        <option value="tr">🇹🇷 Türkçe</option>
-    </select>
+<!-- Google Translate Widget -->
+<div class="lang-selector">
+    <div id="google_translate_element"></div>
 </div>
 
-<div class="version">Alpha 0.3</div>
+<!-- Version Badge -->
+<div class="version">Alpha 8.6</div>
 
+<!-- Top Right Controls -->
 <div class="top-right-controls">
-    <button onclick="githubLogin()" id="githubBtn" title="GitHub" class="github-login">
+    <button class="github-login" onclick="githubLogin()" id="githubBtn" title="Sign in with GitHub">
         <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
         </svg>
     </button>
-    <button onclick="toggleMenu()" class="menu-toggle">
+    <button class="menu-toggle" onclick="toggleMenu()">
         <div class="hamburger">
             <span></span>
             <span></span>
@@ -38,90 +34,155 @@
     </button>
 </div>
 
-<div id="menuOverlay" onclick="toggleMenu()" class="menu-overlay"></div>
+<!-- Menu Overlay -->
+<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 
-<div id="menuSidebar" class="menu-sidebar">
+<!-- Left Menu Sidebar -->
+<div class="menu-sidebar" id="menuSidebar">
     <div class="menu-header">
-        <h2 data-i18n="menu">Menu</h2>
-        <button onclick="toggleMenu()" class="close-btn">×</button>
+        <h2>Menu</h2>
+        <button class="close-btn" onclick="toggleMenu()">×</button>
     </div>
     
     <div class="menu-content">
-        <button onclick="toggleSection('controls')" class="menu-section-btn">
-            <span data-i18n="controls">🎮 Controls</span>
+        <!-- Controls Section -->
+        <button class="menu-section-btn" onclick="toggleSection('controls')">
+            <span>🎮 Controls</span>
             <span class="arrow">▼</span>
         </button>
-        <div id="controlsSection" class="menu-section">
+        <div class="menu-section" id="controlsSection">
             <div class="control-list">
-                <div class="control-item"><span class="control-icon">🖱️</span><span data-i18n="click">Click satellite</span></div>
-                <div class="control-item"><span class="control-icon">🔍</span><span data-i18n="search">Search satellites</span></div>
-                <div class="control-item"><span class="control-icon">⏱️</span><span data-i18n="timewarp">Time Warp</span></div>
+                <div class="control-item">
+                    <span class="control-icon">🖱️</span>
+                    <span>Click satellite to view details</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">🔍</span>
+                    <span>Search satellites by name</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">⏱️</span>
+                    <span>Time Warp: Speed up simulation</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">🌐</span>
+                    <span>Toggle grid lines</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">🗺️</span>
+                    <span>Toggle country borders</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">☁️</span>
+                    <span>Toggle cloud layer</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">🎨</span>
+                    <span>Cycle map styles</span>
+                </div>
             </div>
         </div>
 
-        <button onclick="toggleSection('contact')" class="menu-section-btn">
-            <span data-i18n="contact">📧 Contact</span>
+        <!-- Contact Section -->
+        <button class="menu-section-btn" onclick="toggleSection('contact')">
+            <span>📧 Contact</span>
             <span class="arrow">▼</span>
         </button>
-        <div id="contactSection" class="menu-section">
+        <div class="menu-section" id="contactSection">
             <div class="contact-info">
-                <a href="mailto:contact.maps@gmail.com" class="contact-link"><span>📧</span><span>contact.maps@gmail.com</span></a>
-                <a href="https://github.com/EuropaDev/LunarMap" target="_blank" class="contact-link"><span>💻</span><span>GitHub</span></a>
+                <a href="mailto:contact.maps@gmail.com" class="contact-link">
+                    <span>📧</span>
+                    <span>contact.mapsat@gmail.com</span>
+                </a>
+                <a href="https://github.com/EuropaDev/LunarMap" target="_blank" class="contact-link">
+                    <span>💻</span>
+                    <span>GitHub Repository</span>
+                </a>
             </div>
         </div>
 
         <div class="menu-divider"></div>
 
+        <!-- Powered By Section -->
         <div class="menu-section-static">
             <h3>Powered By</h3>
             <div class="menu-badges">
-                <img src="80x15.png" alt="Badge" class="menu-badge">
-                <a href="https://claude.ai" target="_blank"><img src="80x15cld.png" alt="Claude" class="menu-badge"></a>
+                <img src="80x15.png" alt="Badge 1" class="menu-badge">
+                <a href="https://claude.ai" target="_blank">
+                    <img src="80x15cld.png" alt="Claude AI" class="menu-badge">
+                </a>
+            </div>
+            <div class="translate-credit">
+                <img src="https://www.gstatic.com/images/branding/googlelogo/1x/googlelogo_color_42x16dp.png" alt="Google">
+                <span>Translated by Google</span>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Left Control Buttons -->
 <div class="controls">
-    <button onclick="map.zoomIn()" title="Zoom In" class="control-btn">+</button>
-    <button onclick="map.zoomOut()" title="Zoom Out" class="control-btn">−</button>
-    <button onclick="goToLocation()" title="My Location" class="control-btn">📍</button>
-    <button id="labelBtn" onclick="toggleLabels()" title="Toggle Labels" class="control-btn active">🏷️</button>
-    <button id="gridBtn" onclick="toggleGrid()" title="Toggle Grid" class="control-btn">🌐</button>
-    <button id="borderBtn" onclick="toggleBorders()" title="Toggle Borders" class="control-btn">🗺️</button>
-    <button id="mapBtn" onclick="cycleMapStyle()" title="Map Style" class="control-btn">🎨</button>
-    <button onclick="toggleFullscreen()" title="Fullscreen" class="control-btn">⛶</button>
+    <button class="control-btn" onclick="map.zoomIn()" title="Zoom In">+</button>
+    <button class="control-btn" onclick="map.zoomOut()" title="Zoom Out">−</button>
+    <button class="control-btn" onclick="goToLocation()" title="My Location">📍</button>
+    <button class="control-btn active" id="labelBtn" onclick="toggleLabels()" title="Toggle Labels">🏷️</button>
+    <button class="control-btn" id="gridBtn" onclick="toggleGrid()" title="Toggle Grid">🌐</button>
+    <button class="control-btn" id="borderBtn" onclick="toggleBorders()" title="Toggle Borders">🗺️</button>
+    <button class="control-btn" id="mapBtn" onclick="cycleMapStyle()" title="Map Style">🎨</button>
+    <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
 </div>
 
+<!-- Search Panel -->
 <div class="search-panel">
-    <input type="text" id="searchInput" placeholder="Search satellites..." class="search-input">
-    <div id="searchResults" class="search-results"></div>
+    <input type="text" class="search-input" id="searchInput" placeholder="Search satellites...">
+    <div class="search-results" id="searchResults"></div>
 </div>
 
-<div id="sidebarOverlay" onclick="closeSidebar()" class="sidebar-overlay"></div>
+<!-- Satellite Info Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<div id="sidebar" class="sidebar">
+<!-- Satellite Info Sidebar -->
+<div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <div id="satName" class="sidebar-title">-</div>
-        <button onclick="closeSidebar()" class="close-btn">×</button>
+        <div class="sidebar-title" id="satName">-</div>
+        <button class="close-btn" onclick="closeSidebar()">×</button>
     </div>
     <div class="sidebar-content">
         <div class="sat-image-container">
-            <img id="satImage" alt="Satellite" class="sat-image" style="display:none;">
-            <div id="imageLoading" class="image-loading">Loading...</div>
+            <img class="sat-image" id="satImage" alt="Satellite" style="display:none;">
+            <div class="image-loading" id="imageLoading">Loading...</div>
         </div>
-        <div class="sat-info-item"><div class="info-label">Type</div><div id="satType" class="info-value">-</div></div>
-        <div class="sat-info-item"><div class="info-label">Orbit</div><div id="satOrbit" class="info-value">-</div></div>
-        <div class="sat-info-item"><div class="info-label">Latitude</div><div id="satLat" class="info-value">-</div></div>
-        <div class="sat-info-item"><div class="info-label">Longitude</div><div id="satLng" class="info-value">-</div></div>
-        <div class="sat-info-item"><div class="info-label">Altitude (km)</div><div id="satAlt" class="info-value">-</div></div>
-        <div class="sat-info-item"><div class="info-label">Velocity (km/s)</div><div id="satVel" class="info-value">-</div></div>
+        <div class="sat-info-item">
+            <div class="info-label">Type</div>
+            <div class="info-value" id="satType">-</div>
+        </div>
+        <div class="sat-info-item">
+            <div class="info-label">Orbit</div>
+            <div class="info-value" id="satOrbit">-</div>
+        </div>
+        <div class="sat-info-item">
+            <div class="info-label">Latitude</div>
+            <div class="info-value" id="satLat">-</div>
+        </div>
+        <div class="sat-info-item">
+            <div class="info-label">Longitude</div>
+            <div class="info-value" id="satLng">-</div>
+        </div>
+        <div class="sat-info-item">
+            <div class="info-label">Altitude (km)</div>
+            <div class="info-value" id="satAlt">-</div>
+        </div>
+        <div class="sat-info-item">
+            <div class="info-label">Velocity (km/s)</div>
+            <div class="info-value" id="satVel">-</div>
+        </div>
     </div>
 </div>
 
+<!-- Info Panel (Right Middle) -->
 <div class="info-panel">
     <div class="info-stat">
-        <span id="info" class="stat-value">---</span>
+        <span class="stat-value" id="info">---</span>
         <span class="stat-label">SAT</span>
     </div>
     <div class="legend">
@@ -134,25 +195,84 @@
     </div>
 </div>
 
+<!-- Time Warp Panel (Bottom Right) -->
 <div class="timewarp-panel">
     <div class="timewarp-title">Time Warp</div>
     <div class="timewarp-controls">
-        <button onclick="setTimeWarp(0)" class="timewarp-btn">⏸️</button>
-        <button onclick="setTimeWarp(1)" class="timewarp-btn active">1x</button>
-        <button onclick="setTimeWarp(10)" class="timewarp-btn">10x</button>
-        <button onclick="setTimeWarp(100)" class="timewarp-btn">100x</button>
-        <button onclick="setTimeWarp(1000)" class="timewarp-btn">1000x</button>
-        <button onclick="resetTime()" class="timewarp-btn timewarp-reset">🔄</button>
+        <button class="timewarp-btn" onclick="setTimeWarp(0)">⏸️</button>
+        <button class="timewarp-btn active" onclick="setTimeWarp(1)">1x</button>
+        <button class="timewarp-btn" onclick="setTimeWarp(10)">10x</button>
+        <button class="timewarp-btn" onclick="setTimeWarp(100)">100x</button>
+        <button class="timewarp-btn" onclick="setTimeWarp(1000)">1000x</button>
+        <button class="timewarp-btn timewarp-reset" onclick="resetTime()">🔄</button>
     </div>
-    <div id="timeDisplay" class="timewarp-date">-</div>
+    <div class="timewarp-date" id="timeDisplay">-</div>
 </div>
 
-<div id="tooltip" class="tooltip"></div>
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip"></div>
+
+<!-- Map Container -->
 <div id="map"></div>
 
+<!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
+<script type="text/javascript">
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: 'en,tr,es,fr,de,it,pt,ru,zh-CN,ja,ko,ar,hi,pl,nl,sv,no,da,fi,cs,el,he,id,th,vi,uk,ro,hu',
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false
+        }, 'google_translate_element');
+    }
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 <script src="script.js"></script>
+    <div id="custom-header-unique">
+    <img src="logo120x120.png" alt="Logo" class="header-logo-unique">
+    <span class="header-title-unique">MapSat</span>
+</div>
+
+<style>
+    /* ID ve Class isimlerini çakışma olmaması için özelleştirdim */
+    #custom-header-unique {
+        position: fixed !important; /* Absolute yerine Fixed kullanarak ekrana sabitledik */
+        top: 30px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 99999 !important; /* En üstte olduğundan emin oluyoruz */
+        display: flex !important;
+        align-items: center !important;
+        pointer-events: none;
+        white-space: nowrap; /* Satır kaymasını önler */
+    }
+
+    .header-logo-unique {
+        height: 30px !important;
+        width: auto !important;
+        margin-right: 15px !important;
+        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8)) !important;
+    }
+
+    .header-title-unique {
+        font-family: 'Arial Black', sans-serif !important;
+        font-size: 26px !important;
+        font-weight: 900 !important;
+        color: #ffffff !important;
+        text-transform: uppercase !important;
+        letter-spacing: 4px !important;
+        
+        /* Glow (Parlama) Efekti */
+        text-shadow: 
+            0 0 10px rgba(0, 150, 255, 1),
+            0 0 20px rgba(0, 150, 255, 0.8),
+            0 0 30px rgba(0, 150, 255, 0.6) !important;
+        
+        line-height: 1 !important;
+    }
+</style>
 </body>
 </html>
