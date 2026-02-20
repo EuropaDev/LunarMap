@@ -6,240 +6,153 @@
     <title>Satellite Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        space: {
-                            900: '#0a0e27',
-                            800: '#0f172a',
-                            700: '#1e293b',
-                            600: '#334155',
-                            500: '#64748b',
-                            400: '#94a3b8',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="overflow-hidden bg-space-900">
+<body>
 
-<!-- Dynamic Light Effect -->
-<div id="dynamicLight" class="fixed w-[500px] h-[500px] rounded-full pointer-events-none z-0 transition-all duration-75" style="background: radial-gradient(circle, rgba(167,139,250,0.25) 0%, rgba(139,92,246,0.15) 30%, transparent 70%); filter: blur(60px);"></div>
+<!-- Dynamic Light -->
+<div id="dynamicLight" class="fixed w-96 h-96 rounded-full pointer-events-none z-0 blur-3xl opacity-20" style="background: radial-gradient(circle, rgba(167,139,250,0.6) 0%, transparent 70%);"></div>
 
 <!-- Language Selector -->
-<div class="fixed top-4 left-4 z-[1000]">
-    <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg px-3 py-2 text-space-300 text-sm font-medium cursor-pointer outline-none hover:bg-space-700/95 hover:border-space-400/30 transition-all glow-on-hover">
+<div class="absolute top-4 left-4 z-[1000]">
+    <select id="langSelect" onchange="changeLanguage()" class="bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg px-3 py-2 text-space-300 text-sm">
         <option value="en">🇬🇧 English</option>
         <option value="tr">🇹🇷 Türkçe</option>
-        <option value="es">🇪🇸 Español</option>
-        <option value="fr">🇫🇷 Français</option>
-        <option value="de">🇩🇪 Deutsch</option>
-        <option value="ru">🇷🇺 Русский</option>
-        <option value="zh">🇨🇳 中文</option>
-        <option value="ja">🇯🇵 日本語</option>
-        <option value="ar">🇸🇦 العربية</option>
     </select>
 </div>
 
-<!-- Version Badge -->
-<div class="fixed bottom-4 left-4 z-[1000] bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg px-4 py-2 text-space-400 text-xs font-semibold tracking-widest glow-panel">
-    Alpha 0.3
-</div>
+<div class="version">Alpha 0.3</div>
 
-<!-- Top Right Controls -->
-<div class="fixed top-4 right-4 z-[1002] flex gap-2">
-    <button onclick="githubLogin()" id="githubBtn" title="GitHub" class="bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg p-2.5 text-space-400 hover:bg-space-700/95 hover:border-space-400/30 transition-all duration-200 hover:scale-105 glow-on-hover">
+<div class="top-right-controls">
+    <button onclick="githubLogin()" id="githubBtn" title="GitHub" class="github-login">
         <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
         </svg>
     </button>
-    <button onclick="toggleMenu()" class="menu-toggle bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg w-11 h-11 flex items-center justify-center hover:bg-space-700/95 hover:border-space-400/30 transition-all duration-200 glow-on-hover">
-        <div class="hamburger flex flex-col gap-1.5">
-            <span class="w-5.5 h-0.5 bg-space-300 rounded-full transition-all duration-300"></span>
-            <span class="w-5.5 h-0.5 bg-space-300 rounded-full transition-all duration-300"></span>
-            <span class="w-5.5 h-0.5 bg-space-300 rounded-full transition-all duration-300"></span>
+    <button onclick="toggleMenu()" class="menu-toggle">
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
     </button>
 </div>
 
-<!-- Menu Overlay -->
-<div id="menuOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/50 z-[1000] hidden opacity-0 transition-opacity duration-300"></div>
+<div id="menuOverlay" onclick="toggleMenu()" class="menu-overlay"></div>
 
-<!-- Left Menu Sidebar -->
-<div id="menuSidebar" class="fixed top-0 left-0 w-[350px] h-screen bg-space-800/98 backdrop-blur-xl border-r border-space-600/10 shadow-2xl z-[1001] -translate-x-full transition-transform duration-300 overflow-y-auto">
-    <div class="p-6 border-b border-space-600/10 flex justify-between items-center">
-        <h2 class="text-slate-100 text-xl font-bold" data-i18n="menu">Menu</h2>
-        <button onclick="toggleMenu()" class="text-space-400 text-2xl w-8 h-8 flex items-center justify-center rounded-md hover:bg-space-600/10 transition-all">×</button>
+<div id="menuSidebar" class="menu-sidebar">
+    <div class="menu-header">
+        <h2 data-i18n="menu">Menu</h2>
+        <button onclick="toggleMenu()" class="close-btn">×</button>
     </div>
     
-    <div class="p-6 space-y-4">
-        <button onclick="toggleSection('controls')" class="menu-section-btn w-full bg-space-700/50 border border-space-600/10 rounded-lg px-4 py-3 text-space-300 text-sm flex justify-between items-center hover:bg-space-700/80 hover:border-space-400/30 transition-all">
+    <div class="menu-content">
+        <button onclick="toggleSection('controls')" class="menu-section-btn">
             <span data-i18n="controls">🎮 Controls</span>
-            <span class="arrow transition-transform duration-300">▼</span>
+            <span class="arrow">▼</span>
         </button>
-        <div id="controlsSection" class="menu-section max-h-0 overflow-hidden transition-all duration-300">
-            <div class="space-y-3 pt-3">
-                <div class="flex items-center gap-3 p-2.5 bg-space-700/30 rounded-lg text-space-300 text-sm">
-                    <span class="text-lg">🖱️</span>
-                    <span data-i18n="clickSatellite">Click satellite to view details</span>
-                </div>
-                <div class="flex items-center gap-3 p-2.5 bg-space-700/30 rounded-lg text-space-300 text-sm">
-                    <span class="text-lg">🔍</span>
-                    <span data-i18n="searchSatellite">Search satellites by name</span>
-                </div>
-                <div class="flex items-center gap-3 p-2.5 bg-space-700/30 rounded-lg text-space-300 text-sm">
-                    <span class="text-lg">⏱️</span>
-                    <span data-i18n="timeWarp">Time Warp: Speed up simulation</span>
-                </div>
-                <div class="flex items-center gap-3 p-2.5 bg-space-700/30 rounded-lg text-space-300 text-sm">
-                    <span class="text-lg">🌐</span>
-                    <span data-i18n="toggleGrid">Toggle grid lines</span>
-                </div>
-                <div class="flex items-center gap-3 p-2.5 bg-space-700/30 rounded-lg text-space-300 text-sm">
-                    <span class="text-lg">🗺️</span>
-                    <span data-i18n="toggleBorders">Toggle country borders</span>
-                </div>
-                <div class="flex items-center gap-3 p-2.5 bg-space-700/30 rounded-lg text-space-300 text-sm">
-                    <span class="text-lg">🎨</span>
-                    <span data-i18n="cycleMap">Cycle map styles</span>
-                </div>
+        <div id="controlsSection" class="menu-section">
+            <div class="control-list">
+                <div class="control-item"><span class="control-icon">🖱️</span><span data-i18n="click">Click satellite</span></div>
+                <div class="control-item"><span class="control-icon">🔍</span><span data-i18n="search">Search satellites</span></div>
+                <div class="control-item"><span class="control-icon">⏱️</span><span data-i18n="timewarp">Time Warp</span></div>
             </div>
         </div>
 
-        <button onclick="toggleSection('contact')" class="menu-section-btn w-full bg-space-700/50 border border-space-600/10 rounded-lg px-4 py-3 text-space-300 text-sm flex justify-between items-center hover:bg-space-700/80 hover:border-space-400/30 transition-all">
+        <button onclick="toggleSection('contact')" class="menu-section-btn">
             <span data-i18n="contact">📧 Contact</span>
-            <span class="arrow transition-transform duration-300">▼</span>
+            <span class="arrow">▼</span>
         </button>
-        <div id="contactSection" class="menu-section max-h-0 overflow-hidden transition-all duration-300">
-            <div class="space-y-3 pt-3">
-                <a href="mailto:contact.maps@gmail.com" class="flex items-center gap-2 p-2.5 bg-space-700/30 rounded-lg text-space-300 hover:bg-purple-500/20 hover:text-slate-100 transition-all text-sm">
-                    <span>📧</span>
-                    <span>contact.maps@gmail.com</span>
-                </a>
-                <a href="https://github.com/EuropaDev/LunarMap" target="_blank" class="flex items-center gap-2 p-2.5 bg-space-700/30 rounded-lg text-space-300 hover:bg-purple-500/20 hover:text-slate-100 transition-all text-sm">
-                    <span>💻</span>
-                    <span>GitHub Repository</span>
-                </a>
+        <div id="contactSection" class="menu-section">
+            <div class="contact-info">
+                <a href="mailto:contact.maps@gmail.com" class="contact-link"><span>📧</span><span>contact.maps@gmail.com</span></a>
+                <a href="https://github.com/EuropaDev/LunarMap" target="_blank" class="contact-link"><span>💻</span><span>GitHub</span></a>
             </div>
         </div>
 
-        <div class="h-px bg-space-600/10 my-6"></div>
+        <div class="menu-divider"></div>
 
-        <div>
-            <h3 class="text-space-400 text-xs uppercase tracking-wider mb-4 font-semibold" data-i18n="poweredBy">Powered By</h3>
-            <div class="flex flex-col gap-3">
-                <img src="80x15.png" alt="Badge" class="w-20 h-auto cursor-pointer opacity-90 hover:opacity-100 transition-opacity">
-                <a href="https://claude.ai" target="_blank">
-                    <img src="80x15cld.png" alt="Claude AI" class="w-20 h-auto cursor-pointer opacity-90 hover:opacity-100 transition-opacity">
-                </a>
+        <div class="menu-section-static">
+            <h3>Powered By</h3>
+            <div class="menu-badges">
+                <img src="80x15.png" alt="Badge" class="menu-badge">
+                <a href="https://claude.ai" target="_blank"><img src="80x15cld.png" alt="Claude" class="menu-badge"></a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Left Control Buttons -->
-<div class="fixed left-4 top-20 z-[1000] flex flex-col gap-2">
-    <button onclick="map.zoomIn()" title="Zoom In" class="control-btn w-10 h-10 bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg flex items-center justify-center text-slate-200 text-lg hover:bg-space-700/95 hover:border-space-400/30 hover:scale-105 transition-all duration-200 glow-on-hover">+</button>
-    <button onclick="map.zoomOut()" title="Zoom Out" class="control-btn w-10 h-10 bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg flex items-center justify-center text-slate-200 text-lg hover:bg-space-700/95 hover:border-space-400/30 hover:scale-105 transition-all duration-200 glow-on-hover">−</button>
-    <button onclick="goToLocation()" title="My Location" class="control-btn w-10 h-10 bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg flex items-center justify-center text-slate-200 text-lg hover:bg-space-700/95 hover:border-space-400/30 hover:scale-105 transition-all duration-200 glow-on-hover">📍</button>
-    <button id="labelBtn" onclick="toggleLabels()" title="Toggle Labels" class="control-btn active w-10 h-10 bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg flex items-center justify-center text-slate-200 text-lg hover:bg-space-700/95 hover:border-space-400/30 hover:scale-105 transition-all duration-200 glow-on-hover">🏷️</button>
-    <button id="gridBtn" onclick="toggleGrid()" title="Toggle Grid" class="control-btn w-10 h-10 bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg flex items-center justify-center text-slate-200 text-lg hover:bg-space-700/95 hover:border-space-400/30 hover:scale-105 transition-all duration-200 glow-on-hover">🌐</button>
-    <button id="borderBtn" onclick="toggleBorders()" title="Toggle Borders" class="control-btn w-10 h-10 bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg flex items-center justify-center text-slate-200 text-lg hover:bg-space-700/95 hover:border-space-400/30 hover:scale-105 transition-all duration-200 glow-on-hover">🗺️</button>
-    <button id="mapBtn" onclick="cycleMapStyle()" title="Map Style" class="control-btn w-10 h-10 bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg flex items-center justify-center text-slate-200 text-lg hover:bg-space-700/95 hover:border-space-400/30 hover:scale-105 transition-all duration-200 glow-on-hover">🎨</button>
-    <button onclick="toggleFullscreen()" title="Fullscreen" class="control-btn w-10 h-10 bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg flex items-center justify-center text-slate-200 text-lg hover:bg-space-700/95 hover:border-space-400/30 hover:scale-105 transition-all duration-200 glow-on-hover">⛶</button>
+<div class="controls">
+    <button onclick="map.zoomIn()" title="Zoom In" class="control-btn">+</button>
+    <button onclick="map.zoomOut()" title="Zoom Out" class="control-btn">−</button>
+    <button onclick="goToLocation()" title="My Location" class="control-btn">📍</button>
+    <button id="labelBtn" onclick="toggleLabels()" title="Toggle Labels" class="control-btn active">🏷️</button>
+    <button id="gridBtn" onclick="toggleGrid()" title="Toggle Grid" class="control-btn">🌐</button>
+    <button id="borderBtn" onclick="toggleBorders()" title="Toggle Borders" class="control-btn">🗺️</button>
+    <button id="mapBtn" onclick="cycleMapStyle()" title="Map Style" class="control-btn">🎨</button>
+    <button onclick="toggleFullscreen()" title="Fullscreen" class="control-btn">⛶</button>
 </div>
 
-<!-- Search Panel -->
-<div class="fixed top-[72px] right-4 z-[1000] w-[280px]">
-    <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search satellites..." class="w-full bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-lg px-4 py-3 text-slate-100 text-sm outline-none focus:border-purple-500/50 focus:shadow-lg focus:shadow-purple-500/10 transition-all placeholder-space-500">
-    <div id="searchResults" class="mt-2 bg-space-800/98 backdrop-blur-xl border border-space-600/10 rounded-lg max-h-96 overflow-y-auto hidden"></div>
+<div class="search-panel">
+    <input type="text" id="searchInput" placeholder="Search satellites..." class="search-input">
+    <div id="searchResults" class="search-results"></div>
 </div>
 
-<!-- Info Panel -->
-<div class="fixed right-4 top-1/2 -translate-y-1/2 z-[1000] bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-xl p-3 shadow-2xl glow-panel">
-    <div class="flex flex-col items-center gap-1 mb-3 pb-3 border-b border-space-600/10">
-        <span id="info" class="text-slate-100 text-xl font-bold">---</span>
-        <span class="text-space-400 text-[9px] font-semibold tracking-widest">SAT</span>
-    </div>
-    <div class="flex gap-1.5 justify-center flex-wrap">
-        <div class="w-3 h-3 rounded-full bg-red-500" title="VLEO"></div>
-        <div class="w-3 h-3 rounded-full bg-orange-500" title="LEO"></div>
-        <div class="w-3 h-3 rounded-full bg-yellow-500" title="MEO"></div>
-        <div class="w-3 h-3 rounded-full bg-green-500" title="HEO"></div>
-        <div class="w-3 h-3 rounded-full bg-blue-500" title="GEO"></div>
-        <div class="w-3 h-3 rounded-full bg-purple-500" title="Beyond"></div>
-    </div>
-</div>
+<div id="sidebarOverlay" onclick="closeSidebar()" class="sidebar-overlay"></div>
 
-<!-- Time Warp Panel -->
-<div class="fixed bottom-4 right-4 z-[1000] bg-space-800/95 backdrop-blur-xl border border-space-600/10 rounded-xl p-4 min-w-[280px] glow-panel">
-    <div class="text-space-400 text-xs font-semibold tracking-widest mb-3" data-i18n="timeWarpTitle">TIME WARP</div>
-    <div class="flex gap-1.5 mb-3 flex-wrap">
-        <button onclick="setTimeWarp(0)" class="timewarp-btn flex-1 min-w-[48px] px-3 py-2 bg-space-700/50 border border-space-600/10 rounded-md text-space-300 text-xs font-medium hover:bg-space-700/80 hover:border-space-400/30 transition-all">⏸️</button>
-        <button onclick="setTimeWarp(1)" class="timewarp-btn active flex-1 min-w-[48px] px-3 py-2 bg-space-700/50 border border-space-600/10 rounded-md text-space-300 text-xs font-medium hover:bg-space-700/80 hover:border-space-400/30 transition-all">1x</button>
-        <button onclick="setTimeWarp(10)" class="timewarp-btn flex-1 min-w-[48px] px-3 py-2 bg-space-700/50 border border-space-600/10 rounded-md text-space-300 text-xs font-medium hover:bg-space-700/80 hover:border-space-400/30 transition-all">10x</button>
-        <button onclick="setTimeWarp(100)" class="timewarp-btn flex-1 min-w-[48px] px-3 py-2 bg-space-700/50 border border-space-600/10 rounded-md text-space-300 text-xs font-medium hover:bg-space-700/80 hover:border-space-400/30 transition-all">100x</button>
-        <button onclick="setTimeWarp(1000)" class="timewarp-btn flex-1 min-w-[48px] px-3 py-2 bg-space-700/50 border border-space-600/10 rounded-md text-space-300 text-xs font-medium hover:bg-space-700/80 hover:border-space-400/30 transition-all">1000x</button>
-        <button onclick="resetTime()" class="timewarp-reset w-full mt-1 px-3 py-2 bg-space-700/50 border border-space-600/10 rounded-md text-space-300 text-xs font-medium hover:bg-space-700/80 hover:border-space-400/30 transition-all">🔄</button>
+<div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <div id="satName" class="sidebar-title">-</div>
+        <button onclick="closeSidebar()" class="close-btn">×</button>
     </div>
-    <div id="timeDisplay" class="text-space-400 text-xs text-center pt-2 border-t border-space-600/10">-</div>
-</div>
-
-<!-- Sidebar Overlay -->
-<div id="sidebarOverlay" onclick="closeSidebar()" class="fixed inset-0 bg-black/50 z-[1000] hidden opacity-0 transition-opacity duration-300"></div>
-
-<!-- Satellite Info Sidebar -->
-<div id="sidebar" class="fixed right-0 top-0 bottom-0 w-full max-w-[420px] bg-space-800/98 backdrop-blur-xl border-l border-space-600/10 shadow-2xl z-[1001] translate-x-full transition-transform duration-300 overflow-y-auto">
-    <div class="p-6 border-b border-space-600/10 flex justify-between items-center">
-        <div id="satName" class="text-slate-100 text-lg font-bold max-w-[320px] truncate">-</div>
-        <button onclick="closeSidebar()" class="text-space-400 text-2xl w-8 h-8 flex items-center justify-center rounded-md hover:bg-space-600/10 transition-all">×</button>
-    </div>
-    <div class="p-6">
-        <div class="w-full h-[280px] bg-space-900 rounded-xl mb-5 overflow-hidden relative">
-            <img id="satImage" alt="Satellite" class="w-full h-full object-cover hidden">
-            <div id="imageLoading" class="absolute inset-0 flex items-center justify-center text-space-400 text-sm" data-i18n="loading">Loading...</div>
+    <div class="sidebar-content">
+        <div class="sat-image-container">
+            <img id="satImage" alt="Satellite" class="sat-image" style="display:none;">
+            <div id="imageLoading" class="image-loading">Loading...</div>
         </div>
-        <div class="space-y-4">
-            <div class="pb-4 border-b border-space-600/10">
-                <div class="text-space-400 text-xs uppercase tracking-wider mb-1.5" data-i18n="type">Type</div>
-                <div id="satType" class="text-slate-100 text-base font-medium">-</div>
-            </div>
-            <div class="pb-4 border-b border-space-600/10">
-                <div class="text-space-400 text-xs uppercase tracking-wider mb-1.5" data-i18n="orbit">Orbit</div>
-                <div id="satOrbit" class="text-slate-100 text-base font-medium">-</div>
-            </div>
-            <div class="pb-4 border-b border-space-600/10">
-                <div class="text-space-400 text-xs uppercase tracking-wider mb-1.5" data-i18n="latitude">Latitude</div>
-                <div id="satLat" class="text-slate-100 text-base font-medium">-</div>
-            </div>
-            <div class="pb-4 border-b border-space-600/10">
-                <div class="text-space-400 text-xs uppercase tracking-wider mb-1.5" data-i18n="longitude">Longitude</div>
-                <div id="satLng" class="text-slate-100 text-base font-medium">-</div>
-            </div>
-            <div class="pb-4 border-b border-space-600/10">
-                <div class="text-space-400 text-xs uppercase tracking-wider mb-1.5" data-i18n="altitude">Altitude (km)</div>
-                <div id="satAlt" class="text-slate-100 text-base font-medium">-</div>
-            </div>
-            <div>
-                <div class="text-space-400 text-xs uppercase tracking-wider mb-1.5" data-i18n="velocity">Velocity (km/s)</div>
-                <div id="satVel" class="text-slate-100 text-base font-medium">-</div>
-            </div>
-        </div>
+        <div class="sat-info-item"><div class="info-label">Type</div><div id="satType" class="info-value">-</div></div>
+        <div class="sat-info-item"><div class="info-label">Orbit</div><div id="satOrbit" class="info-value">-</div></div>
+        <div class="sat-info-item"><div class="info-label">Latitude</div><div id="satLat" class="info-value">-</div></div>
+        <div class="sat-info-item"><div class="info-label">Longitude</div><div id="satLng" class="info-value">-</div></div>
+        <div class="sat-info-item"><div class="info-label">Altitude (km)</div><div id="satAlt" class="info-value">-</div></div>
+        <div class="sat-info-item"><div class="info-label">Velocity (km/s)</div><div id="satVel" class="info-value">-</div></div>
     </div>
 </div>
 
-<div id="tooltip" class="fixed bg-space-800/98 text-slate-100 px-3 py-2 rounded-md text-xs font-medium pointer-events-none z-[2000] border border-space-600/20 shadow-lg backdrop-blur-xl hidden whitespace-nowrap"></div>
-<div id="map" class="h-screen w-screen"></div>
+<div class="info-panel">
+    <div class="info-stat">
+        <span id="info" class="stat-value">---</span>
+        <span class="stat-label">SAT</span>
+    </div>
+    <div class="legend">
+        <div class="legend-dot" style="background:#ef4444" title="VLEO"></div>
+        <div class="legend-dot" style="background:#f97316" title="LEO"></div>
+        <div class="legend-dot" style="background:#eab308" title="MEO"></div>
+        <div class="legend-dot" style="background:#22c55e" title="HEO"></div>
+        <div class="legend-dot" style="background:#3b82f6" title="GEO"></div>
+        <div class="legend-dot" style="background:#a855f7" title="Beyond"></div>
+    </div>
+</div>
+
+<div class="timewarp-panel">
+    <div class="timewarp-title">Time Warp</div>
+    <div class="timewarp-controls">
+        <button onclick="setTimeWarp(0)" class="timewarp-btn">⏸️</button>
+        <button onclick="setTimeWarp(1)" class="timewarp-btn active">1x</button>
+        <button onclick="setTimeWarp(10)" class="timewarp-btn">10x</button>
+        <button onclick="setTimeWarp(100)" class="timewarp-btn">100x</button>
+        <button onclick="setTimeWarp(1000)" class="timewarp-btn">1000x</button>
+        <button onclick="resetTime()" class="timewarp-btn timewarp-reset">🔄</button>
+    </div>
+    <div id="timeDisplay" class="timewarp-date">-</div>
+</div>
+
+<div id="tooltip" class="tooltip"></div>
+<div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
-<script src="i18n.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
