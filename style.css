@@ -40,48 +40,83 @@
           'panel-hover': '0 0 0 1px rgba(0,245,255,0.35), 0 8px 40px rgba(0,0,0,0.7), 0 0 30px rgba(0,245,255,0.08)',
         },
         animation: {
-          'pulse-neon': 'pulse-neon 2s ease-in-out infinite',
-          'scan': 'scan 3s linear infinite',
-          'flicker': 'flicker 4s linear infinite',
-          'float': 'float 6s ease-in-out infinite',
-          'spin-slow': 'spin 8s linear infinite',
-          'glow-breathe': 'glow-breathe 3s ease-in-out infinite',
-          'slide-in-right': 'slide-in-right 0.35s cubic-bezier(0.16,1,0.3,1)',
+          'pulse-neon':    'pulse-neon 2s ease-in-out infinite',
+          'scan':          'scan-beam 6s linear infinite',
+          'flicker':       'flicker 4s linear infinite',
+          'float':         'float 7s ease-in-out infinite',
+          'spin-slow':     'spin 8s linear infinite',
+          'glow-breathe':  'panel-glow-breathe 4s ease-in-out infinite',
+          'slide-in-right':'slide-in-right 0.35s cubic-bezier(0.16,1,0.3,1)',
           'slide-in-left': 'slide-in-left 0.35s cubic-bezier(0.16,1,0.3,1)',
-          'fade-in': 'fade-in 0.2s ease',
+          'fade-in':       'fade-in 0.2s ease',
+          'orb-cyan':      'orb-breathe-cyan 5s ease-in-out infinite',
+          'orb-violet':    'orb-breathe-violet 7s ease-in-out infinite',
+          'orb-green':     'orb-breathe-green 9s ease-in-out infinite',
+          'border-shift':  'border-color-shift 5s ease-in-out infinite',
+          'shimmer':       'timewarp-shimmer 2.5s linear infinite',
+          'dot-ring':      'dot-ring 2s ease-out infinite',
         },
         keyframes: {
+          /* ── Existing ─────────────────────────────── */
           'pulse-neon': {
             '0%,100%': { opacity: '1' },
-            '50%': { opacity: '0.6' },
+            '50%':     { opacity: '0.55' },
           },
-          'scan': {
-            '0%': { transform: 'translateY(-100%)' },
-            '100%': { transform: 'translateY(100vh)' },
+          'scan-beam': {
+            '0%':   { transform: 'translateY(-10vh)' },
+            '100%': { transform: 'translateY(110vh)' },
           },
           'flicker': {
             '0%,19%,21%,23%,25%,54%,56%,100%': { opacity: '1' },
-            '20%,24%,55%': { opacity: '0.5' },
+            '20%,24%,55%':                      { opacity: '0.4' },
           },
           'float': {
             '0%,100%': { transform: 'translateY(0px)' },
-            '50%': { transform: 'translateY(-6px)' },
-          },
-          'glow-breathe': {
-            '0%,100%': { boxShadow: '0 0 8px #00f5ff, 0 0 24px #00f5ff55' },
-            '50%': { boxShadow: '0 0 20px #00f5ff, 0 0 60px #00f5ff88, 0 0 100px #00f5ff33' },
+            '50%':     { transform: 'translateY(-6px)' },
           },
           'slide-in-right': {
             from: { transform: 'translateX(100%)', opacity: '0' },
-            to:   { transform: 'translateX(0)', opacity: '1' },
+            to:   { transform: 'translateX(0)',    opacity: '1' },
           },
           'slide-in-left': {
             from: { transform: 'translateX(-100%)', opacity: '0' },
-            to:   { transform: 'translateX(0)', opacity: '1' },
+            to:   { transform: 'translateX(0)',     opacity: '1' },
           },
           'fade-in': {
-            from: { opacity: '0', transform: 'translateY(-4px)' },
+            from: { opacity: '0', transform: 'translateY(-5px)' },
             to:   { opacity: '1', transform: 'translateY(0)' },
+          },
+          /* ── Dynamic Lighting ─────────────────────── */
+          'panel-glow-breathe': {
+            '0%,100%': { boxShadow: '0 0 0 1px rgba(0,245,255,.06) inset, 0 20px 60px rgba(0,0,0,.6), 0 0 40px rgba(0,245,255,.04)' },
+            '50%':     { boxShadow: '0 0 0 1px rgba(0,245,255,.22) inset, 0 20px 60px rgba(0,0,0,.6), 0 0 80px rgba(0,245,255,.18)' },
+          },
+          'orb-breathe-cyan': {
+            '0%,100%': { opacity: '0.18', transform: 'scale(1) translate(0,0)' },
+            '33%':     { opacity: '0.32', transform: 'scale(1.15) translate(12px,8px)' },
+            '66%':     { opacity: '0.12', transform: 'scale(0.9) translate(-8px,-4px)' },
+          },
+          'orb-breathe-violet': {
+            '0%,100%': { opacity: '0.16', transform: 'scale(1) translate(0,0)' },
+            '40%':     { opacity: '0.28', transform: 'scale(1.2) translate(-10px,14px)' },
+            '70%':     { opacity: '0.10', transform: 'scale(0.85) translate(6px,-10px)' },
+          },
+          'orb-breathe-green': {
+            '0%,100%': { opacity: '0.14', transform: 'scale(1)' },
+            '50%':     { opacity: '0.25', transform: 'scale(1.18) translate(8px,-12px)' },
+          },
+          'border-color-shift': {
+            '0%,100%': { borderColor: 'rgba(0,245,255,.22)', boxShadow: '0 0 12px rgba(0,245,255,.2)' },
+            '50%':     { borderColor: 'rgba(191,0,255,.28)', boxShadow: '0 0 20px rgba(191,0,255,.25)' },
+          },
+          'timewarp-shimmer': {
+            '0%':   { backgroundPosition: '-200% center' },
+            '100%': { backgroundPosition:  '200% center' },
+          },
+          'dot-ring': {
+            '0%':   { boxShadow: '0 0 0 0 currentColor' },
+            '70%':  { boxShadow: '0 0 0 6px transparent' },
+            '100%': { boxShadow: '0 0 0 0 transparent' },
           },
         }
       }
@@ -89,151 +124,321 @@
   }
 </script>
 <style>
-  /* ── Scanline overlay ──────────────────────────────── */
+  /* ════════════════════════════════════════════
+     CSS CUSTOM PROPERTIES
+  ════════════════════════════════════════════ */
+  :root {
+    --neon-cyan:   #00f5ff;
+    --neon-violet: #bf00ff;
+    --neon-green:  #00ff87;
+    --neon-pink:   #ff0090;
+    --neon-amber:  #ffb300;
+
+    --glow-cyan:   0 0 8px #00f5ff, 0 0 24px rgba(0,245,255,.45), 0 0 60px rgba(0,245,255,.18), 0 0 120px rgba(0,245,255,.08);
+    --glow-violet: 0 0 8px #bf00ff, 0 0 24px rgba(191,0,255,.45), 0 0 60px rgba(191,0,255,.18);
+    --glow-green:  0 0 8px #00ff87, 0 0 24px rgba(0,255,135,.45), 0 0 60px rgba(0,255,135,.18);
+    --glow-pink:   0 0 8px #ff0090, 0 0 24px rgba(255,0,144,.45),  0 0 60px rgba(255,0,144,.18);
+    --glow-amber:  0 0 8px #ffb300, 0 0 24px rgba(255,179,0,.45),  0 0 60px rgba(255,179,0,.18);
+
+    --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* ════════════════════════════════════════════
+     CRT SCANLINE OVERLAY
+  ════════════════════════════════════════════ */
   body::before {
     content: '';
     position: fixed; inset: 0; z-index: 9998; pointer-events: none;
     background: repeating-linear-gradient(
       to bottom,
       transparent 0px, transparent 2px,
-      rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+      rgba(0,0,0,.09) 2px, rgba(0,0,0,.09) 4px
     );
   }
-  /* ── Moving scan line ──────────────────────────────── */
+
+  /* ════════════════════════════════════════════
+     MOVING SCAN BEAM  (replaces old 3-line scan)
+  ════════════════════════════════════════════ */
   body::after {
     content: '';
-    position: fixed; left: 0; right: 0; height: 3px; z-index: 9997; pointer-events: none;
-    background: linear-gradient(transparent, rgba(0,245,255,0.25), transparent);
-    animation: scan 5s linear infinite;
+    position: fixed; left: 0; right: 0; height: 4px; z-index: 9997; pointer-events: none;
+    background: linear-gradient(transparent, rgba(0,245,255,.22), rgba(0,245,255,.06), transparent);
+    animation: scan-beam 6s linear infinite;
   }
-  /* ── Corner brackets ──────────────────────────────── */
+
+  /* ════════════════════════════════════════════
+     AMBIENT LIGHT ORBS — dynamic breathing blobs
+  ════════════════════════════════════════════ */
+  .orb {
+    position: fixed; border-radius: 50%; pointer-events: none;
+    filter: blur(90px); z-index: 0; will-change: opacity, transform;
+  }
+  .orb--cyan {
+    width: 420px; height: 420px; top: -80px; left: -80px;
+    background: radial-gradient(circle, rgba(0,245,255,.35) 0%, transparent 70%);
+    animation: orb-breathe-cyan 5s ease-in-out infinite;
+  }
+  .orb--violet {
+    width: 360px; height: 360px; top: 35%; right: -60px;
+    background: radial-gradient(circle, rgba(191,0,255,.28) 0%, transparent 70%);
+    animation: orb-breathe-violet 7s ease-in-out infinite;
+    animation-delay: -2.5s;
+  }
+  .orb--green {
+    width: 280px; height: 280px; bottom: -30px; left: 28%;
+    background: radial-gradient(circle, rgba(0,255,135,.22) 0%, transparent 70%);
+    animation: orb-breathe-green 9s ease-in-out infinite;
+    animation-delay: -4s;
+  }
+
+  /* ════════════════════════════════════════════
+     GLASSMORPHISM PANELS
+  ════════════════════════════════════════════ */
+  .glass {
+    background: rgba(6,10,26,.88);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    border: 1px solid rgba(0,245,255,.12);
+    box-shadow: 0 0 0 1px rgba(0,245,255,.06) inset,
+                0 20px 60px rgba(0,0,0,.6),
+                0 0 40px rgba(0,245,255,.04);
+    transition: border-color .25s ease, box-shadow .25s ease;
+  }
+  .glass:hover {
+    border-color: rgba(0,245,255,.28);
+    box-shadow: 0 0 0 1px rgba(0,245,255,.18) inset,
+                0 20px 60px rgba(0,0,0,.6),
+                0 0 60px rgba(0,245,255,.14);
+  }
+  /* Auto-breathing variant */
+  .glass-breathe {
+    animation: panel-glow-breathe 4s ease-in-out infinite;
+  }
+
+  .glass-violet {
+    background: rgba(6,10,26,.9);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid rgba(191,0,255,.18);
+    box-shadow: 0 0 0 1px rgba(191,0,255,.06) inset,
+                0 20px 60px rgba(0,0,0,.65),
+                0 0 40px rgba(191,0,255,.06);
+  }
+
+  /* ════════════════════════════════════════════
+     BRACKET CORNER DECORATIONS
+  ════════════════════════════════════════════ */
   .bracket::before, .bracket::after {
     content: ''; position: absolute;
-    width: 12px; height: 12px;
-    border-color: rgba(0,245,255,0.5); border-style: solid;
+    width: 14px; height: 14px;
+    border-color: rgba(0,245,255,.5); border-style: solid;
+    transition: border-color .3s;
   }
   .bracket::before { top: 0; left: 0; border-width: 1.5px 0 0 1.5px; }
   .bracket::after  { bottom: 0; right: 0; border-width: 0 1.5px 1.5px 0; }
+  .bracket:hover::before,
+  .bracket:hover::after { border-color: var(--neon-cyan); }
+
   .bracket-inner::before, .bracket-inner::after {
     content: ''; position: absolute;
-    width: 12px; height: 12px;
-    border-color: rgba(0,245,255,0.5); border-style: solid;
+    width: 14px; height: 14px;
+    border-color: rgba(0,245,255,.5); border-style: solid;
+    transition: border-color .3s;
   }
   .bracket-inner::before { top: 0; right: 0; border-width: 1.5px 1.5px 0 0; }
   .bracket-inner::after  { bottom: 0; left: 0; border-width: 0 0 1.5px 1.5px; }
 
-  /* ── Glassmorphism panel ───────────────────────────── */
-  .glass {
-    background: rgba(6,10,26,0.88);
-    backdrop-filter: blur(20px) saturate(1.5);
-    -webkit-backdrop-filter: blur(20px) saturate(1.5);
-    border: 1px solid rgba(0,245,255,0.12);
-    box-shadow: 0 0 0 1px rgba(0,245,255,0.06) inset,
-                0 20px 60px rgba(0,0,0,0.6),
-                0 0 40px rgba(0,245,255,0.04);
-  }
-  .glass:hover {
-    border-color: rgba(0,245,255,0.25);
-    box-shadow: 0 0 0 1px rgba(0,245,255,0.1) inset,
-                0 20px 60px rgba(0,0,0,0.6),
-                0 0 40px rgba(0,245,255,0.1);
-    transition: all 0.3s ease;
-  }
-  .glass-violet {
-    background: rgba(6,10,26,0.9);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(191,0,255,0.15);
-    box-shadow: 0 0 0 1px rgba(191,0,255,0.06) inset, 0 20px 60px rgba(0,0,0,0.6);
-  }
+  /* ════════════════════════════════════════════
+     NEON TEXT GLOW
+  ════════════════════════════════════════════ */
+  .glow-cyan   { text-shadow: 0 0 10px #00f5ff, 0 0 30px rgba(0,245,255,.5); }
+  .glow-violet { text-shadow: 0 0 10px #bf00ff, 0 0 30px rgba(191,0,255,.5); }
+  .glow-green  { text-shadow: 0 0 10px #00ff87, 0 0 30px rgba(0,255,135,.5); }
+  .glow-pink   { text-shadow: 0 0 10px #ff0090, 0 0 30px rgba(255,0,144,.5); }
 
-  /* ── Neon text glow ────────────────────────────────── */
-  .glow-cyan   { text-shadow: 0 0 10px #00f5ff, 0 0 30px #00f5ff66; }
-  .glow-violet { text-shadow: 0 0 10px #bf00ff, 0 0 30px #bf00ff66; }
-  .glow-green  { text-shadow: 0 0 10px #00ff87, 0 0 30px #00ff8766; }
-  .glow-pink   { text-shadow: 0 0 10px #ff0090, 0 0 30px #ff009066; }
+  /* ════════════════════════════════════════════
+     NEON BORDER GLOW
+  ════════════════════════════════════════════ */
+  .border-neon-cyan   { border-color: #00f5ff; box-shadow: var(--glow-cyan); }
+  .border-neon-violet { border-color: #bf00ff; box-shadow: var(--glow-violet); }
+  .border-neon-green  { border-color: #00ff87; box-shadow: var(--glow-green); }
+  .border-neon-pink   { border-color: #ff0090; box-shadow: var(--glow-pink); }
+  .border-neon-amber  { border-color: #ffb300; box-shadow: var(--glow-amber); }
 
-  /* ── Neon border glow ──────────────────────────────── */
-  .border-neon-cyan   { border-color: #00f5ff; box-shadow: 0 0 12px #00f5ff88; }
-  .border-neon-violet { border-color: #bf00ff; box-shadow: 0 0 12px #bf00ff88; }
-  .border-neon-green  { border-color: #00ff87; box-shadow: 0 0 12px #00ff8788; }
-  .border-neon-pink   { border-color: #ff0090; box-shadow: 0 0 12px #ff009088; }
-  .border-neon-amber  { border-color: #ffb300; box-shadow: 0 0 12px #ffb30088; }
-
-  /* ── Neon button ──────────────────────────────────── */
+  /* ════════════════════════════════════════════
+     NEON BUTTONS
+  ════════════════════════════════════════════ */
   .btn-neon {
     position: relative; overflow: hidden;
-    background: rgba(0,245,255,0.06);
-    border: 1px solid rgba(0,245,255,0.3);
+    background: rgba(0,245,255,.05);
+    border: 1px solid rgba(0,245,255,.25);
     color: #00f5ff;
-    transition: all 0.25s ease;
+    transition: background .2s, border-color .2s, box-shadow .2s, transform .15s;
   }
   .btn-neon::before {
     content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(0,245,255,0.15) 0%, transparent 60%);
-    opacity: 0; transition: opacity 0.25s;
+    background: linear-gradient(135deg, rgba(0,245,255,.15) 0%, transparent 60%);
+    opacity: 0; transition: opacity .25s;
   }
-  .btn-neon:hover { border-color: #00f5ff; box-shadow: 0 0 16px #00f5ff55; }
-  .btn-neon:hover::before { opacity: 1; }
-  .btn-neon.active {
-    background: rgba(0,245,255,0.18);
+  .btn-neon:hover {
     border-color: #00f5ff;
-    box-shadow: 0 0 20px #00f5ff66, inset 0 0 12px rgba(0,245,255,0.15);
-    color: #fff;
+    box-shadow: var(--glow-cyan);
+    transform: scale(1.04);
   }
-  .btn-neon-violet {
-    background: rgba(191,0,255,0.06);
-    border: 1px solid rgba(191,0,255,0.3);
-    color: #bf00ff;
-    transition: all 0.25s;
-  }
-  .btn-neon-violet:hover { border-color: #bf00ff; box-shadow: 0 0 16px #bf00ff55; }
-  .btn-neon-violet.active {
-    background: rgba(191,0,255,0.18);
-    border-color: #bf00ff;
-    box-shadow: 0 0 20px #bf00ff66, inset 0 0 12px rgba(191,0,255,0.15);
+  .btn-neon:hover::before { opacity: 1; }
+  .btn-neon:active         { transform: scale(.97); }
+  .btn-neon.active {
+    background: rgba(0,245,255,.18);
+    border-color: #00f5ff;
+    box-shadow: var(--glow-cyan), inset 0 0 14px rgba(0,245,255,.15);
     color: #fff;
+    animation: pulse-neon 2.5s ease-in-out infinite;
   }
 
-  /* ── Input neon focus ──────────────────────────────── */
-  .input-neon {
-    background: rgba(6,10,26,0.9);
-    border: 1px solid rgba(0,245,255,0.15);
-    color: #e0f8ff; caret-color: #00f5ff;
-    transition: all 0.2s;
+  .btn-neon-violet {
+    background: rgba(191,0,255,.05);
+    border: 1px solid rgba(191,0,255,.25);
+    color: #bf00ff;
+    transition: background .2s, border-color .2s, box-shadow .2s, transform .15s;
   }
-  .input-neon::placeholder { color: rgba(0,245,255,0.3); }
+  .btn-neon-violet:hover {
+    border-color: #bf00ff;
+    box-shadow: var(--glow-violet);
+    transform: scale(1.04);
+  }
+  .btn-neon-violet:active { transform: scale(.97); }
+  .btn-neon-violet.active {
+    background: rgba(191,0,255,.18);
+    border-color: #bf00ff;
+    box-shadow: var(--glow-violet), inset 0 0 14px rgba(191,0,255,.15);
+    color: #fff;
+    /* shimmer gradient sweep */
+    background: linear-gradient(90deg,
+      rgba(191,0,255,.2) 0%,
+      rgba(0,245,255,.22) 50%,
+      rgba(191,0,255,.2) 100%);
+    background-size: 200% auto;
+    animation: timewarp-shimmer 2.5s linear infinite;
+  }
+
+  /* ════════════════════════════════════════════
+     NEON INPUT
+  ════════════════════════════════════════════ */
+  .input-neon {
+    background: rgba(6,10,26,.9);
+    border: 1px solid rgba(0,245,255,.15);
+    color: #e0f8ff;
+    caret-color: #00f5ff;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .input-neon::placeholder { color: rgba(0,245,255,.3); }
   .input-neon:focus {
     outline: none;
     border-color: #00f5ff;
-    box-shadow: 0 0 0 3px rgba(0,245,255,0.1), 0 0 20px rgba(0,245,255,0.15);
+    box-shadow: 0 0 0 3px rgba(0,245,255,.1), 0 0 24px rgba(0,245,255,.18);
   }
 
-  /* ── Legend dots ───────────────────────────────────── */
+  /* ════════════════════════════════════════════
+     LEGEND DOTS — animated neon pulse
+  ════════════════════════════════════════════ */
   .dot-glow {
-    box-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
+    box-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
+    animation: pulse-neon 2.5s ease-in-out infinite;
+    transition: transform .2s;
+  }
+  .dot-glow:hover { transform: scale(1.6); }
+  /* stagger each dot */
+  .dot-glow:nth-child(1) { animation-delay: 0s; }
+  .dot-glow:nth-child(2) { animation-delay: .4s; }
+  .dot-glow:nth-child(3) { animation-delay: .8s; }
+  .dot-glow:nth-child(4) { animation-delay: 1.2s; }
+  .dot-glow:nth-child(5) { animation-delay: 1.6s; }
+
+  /* ════════════════════════════════════════════
+     GITHUB BUTTON — dynamic border color shift
+  ════════════════════════════════════════════ */
+  #githubBtn { animation: border-color-shift 5s ease-in-out infinite; }
+  #githubBtn:hover { animation: none; }
+  #githubBtn.logged-in {
+    background: rgba(0,255,135,.12);
+    border-color: rgba(0,255,135,.4);
+    color: var(--neon-green);
+    box-shadow: var(--glow-green);
+    animation: none;
   }
 
-  /* ── Scroll bar ────────────────────────────────────── */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: rgba(6,10,26,0.5); }
-  ::-webkit-scrollbar-thumb { background: rgba(0,245,255,0.3); border-radius: 2px; }
+  /* ════════════════════════════════════════════
+     SIDEBAR EDGE GLOW — lights up on open
+  ════════════════════════════════════════════ */
+  #menuSidebar {
+    box-shadow: 4px 0 60px rgba(0,0,0,.5),
+                4px 0 20px rgba(191,0,255,.06);
+    border-right: 1px solid rgba(191,0,255,.18);
+  }
+  #menuSidebar.sidebar-open {
+    box-shadow: 4px 0 60px rgba(0,0,0,.5),
+                4px 0 50px rgba(191,0,255,.2),
+                8px 0 80px rgba(0,245,255,.06);
+  }
+  #satSidebar {
+    border-left: 1px solid rgba(0,245,255,.15);
+    box-shadow: -4px 0 60px rgba(0,0,0,.5),
+                -4px 0 20px rgba(0,245,255,.06);
+  }
+  #satSidebar.sidebar-open {
+    box-shadow: -4px 0 60px rgba(0,0,0,.5),
+                -6px 0 40px rgba(0,245,255,.16),
+                -10px 0 80px rgba(191,0,255,.06);
+  }
 
-  /* ── Active hamburger ──────────────────────────────── */
-  .hamburger-active-1 { transform: rotate(45deg) translate(5px, 6px); }
-  .hamburger-active-2 { opacity: 0; }
-  .hamburger-active-3 { transform: rotate(-45deg) translate(5px, -6px); }
+  /* ════════════════════════════════════════════
+     SEARCH RESULTS — neon drip glow
+  ════════════════════════════════════════════ */
+  #searchResults {
+    box-shadow: 0 12px 40px rgba(0,0,0,.5),
+                0 4px 20px rgba(0,245,255,.08),
+                0 0 0 1px rgba(0,245,255,.1);
+  }
+  .search-result-item {
+    transition: background .18s, color .18s, padding-left .18s;
+  }
+  .search-result-item:hover { padding-left: 22px; }
 
-  /* ── Sidebar open ──────────────────────────────────── */
-  .sidebar-open  { transform: translateX(0) !important; }
-  .overlay-show  { display: block !important; }
+  /* ════════════════════════════════════════════
+     MENU SIDEBAR ITEM HOVER — slide effect
+  ════════════════════════════════════════════ */
+  .menu-section-btn:hover {
+    transform: translateX(3px);
+    transition: transform .2s;
+  }
 
-  /* ── Google Translate hide branding ────────────────── */
-  .goog-te-gadget { color: transparent !important; }
-  .goog-te-gadget span { display: none !important; }
-  .goog-te-banner-frame { display: none !important; }
+  /* ════════════════════════════════════════════
+     SATELLITE DETAIL SAT-INFO HOVER
+  ════════════════════════════════════════════ */
+  .sat-info-item:hover .info-value {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px #00f5ff, 0 0 30px rgba(0,245,255,.5);
+  }
+
+  /* ════════════════════════════════════════════
+     SCROLLBAR
+  ════════════════════════════════════════════ */
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,245,255,.25); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--neon-cyan); }
+
+  /* ════════════════════════════════════════════
+     GOOGLE TRANSLATE
+  ════════════════════════════════════════════ */
+  .goog-te-gadget           { color: transparent !important; }
+  .goog-te-gadget span      { display: none !important; }
+  .goog-te-gadget .goog-te-combo { margin: 0 !important; }
+  .goog-te-banner-frame     { display: none !important; }
+  .skiptranslate            { display: block !important; }
   .goog-te-combo {
-    background: rgba(6,10,26,0.9) !important;
-    border: 1px solid rgba(0,245,255,0.2) !important;
+    background: rgba(6,10,26,.9) !important;
+    border: 1px solid rgba(0,245,255,.2) !important;
     border-radius: 8px !important;
     color: #00f5ff !important;
     font-family: 'Orbitron', sans-serif !important;
@@ -241,33 +446,35 @@
     padding: 10px 12px !important;
     outline: none !important;
     cursor: pointer !important;
-    transition: all 0.2s !important;
-    letter-spacing: 0.05em !important;
+    letter-spacing: .08em !important;
+    transition: all .2s !important;
   }
+  .goog-te-combo:hover,
   .goog-te-combo:focus {
     border-color: #00f5ff !important;
-    box-shadow: 0 0 16px rgba(0,245,255,0.3) !important;
+    box-shadow: var(--glow-cyan) !important;
   }
 
-  /* ── Ambient orbs ──────────────────────────────────── */
-  .orb {
-    position: fixed; border-radius: 50%; pointer-events: none;
-    filter: blur(80px); opacity: 0.18; z-index: 0;
-  }
+  /* ════════════════════════════════════════════
+     SIDEBAR OPEN HELPERS
+  ════════════════════════════════════════════ */
+  .sidebar-open  { transform: translateX(0) !important; }
+  .overlay-show  { display: block !important; }
 </style>
 </head>
-<body class="bg-space-950 overflow-hidden font-mono" style="font-family:'Share Tech Mono',monospace">
+<body class="bg-space-950 overflow-hidden" style="font-family:'Share Tech Mono',monospace">
 
-  <!-- Ambient light orbs -->
-  <div class="orb w-96 h-96 -top-20 -left-20 animate-pulse-neon" style="background:#00f5ff"></div>
-  <div class="orb w-80 h-80 top-1/3 -right-20 animate-pulse-neon" style="background:#bf00ff;animation-delay:1.5s"></div>
-  <div class="orb w-64 h-64 -bottom-10 left-1/4 animate-pulse-neon" style="background:#00ff87;animation-delay:3s"></div>
+  <!-- ══════════════════════════════════════════
+       AMBIENT LIGHT ORBS — dynamic breathing
+  ══════════════════════════════════════════ -->
+  <div class="orb orb--cyan"></div>
+  <div class="orb orb--violet"></div>
+  <div class="orb orb--green"></div>
 
   <!-- MAP placeholder -->
   <div id="map" class="absolute inset-0 z-0">
-    <!-- Real Leaflet/Mapbox map mounts here -->
     <div class="absolute inset-0 flex items-center justify-center">
-      <span class="text-neon-cyan/20 font-orbitron text-2xl tracking-widest animate-pulse-neon">MAP SURFACE</span>
+      <span class="font-orbitron text-2xl tracking-widest animate-pulse-neon" style="color:rgba(0,245,255,.18)">MAP SURFACE</span>
     </div>
   </div>
 
@@ -275,7 +482,7 @@
        VERSION BADGE
   ══════════════════════════════════════════ -->
   <div class="fixed bottom-4 left-4 z-50 glass rounded-lg px-4 py-2 bracket bracket-inner">
-    <span class="font-orbitron text-[10px] tracking-[0.2em] text-neon-cyan glow-cyan animate-flicker">
+    <span class="font-orbitron text-[10px] tracking-[0.2em] glow-cyan animate-flicker" style="color:var(--neon-cyan)">
       v2.4.0 — ORBITWATCH
     </span>
   </div>
@@ -297,15 +504,15 @@
       <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
         <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
       </svg>
-      <span class="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[10px] font-orbitron text-neon-cyan/70 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">GITHUB</span>
+      <span class="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[10px] font-orbitron whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none glow-cyan" style="color:rgba(0,245,255,.7)">GITHUB</span>
     </button>
 
     <!-- Menu Toggle -->
     <button id="menuToggle" class="btn-neon w-11 h-11 rounded-xl flex items-center justify-center" title="Menu">
       <div class="flex flex-col gap-[5px]" id="hamburger">
-        <span id="h1" class="block w-5 h-[2px] bg-current rounded-sm transition-all duration-300"></span>
-        <span id="h2" class="block w-5 h-[2px] bg-current rounded-sm transition-all duration-300"></span>
-        <span id="h3" class="block w-5 h-[2px] bg-current rounded-sm transition-all duration-300"></span>
+        <span id="h1" class="block w-5 h-[2px] rounded-sm transition-all duration-300" style="background:currentColor;box-shadow:0 0 6px currentColor"></span>
+        <span id="h2" class="block w-5 h-[2px] rounded-sm transition-all duration-300" style="background:currentColor;box-shadow:0 0 6px currentColor"></span>
+        <span id="h3" class="block w-5 h-[2px] rounded-sm transition-all duration-300" style="background:currentColor;box-shadow:0 0 6px currentColor"></span>
       </div>
     </button>
   </div>
@@ -321,21 +528,19 @@
   <aside id="menuSidebar" class="fixed top-0 left-0 h-full w-[340px] glass-violet z-50 overflow-y-auto
          translate-x-[-100%] transition-transform duration-[350ms] ease-[cubic-bezier(0.16,1,0.3,1)]">
 
-    <!-- Header -->
-    <div class="px-6 py-5 border-b border-neon-violet/20 flex items-center justify-between">
+    <div class="px-6 py-5 flex items-center justify-between sticky top-0 z-10" style="background:rgba(6,10,26,.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(191,0,255,.18)">
       <div>
-        <div class="font-orbitron text-xs text-neon-violet/60 tracking-[0.3em] mb-1">SYSTEM MENU</div>
+        <div class="font-orbitron text-[9px] tracking-[0.3em] mb-1" style="color:rgba(191,0,255,.55)">SYSTEM MENU</div>
         <h2 class="font-orbitron text-lg font-bold text-white glow-violet">ORBITWATCH</h2>
       </div>
-      <button onclick="closeMenu()" class="w-8 h-8 rounded-lg border border-neon-violet/20 flex items-center justify-center text-neon-violet/70 hover:text-neon-violet hover:border-neon-violet transition-all hover:shadow-[0_0_12px_#bf00ff55]">
+      <button onclick="closeMenu()" class="w-8 h-8 rounded-lg flex items-center justify-center transition-all btn-neon-violet">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
     <div class="p-6 space-y-3">
 
-      <!-- Keyboard Controls -->
-      <button onclick="toggleSection('sec-controls')" class="w-full btn-neon-violet rounded-xl px-4 py-3 font-orbitron text-xs tracking-[0.1em] flex justify-between items-center">
+      <button onclick="toggleSection('sec-controls')" class="w-full btn-neon-violet rounded-xl px-4 py-3 font-orbitron text-xs tracking-[0.1em] flex justify-between items-center menu-section-btn">
         <span>⌨ CONTROLS</span>
         <span id="arr-controls" class="text-xs transition-transform duration-300">▾</span>
       </button>
@@ -343,64 +548,57 @@
         <div class="grid grid-cols-1 gap-2">
           <div class="glass rounded-lg px-3 py-2 flex items-center gap-3 text-xs">
             <span class="text-xl">🖱️</span>
-            <span class="text-neon-cyan/80">Drag — Pan map surface</span>
+            <span style="color:rgba(0,245,255,.8)">Drag — Pan map surface</span>
           </div>
           <div class="glass rounded-lg px-3 py-2 flex items-center gap-3 text-xs">
             <span class="text-xl">🔍</span>
-            <span class="text-neon-cyan/80">Scroll — Zoom in / out</span>
+            <span style="color:rgba(0,245,255,.8)">Scroll — Zoom in / out</span>
           </div>
           <div class="glass rounded-lg px-3 py-2 flex items-center gap-3 text-xs">
             <span class="text-xl">🛰️</span>
-            <span class="text-neon-cyan/80">Click satellite — Details</span>
+            <span style="color:rgba(0,245,255,.8)">Click satellite — Details</span>
           </div>
           <div class="glass rounded-lg px-3 py-2 flex items-center gap-3 text-xs">
             <span class="text-xl">⌨️</span>
-            <span class="text-neon-cyan/80">/ — Focus search bar</span>
+            <span style="color:rgba(0,245,255,.8)">/ — Focus search bar</span>
           </div>
           <div class="glass rounded-lg px-3 py-2 flex items-center gap-3 text-xs">
             <span class="text-xl">🕒</span>
-            <span class="text-neon-cyan/80">T — Toggle time warp</span>
+            <span style="color:rgba(0,245,255,.8)">T — Toggle time warp</span>
           </div>
         </div>
       </div>
 
-      <!-- Contact -->
-      <button onclick="toggleSection('sec-contact')" class="w-full btn-neon-violet rounded-xl px-4 py-3 font-orbitron text-xs tracking-[0.1em] flex justify-between items-center">
+      <button onclick="toggleSection('sec-contact')" class="w-full btn-neon-violet rounded-xl px-4 py-3 font-orbitron text-xs tracking-[0.1em] flex justify-between items-center menu-section-btn">
         <span>📡 CONTACT</span>
         <span id="arr-contact" class="text-xs transition-transform duration-300">▾</span>
       </button>
       <div id="sec-contact" class="hidden space-y-2 animate-fade-in">
-        <a href="#" class="flex items-center gap-3 glass rounded-lg px-3 py-2.5 text-xs text-neon-cyan/80 hover:text-neon-cyan hover:border-neon-cyan/30 transition-all group">
-          <span class="text-base">🐙</span>
-          <span class="group-hover:glow-cyan transition-all">GitHub Repository</span>
+        <a href="#" class="flex items-center gap-3 glass rounded-lg px-3 py-2.5 text-xs transition-all" style="color:rgba(0,245,255,.8)" onmouseover="this.style.color='#00f5ff';this.style.paddingLeft='18px'" onmouseout="this.style.color='rgba(0,245,255,.8)';this.style.paddingLeft=''">
+          <span class="text-base">🐙</span><span>GitHub Repository</span>
         </a>
-        <a href="#" class="flex items-center gap-3 glass rounded-lg px-3 py-2.5 text-xs text-neon-cyan/80 hover:text-neon-cyan transition-all group">
-          <span class="text-base">🐦</span>
-          <span>Twitter / X</span>
+        <a href="#" class="flex items-center gap-3 glass rounded-lg px-3 py-2.5 text-xs transition-all" style="color:rgba(0,245,255,.8)" onmouseover="this.style.color='#00f5ff';this.style.paddingLeft='18px'" onmouseout="this.style.color='rgba(0,245,255,.8)';this.style.paddingLeft=''">
+          <span class="text-base">🐦</span><span>Twitter / X</span>
         </a>
-        <a href="#" class="flex items-center gap-3 glass rounded-lg px-3 py-2.5 text-xs text-neon-cyan/80 hover:text-neon-cyan transition-all group">
-          <span class="text-base">✉️</span>
-          <span>contact@orbitwatch.io</span>
+        <a href="#" class="flex items-center gap-3 glass rounded-lg px-3 py-2.5 text-xs transition-all" style="color:rgba(0,245,255,.8)" onmouseover="this.style.color='#00f5ff';this.style.paddingLeft='18px'" onmouseout="this.style.color='rgba(0,245,255,.8)';this.style.paddingLeft=''">
+          <span class="text-base">✉️</span><span>contact@orbitwatch.io</span>
         </a>
       </div>
 
-      <div class="border-t border-neon-violet/10 my-4"></div>
+      <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,245,255,.15),transparent);margin:20px 0"></div>
 
-      <!-- Badges -->
       <div>
-        <div class="font-orbitron text-[9px] text-neon-violet/40 tracking-[0.3em] mb-3">AVAILABLE ON</div>
+        <div class="font-orbitron text-[9px] tracking-[0.3em] mb-3" style="color:rgba(191,0,255,.4)">AVAILABLE ON</div>
         <div class="flex gap-3">
-          <img src="https://img.shields.io/badge/App_Store-0D96F6?style=flat&logo=app-store&logoColor=white" alt="App Store" class="h-5 cursor-pointer hover:opacity-80 transition-opacity rounded" />
-          <img src="https://img.shields.io/badge/Google_Play-3DDC84?style=flat&logo=google-play&logoColor=white" alt="Google Play" class="h-5 cursor-pointer hover:opacity-80 transition-opacity rounded" />
+          <img src="https://img.shields.io/badge/App_Store-0D96F6?style=flat&logo=app-store&logoColor=white" alt="App Store" class="h-5 cursor-pointer rounded transition-all hover:opacity-80" style="filter:drop-shadow(0 0 4px rgba(0,245,255,.3))" />
+          <img src="https://img.shields.io/badge/Google_Play-3DDC84?style=flat&logo=google-play&logoColor=white" alt="Google Play" class="h-5 cursor-pointer rounded transition-all hover:opacity-80" />
         </div>
       </div>
 
-      <!-- Translate credit -->
-      <div class="glass rounded-xl px-3 py-3 flex items-center gap-2 mt-2">
-        <span class="text-xs text-neon-cyan/40">Powered by</span>
-        <span class="font-orbitron text-[10px] text-neon-cyan/60 tracking-widest">GOOGLE TRANSLATE</span>
+      <div class="glass rounded-xl px-3 py-3 flex items-center gap-2">
+        <span class="text-xs" style="color:rgba(0,245,255,.4)">Powered by</span>
+        <span class="font-orbitron text-[10px] tracking-widest" style="color:rgba(0,245,255,.6)">GOOGLE TRANSLATE</span>
       </div>
-
     </div>
   </aside>
 
@@ -410,14 +608,14 @@
   <div class="fixed top-[72px] right-4 z-40 w-72">
     <div class="relative">
       <input id="searchInput" type="text" placeholder="SEARCH SATELLITE..." class="input-neon w-full rounded-xl px-4 py-3 font-orbitron text-xs tracking-[0.1em] pr-10" autocomplete="off" />
-      <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neon-cyan/40 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style="color:rgba(0,245,255,.4)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
       </svg>
     </div>
     <div id="searchResults" class="hidden mt-2 glass rounded-xl overflow-hidden max-h-80 overflow-y-auto animate-fade-in">
-      <div class="search-result-item px-4 py-3 cursor-pointer text-xs text-neon-cyan/80 hover:bg-neon-cyan/10 hover:text-neon-cyan border-b border-neon-cyan/10 transition-all font-orbitron tracking-widest">ISS — INT'L SPACE STATION</div>
-      <div class="search-result-item px-4 py-3 cursor-pointer text-xs text-neon-cyan/80 hover:bg-neon-cyan/10 hover:text-neon-cyan border-b border-neon-cyan/10 transition-all font-orbitron tracking-widest">HUBBLE SPACE TELESCOPE</div>
-      <div class="search-result-item px-4 py-3 cursor-pointer text-xs text-neon-cyan/80 hover:bg-neon-cyan/10 hover:text-neon-cyan transition-all font-orbitron tracking-widest">TIANGONG SPACE STATION</div>
+      <div class="search-result-item px-4 py-3 cursor-pointer text-xs border-b font-orbitron tracking-widest" style="color:rgba(0,245,255,.8);border-color:rgba(0,245,255,.08)" onmouseover="this.style.background='rgba(0,245,255,.08)';this.style.color='#00f5ff'" onmouseout="this.style.background='';this.style.color='rgba(0,245,255,.8)'">ISS — INT'L SPACE STATION</div>
+      <div class="search-result-item px-4 py-3 cursor-pointer text-xs border-b font-orbitron tracking-widest" style="color:rgba(0,245,255,.8);border-color:rgba(0,245,255,.08)" onmouseover="this.style.background='rgba(0,245,255,.08)';this.style.color='#00f5ff'" onmouseout="this.style.background='';this.style.color='rgba(0,245,255,.8)'">HUBBLE SPACE TELESCOPE</div>
+      <div class="search-result-item px-4 py-3 cursor-pointer text-xs font-orbitron tracking-widest" style="color:rgba(0,245,255,.8)" onmouseover="this.style.background='rgba(0,245,255,.08)';this.style.color='#00f5ff'" onmouseout="this.style.background='';this.style.color='rgba(0,245,255,.8)'">TIANGONG SPACE STATION</div>
     </div>
   </div>
 
@@ -425,50 +623,46 @@
        LEFT ZOOM / CONTROL BUTTONS
   ══════════════════════════════════════════ -->
   <div class="fixed left-4 top-20 z-40 flex flex-col gap-2">
-    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold transition-all" title="Zoom In">+</button>
-    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold transition-all" title="Zoom Out">−</button>
-    <div class="w-10 h-[1px] bg-neon-cyan/20 my-1"></div>
-    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center transition-all" title="My Location">
+    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold" title="Zoom In">+</button>
+    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold" title="Zoom Out">−</button>
+    <div class="w-10 h-px my-1" style="background:rgba(0,245,255,.2)"></div>
+    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center" title="My Location">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
     </button>
-    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center active transition-all" title="Toggle Orbits">
+    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center active" title="Toggle Orbits">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 5a7 7 0 0 1 7 7" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke-dasharray="4 2"/></svg>
     </button>
-    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center transition-all" title="Night View">
+    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center" title="Night View">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
   </div>
 
   <!-- ══════════════════════════════════════════
-       INFO PANEL — Right Center
+       INFO PANEL — Right Center (floating)
   ══════════════════════════════════════════ -->
-  <div class="fixed right-4 top-1/2 -translate-y-1/2 z-40 glass rounded-2xl p-4 flex flex-col items-center gap-0 bracket animate-float" style="min-width:80px">
+  <div class="fixed right-4 top-1/2 -translate-y-1/2 z-40 glass glass-breathe rounded-2xl p-4 flex flex-col items-center bracket animate-float" style="min-width:82px">
 
-    <!-- Stat: Total Satellites -->
-    <div class="flex flex-col items-center mb-3 pb-3 border-b border-neon-cyan/10 w-full">
-      <span class="font-orbitron text-[8px] tracking-[0.2em] text-neon-cyan/50 mb-1">ACTIVE</span>
+    <div class="flex flex-col items-center mb-3 pb-3 w-full" style="border-bottom:1px solid rgba(0,245,255,.1)">
+      <span class="font-orbitron text-[8px] tracking-[0.2em] mb-1" style="color:rgba(0,245,255,.5)">ACTIVE</span>
       <span class="font-orbitron text-2xl font-black text-white glow-cyan animate-pulse-neon">8,426</span>
     </div>
 
-    <!-- Stat: Debris -->
-    <div class="flex flex-col items-center mb-3 pb-3 border-b border-neon-cyan/10 w-full">
-      <span class="font-orbitron text-[8px] tracking-[0.2em] text-neon-pink/50 mb-1">DEBRIS</span>
-      <span class="font-orbitron text-2xl font-black text-neon-pink glow-pink">27K+</span>
+    <div class="flex flex-col items-center mb-3 pb-3 w-full" style="border-bottom:1px solid rgba(0,245,255,.1)">
+      <span class="font-orbitron text-[8px] tracking-[0.2em] mb-1" style="color:rgba(255,0,144,.5)">DEBRIS</span>
+      <span class="font-orbitron text-2xl font-black glow-pink" style="color:#ff0090;animation:pulse-neon 2s ease-in-out .6s infinite">27K+</span>
     </div>
 
-    <!-- Stat: Visible -->
     <div class="flex flex-col items-center mb-4 w-full">
-      <span class="font-orbitron text-[8px] tracking-[0.2em] text-neon-green/50 mb-1">VISIBLE</span>
-      <span class="font-orbitron text-2xl font-black text-neon-green glow-green">312</span>
+      <span class="font-orbitron text-[8px] tracking-[0.2em] mb-1" style="color:rgba(0,255,135,.5)">VISIBLE</span>
+      <span class="font-orbitron text-2xl font-black glow-green" style="color:#00ff87;animation:pulse-neon 2s ease-in-out 1.2s infinite">312</span>
     </div>
 
-    <!-- Legend dots -->
     <div class="flex flex-col gap-2 items-center">
-      <div class="w-3 h-3 rounded-full bg-neon-cyan dot-glow cursor-help" style="color:#00f5ff" title="Navigation"></div>
-      <div class="w-3 h-3 rounded-full bg-neon-violet dot-glow cursor-help" style="color:#bf00ff" title="Communication"></div>
-      <div class="w-3 h-3 rounded-full bg-neon-green dot-glow cursor-help" style="color:#00ff87" title="Weather"></div>
-      <div class="w-3 h-3 rounded-full bg-neon-pink dot-glow cursor-help" style="color:#ff0090" title="Military"></div>
-      <div class="w-3 h-3 rounded-full bg-neon-amber dot-glow cursor-help" style="color:#ffb300" title="Research"></div>
+      <div class="w-3 h-3 rounded-full dot-glow cursor-help" style="background:#00f5ff;color:#00f5ff" title="Navigation"></div>
+      <div class="w-3 h-3 rounded-full dot-glow cursor-help" style="background:#bf00ff;color:#bf00ff" title="Communication"></div>
+      <div class="w-3 h-3 rounded-full dot-glow cursor-help" style="background:#00ff87;color:#00ff87" title="Weather"></div>
+      <div class="w-3 h-3 rounded-full dot-glow cursor-help" style="background:#ff0090;color:#ff0090" title="Military"></div>
+      <div class="w-3 h-3 rounded-full dot-glow cursor-help" style="background:#ffb300;color:#ffb300" title="Research"></div>
     </div>
   </div>
 
@@ -476,18 +670,18 @@
        TIMEWARP PANEL — Bottom Right
   ══════════════════════════════════════════ -->
   <div class="fixed bottom-4 right-4 z-40 glass rounded-2xl p-4 min-w-[300px]">
-    <div class="font-orbitron text-[9px] tracking-[0.3em] text-neon-violet/60 mb-3">⏱ TIME WARP ENGINE</div>
+    <div class="font-orbitron text-[9px] tracking-[0.3em] mb-3" style="color:rgba(191,0,255,.6)">⏱ TIME WARP ENGINE</div>
 
     <div class="flex gap-1.5 mb-2 flex-wrap">
-      <button class="timewarp-btn btn-neon-violet flex-1 min-w-[46px] rounded-lg py-2 font-orbitron text-[10px] tracking-wider transition-all">1×</button>
-      <button class="timewarp-btn btn-neon-violet flex-1 min-w-[46px] rounded-lg py-2 font-orbitron text-[10px] tracking-wider active transition-all">10×</button>
-      <button class="timewarp-btn btn-neon-violet flex-1 min-w-[46px] rounded-lg py-2 font-orbitron text-[10px] tracking-wider transition-all">60×</button>
-      <button class="timewarp-btn btn-neon-violet flex-1 min-w-[46px] rounded-lg py-2 font-orbitron text-[10px] tracking-wider transition-all">1000×</button>
+      <button class="timewarp-btn btn-neon-violet flex-1 min-w-[46px] rounded-lg py-2 font-orbitron text-[10px] tracking-wider">1×</button>
+      <button class="timewarp-btn btn-neon-violet flex-1 min-w-[46px] rounded-lg py-2 font-orbitron text-[10px] tracking-wider active">10×</button>
+      <button class="timewarp-btn btn-neon-violet flex-1 min-w-[46px] rounded-lg py-2 font-orbitron text-[10px] tracking-wider">60×</button>
+      <button class="timewarp-btn btn-neon-violet flex-1 min-w-[46px] rounded-lg py-2 font-orbitron text-[10px] tracking-wider">1000×</button>
     </div>
 
-    <button class="w-full btn-neon-violet rounded-lg py-2 font-orbitron text-[10px] tracking-[0.2em] mb-3 transition-all">⟳ RESET TO NOW</button>
+    <button class="w-full btn-neon-violet rounded-lg py-2 font-orbitron text-[10px] tracking-[0.2em] mb-3">⟳ RESET TO NOW</button>
 
-    <div class="border-t border-neon-violet/10 pt-2 text-center font-mono text-[11px] text-neon-violet/60 tracking-wider">
+    <div class="timewarp-date pt-2 text-center font-mono text-[11px] tracking-wider" style="border-top:1px solid rgba(191,0,255,.12);color:rgba(191,0,255,.55)">
       2025 · FEB · 21 — 14:32:07 UTC
     </div>
   </div>
@@ -500,88 +694,78 @@
   <aside id="satSidebar" class="fixed top-0 right-0 h-full w-full max-w-[420px] glass z-50 overflow-y-auto
          translate-x-full transition-transform duration-[350ms] ease-[cubic-bezier(0.16,1,0.3,1)]">
 
-    <!-- Header -->
-    <div class="px-6 py-5 border-b border-neon-cyan/15 flex items-start justify-between sticky top-0 glass z-10">
+    <div class="px-6 py-5 flex items-start justify-between sticky top-0 z-10 glass" style="border-bottom:1px solid rgba(0,245,255,.12)">
       <div>
-        <div class="font-orbitron text-[9px] text-neon-cyan/40 tracking-[0.3em] mb-1.5">OBJECT DETAILS</div>
-        <div id="sidebarTitle" class="font-orbitron text-base font-bold text-white glow-cyan max-w-[300px] truncate">
-          ISS (ZARYA)
-        </div>
+        <div class="font-orbitron text-[9px] tracking-[0.3em] mb-1.5" style="color:rgba(0,245,255,.4)">OBJECT DETAILS</div>
+        <div id="sidebarTitle" class="font-orbitron text-base font-bold text-white glow-cyan max-w-[300px] truncate">ISS (ZARYA)</div>
       </div>
-      <button onclick="closeSidebar()" class="mt-1 w-8 h-8 rounded-lg border border-neon-cyan/20 flex items-center justify-center text-neon-cyan/60 hover:text-neon-cyan hover:border-neon-cyan transition-all hover:shadow-[0_0_12px_#00f5ff44]">
+      <button onclick="closeSidebar()" class="mt-1 btn-neon w-8 h-8 rounded-lg flex items-center justify-center">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
     <div class="p-6 space-y-5">
 
-      <!-- Image -->
-      <div class="w-full h-56 rounded-2xl overflow-hidden relative bracket bracket-inner" style="background:linear-gradient(135deg,#060a1a 0%,#0f1a35 100%)">
+      <div class="w-full h-56 rounded-2xl overflow-hidden relative bracket bracket-inner" style="background:linear-gradient(135deg,#060a1a,#0f1a35);box-shadow:inset 0 0 40px rgba(0,245,255,.04),0 0 0 1px rgba(0,245,255,.1)">
         <div class="absolute inset-0 flex items-center justify-center">
           <div class="text-center">
-            <div class="font-orbitron text-5xl text-neon-cyan/10 animate-spin-slow mb-2">⬡</div>
-            <div class="font-orbitron text-xs text-neon-cyan/30 tracking-widest">LOADING TELEMETRY…</div>
+            <div class="font-orbitron text-5xl mb-2 animate-spin-slow" style="color:rgba(0,245,255,.12)">⬡</div>
+            <div class="font-orbitron text-xs tracking-widest" style="color:rgba(0,245,255,.3)">LOADING TELEMETRY…</div>
           </div>
         </div>
-        <!-- Fake scanline on image -->
-        <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
-          <div class="h-full w-full" style="background:repeating-linear-gradient(to bottom,transparent 0,transparent 3px,rgba(0,245,255,0.03) 3px,rgba(0,245,255,0.03) 4px)"></div>
-        </div>
+        <div class="absolute inset-0 pointer-events-none opacity-30" style="background:repeating-linear-gradient(to bottom,transparent 0,transparent 3px,rgba(0,245,255,.03) 3px,rgba(0,245,255,.03) 4px)"></div>
       </div>
 
-      <!-- Info Grid -->
       <div class="grid grid-cols-2 gap-3">
-        <div class="glass rounded-xl p-3">
-          <div class="font-orbitron text-[8px] tracking-[0.2em] text-neon-cyan/40 mb-1.5">NORAD ID</div>
-          <div class="font-mono text-sm text-neon-cyan glow-cyan">25544</div>
+        <div class="glass rounded-xl p-3 sat-info-item" style="margin-bottom:0;padding-bottom:0;border-bottom:none">
+          <div class="info-label font-orbitron text-[8px] tracking-[0.2em] mb-1.5" style="color:rgba(0,245,255,.4)">NORAD ID</div>
+          <div class="info-value font-mono text-sm glow-cyan" style="color:#00f5ff">25544</div>
         </div>
-        <div class="glass rounded-xl p-3">
-          <div class="font-orbitron text-[8px] tracking-[0.2em] text-neon-cyan/40 mb-1.5">CATEGORY</div>
-          <div class="font-mono text-sm text-white">CREWED</div>
+        <div class="glass rounded-xl p-3 sat-info-item" style="margin-bottom:0;padding-bottom:0;border-bottom:none">
+          <div class="info-label font-orbitron text-[8px] tracking-[0.2em] mb-1.5" style="color:rgba(0,245,255,.4)">CATEGORY</div>
+          <div class="info-value font-mono text-sm text-white">CREWED</div>
         </div>
-        <div class="glass rounded-xl p-3">
-          <div class="font-orbitron text-[8px] tracking-[0.2em] text-neon-green/40 mb-1.5">ALTITUDE</div>
-          <div class="font-mono text-sm text-neon-green glow-green">418 km</div>
+        <div class="glass rounded-xl p-3 sat-info-item" style="margin-bottom:0;padding-bottom:0;border-bottom:none">
+          <div class="info-label font-orbitron text-[8px] tracking-[0.2em] mb-1.5" style="color:rgba(0,255,135,.4)">ALTITUDE</div>
+          <div class="info-value font-mono text-sm glow-green" style="color:#00ff87">418 km</div>
         </div>
-        <div class="glass rounded-xl p-3">
-          <div class="font-orbitron text-[8px] tracking-[0.2em] text-neon-green/40 mb-1.5">VELOCITY</div>
-          <div class="font-mono text-sm text-neon-green glow-green">7.66 km/s</div>
+        <div class="glass rounded-xl p-3 sat-info-item" style="margin-bottom:0;padding-bottom:0;border-bottom:none">
+          <div class="info-label font-orbitron text-[8px] tracking-[0.2em] mb-1.5" style="color:rgba(0,255,135,.4)">VELOCITY</div>
+          <div class="info-value font-mono text-sm glow-green" style="color:#00ff87">7.66 km/s</div>
         </div>
-        <div class="glass rounded-xl p-3">
-          <div class="font-orbitron text-[8px] tracking-[0.2em] text-neon-amber/40 mb-1.5">LATITUDE</div>
-          <div class="font-mono text-sm text-neon-amber" style="text-shadow:0 0 10px #ffb300">48.24°</div>
+        <div class="glass rounded-xl p-3 sat-info-item" style="margin-bottom:0;padding-bottom:0;border-bottom:none">
+          <div class="info-label font-orbitron text-[8px] tracking-[0.2em] mb-1.5" style="color:rgba(255,179,0,.4)">LATITUDE</div>
+          <div class="info-value font-mono text-sm" style="color:#ffb300;text-shadow:0 0 10px #ffb300">48.24°</div>
         </div>
-        <div class="glass rounded-xl p-3">
-          <div class="font-orbitron text-[8px] tracking-[0.2em] text-neon-amber/40 mb-1.5">LONGITUDE</div>
-          <div class="font-mono text-sm text-neon-amber" style="text-shadow:0 0 10px #ffb300">−112.7°</div>
+        <div class="glass rounded-xl p-3 sat-info-item" style="margin-bottom:0;padding-bottom:0;border-bottom:none">
+          <div class="info-label font-orbitron text-[8px] tracking-[0.2em] mb-1.5" style="color:rgba(255,179,0,.4)">LONGITUDE</div>
+          <div class="info-value font-mono text-sm" style="color:#ffb300;text-shadow:0 0 10px #ffb300">−112.7°</div>
         </div>
       </div>
 
-      <!-- Full-width stats -->
       <div class="glass rounded-xl p-4 space-y-3">
-        <div class="flex justify-between items-center border-b border-neon-cyan/10 pb-3">
-          <span class="font-orbitron text-[9px] tracking-widest text-neon-cyan/40">INCLINATION</span>
-          <span class="font-mono text-sm text-white">51.64°</span>
+        <div class="flex justify-between items-center sat-info-item pb-3" style="border-bottom:1px solid rgba(0,245,255,.08);margin-bottom:0">
+          <span class="font-orbitron text-[9px] tracking-widest" style="color:rgba(0,245,255,.4)">INCLINATION</span>
+          <span class="info-value font-mono text-sm text-white">51.64°</span>
         </div>
-        <div class="flex justify-between items-center border-b border-neon-cyan/10 pb-3">
-          <span class="font-orbitron text-[9px] tracking-widest text-neon-cyan/40">PERIOD</span>
-          <span class="font-mono text-sm text-white">92.68 min</span>
+        <div class="flex justify-between items-center sat-info-item pb-3" style="border-bottom:1px solid rgba(0,245,255,.08);margin-bottom:0">
+          <span class="font-orbitron text-[9px] tracking-widest" style="color:rgba(0,245,255,.4)">PERIOD</span>
+          <span class="info-value font-mono text-sm text-white">92.68 min</span>
         </div>
-        <div class="flex justify-between items-center border-b border-neon-cyan/10 pb-3">
-          <span class="font-orbitron text-[9px] tracking-widest text-neon-cyan/40">LAUNCH DATE</span>
-          <span class="font-mono text-sm text-white">1998-11-20</span>
+        <div class="flex justify-between items-center sat-info-item pb-3" style="border-bottom:1px solid rgba(0,245,255,.08);margin-bottom:0">
+          <span class="font-orbitron text-[9px] tracking-widest" style="color:rgba(0,245,255,.4)">LAUNCH DATE</span>
+          <span class="info-value font-mono text-sm text-white">1998-11-20</span>
         </div>
-        <div class="flex justify-between items-center">
-          <span class="font-orbitron text-[9px] tracking-widest text-neon-cyan/40">COUNTRY</span>
-          <span class="font-mono text-sm text-white">MULTI</span>
+        <div class="flex justify-between items-center sat-info-item" style="margin-bottom:0;padding-bottom:0;border-bottom:none">
+          <span class="font-orbitron text-[9px] tracking-widest" style="color:rgba(0,245,255,.4)">COUNTRY</span>
+          <span class="info-value font-mono text-sm text-white">MULTI</span>
         </div>
       </div>
 
-      <!-- Status pill -->
       <div class="flex justify-center">
-        <div class="inline-flex items-center gap-2 border border-neon-green/30 rounded-full px-4 py-1.5 bg-neon-green/5">
-          <span class="w-2 h-2 rounded-full bg-neon-green animate-pulse-neon shadow-neon-green"></span>
-          <span class="font-orbitron text-[10px] tracking-widest text-neon-green glow-green">SIGNAL ACTIVE</span>
+        <div class="inline-flex items-center gap-2 rounded-full px-4 py-1.5" style="border:1px solid rgba(0,255,135,.3);background:rgba(0,255,135,.05)">
+          <span class="w-2 h-2 rounded-full" style="background:#00ff87;box-shadow:var(--glow-green);animation:pulse-neon 1.5s ease-in-out infinite"></span>
+          <span class="font-orbitron text-[10px] tracking-widest glow-green" style="color:#00ff87">SIGNAL ACTIVE</span>
         </div>
       </div>
 
@@ -591,7 +775,7 @@
   <!-- ══════════════════════════════════════════
        TOOLTIP
   ══════════════════════════════════════════ -->
-  <div id="tooltip" class="glass hidden fixed text-xs font-orbitron tracking-widest text-neon-cyan glow-cyan px-3 py-1.5 rounded-lg pointer-events-none z-[9999]"></div>
+  <div id="tooltip" class="glass hidden fixed text-xs font-orbitron tracking-widest glow-cyan px-3 py-1.5 rounded-lg pointer-events-none z-[9999]" style="color:var(--neon-cyan)"></div>
 
   <!-- ══════════════════════════════════════════
        SCRIPTS
@@ -609,8 +793,9 @@
     menuToggle.addEventListener('click', () => {
       menuOpen = !menuOpen;
       if (menuOpen) {
-        menuSidebar.style.transform = 'translateX(0)';
+        menuSidebar.classList.add('sidebar-open');
         menuOverlay.classList.remove('hidden');
+        menuToggle.classList.add('active');
         h1.style.transform = 'rotate(45deg) translate(5px, 6px)';
         h2.style.opacity   = '0';
         h3.style.transform = 'rotate(-45deg) translate(5px, -6px)';
@@ -619,8 +804,9 @@
 
     function closeMenu() {
       menuOpen = false;
-      menuSidebar.style.transform = '';
+      menuSidebar.classList.remove('sidebar-open');
       menuOverlay.classList.add('hidden');
+      menuToggle.classList.remove('active');
       h1.style.transform = '';
       h2.style.opacity   = '';
       h3.style.transform = '';
@@ -628,9 +814,8 @@
 
     /* ─── Collapsible sections ──────────────────────────── */
     function toggleSection(id) {
-      const el = document.getElementById(id);
-      const arrowId = 'arr-' + id.replace('sec-','');
-      const arrow = document.getElementById(arrowId);
+      const el    = document.getElementById(id);
+      const arrow = document.getElementById('arr-' + id.replace('sec-', ''));
       const hidden = el.classList.contains('hidden');
       el.classList.toggle('hidden', !hidden);
       if (arrow) arrow.style.transform = hidden ? 'rotate(180deg)' : '';
@@ -642,11 +827,11 @@
 
     function openSidebar(name) {
       document.getElementById('sidebarTitle').textContent = name || 'UNKNOWN OBJECT';
-      satSidebar.style.transform = 'translateX(0)';
+      satSidebar.classList.add('sidebar-open');
       sidebarOverlay.classList.remove('hidden');
     }
     function closeSidebar() {
-      satSidebar.style.transform = '';
+      satSidebar.classList.remove('sidebar-open');
       sidebarOverlay.classList.add('hidden');
     }
 
@@ -680,43 +865,33 @@
     let githubLoggedIn = false;
     document.getElementById('githubBtn').addEventListener('click', () => {
       githubLoggedIn = !githubLoggedIn;
-      const btn = document.getElementById('githubBtn');
-      if (githubLoggedIn) {
-        btn.style.background = 'rgba(0,255,135,0.12)';
-        btn.style.borderColor = 'rgba(0,255,135,0.4)';
-        btn.style.color = '#00ff87';
-        btn.style.boxShadow = '0 0 16px rgba(0,255,135,0.3)';
-      } else {
-        btn.style.background = ''; btn.style.borderColor = '';
-        btn.style.color = ''; btn.style.boxShadow = '';
-      }
+      document.getElementById('githubBtn').classList.toggle('logged-in', githubLoggedIn);
     });
 
     /* ─── Demo: click on map to open sidebar ────────────── */
-    document.getElementById('map').addEventListener('click', (e) => {
+    document.getElementById('map').addEventListener('click', e => {
       if (e.target.id === 'map' || e.target.parentElement?.id === 'map') {
         openSidebar('SATELLITE — NORAD #' + Math.floor(Math.random() * 99999));
       }
     });
 
-    /* ─── Keyboard shortcut ─────────────────────────────── */
+    /* ─── Keyboard shortcuts ─────────────────────────────── */
     document.addEventListener('keydown', e => {
       if (e.key === '/' && document.activeElement !== searchInput) {
-        e.preventDefault();
-        searchInput.focus();
+        e.preventDefault(); searchInput.focus();
       }
       if (e.key === 'Escape') { closeMenu(); closeSidebar(); }
     });
 
-    /* ─── Dynamic time display ──────────────────────────── */
+    /* ─── Live UTC clock ─────────────────────────────────── */
     function updateTime() {
       const now = new Date();
-      const pad = n => String(n).padStart(2,'0');
-      const dateStr = `${now.getUTCFullYear()} · ${['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][now.getUTCMonth()]} · ${pad(now.getUTCDate())} — ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} UTC`;
-      document.querySelectorAll('.timewarp-date, .timewarp-panel > .border-t').forEach(el => {
-        if(el.textContent.includes('UTC')) el.textContent = dateStr;
-      });
+      const pad = n => String(n).padStart(2, '0');
+      const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      document.querySelector('.timewarp-date').textContent =
+        `${now.getUTCFullYear()} · ${months[now.getUTCMonth()]} · ${pad(now.getUTCDate())} — ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} UTC`;
     }
+    updateTime();
     setInterval(updateTime, 1000);
   </script>
 
