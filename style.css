@@ -1,819 +1,724 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ORBITWATCH — Satellite Tracker</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          orbitron: ['Orbitron', 'sans-serif'],
+          mono: ['Share Tech Mono', 'monospace'],
+        },
+        colors: {
+          neon: {
+            cyan:   '#00f5ff',
+            violet: '#bf00ff',
+            green:  '#00ff87',
+            pink:   '#ff0090',
+            amber:  '#ffb300',
+          },
+          space: {
+            950: '#03050f',
+            900: '#060a1a',
+            800: '#0a1025',
+            700: '#0f1a35',
+            600: '#162140',
+          }
+        },
+        boxShadow: {
+          'neon-cyan':   '0 0 8px #00f5ff, 0 0 24px #00f5ff55, 0 0 60px #00f5ff22',
+          'neon-violet': '0 0 8px #bf00ff, 0 0 24px #bf00ff55, 0 0 60px #bf00ff22',
+          'neon-green':  '0 0 8px #00ff87, 0 0 24px #00ff8755, 0 0 60px #00ff8722',
+          'neon-pink':   '0 0 8px #ff0090, 0 0 24px #ff009055, 0 0 60px #ff009022',
+          'neon-amber':  '0 0 8px #ffb300, 0 0 24px #ffb30055, 0 0 60px #ffb30022',
+          'panel':       '0 0 0 1px rgba(0,245,255,0.12), 0 8px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)',
+          'panel-hover': '0 0 0 1px rgba(0,245,255,0.35), 0 8px 40px rgba(0,0,0,0.7), 0 0 30px rgba(0,245,255,0.08)',
+        },
+        animation: {
+          'pulse-neon': 'pulse-neon 2s ease-in-out infinite',
+          'scan': 'scan 3s linear infinite',
+          'flicker': 'flicker 4s linear infinite',
+          'float': 'float 6s ease-in-out infinite',
+          'spin-slow': 'spin 8s linear infinite',
+          'glow-breathe': 'glow-breathe 3s ease-in-out infinite',
+          'slide-in-right': 'slide-in-right 0.35s cubic-bezier(0.16,1,0.3,1)',
+          'slide-in-left': 'slide-in-left 0.35s cubic-bezier(0.16,1,0.3,1)',
+          'fade-in': 'fade-in 0.2s ease',
+        },
+        keyframes: {
+          'pulse-neon': {
+            '0%,100%': { opacity: '1' },
+            '50%': { opacity: '0.6' },
+          },
+          'scan': {
+            '0%': { transform: 'translateY(-100%)' },
+            '100%': { transform: 'translateY(100vh)' },
+          },
+          'flicker': {
+            '0%,19%,21%,23%,25%,54%,56%,100%': { opacity: '1' },
+            '20%,24%,55%': { opacity: '0.5' },
+          },
+          'float': {
+            '0%,100%': { transform: 'translateY(0px)' },
+            '50%': { transform: 'translateY(-6px)' },
+          },
+          'glow-breathe': {
+            '0%,100%': { boxShadow: '0 0 8px #00f5ff, 0 0 24px #00f5ff55' },
+            '50%': { boxShadow: '0 0 20px #00f5ff, 0 0 60px #00f5ff88, 0 0 100px #00f5ff33' },
+          },
+          'slide-in-right': {
+            from: { transform: 'translateX(100%)', opacity: '0' },
+            to:   { transform: 'translateX(0)', opacity: '1' },
+          },
+          'slide-in-left': {
+            from: { transform: 'translateX(-100%)', opacity: '0' },
+            to:   { transform: 'translateX(0)', opacity: '1' },
+          },
+          'fade-in': {
+            from: { opacity: '0', transform: 'translateY(-4px)' },
+            to:   { opacity: '1', transform: 'translateY(0)' },
+          },
+        }
+      }
+    }
+  }
+</script>
+<style>
+  /* ── Scanline overlay ──────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 9998; pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 2px,
+      rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+    );
+  }
+  /* ── Moving scan line ──────────────────────────────── */
+  body::after {
+    content: '';
+    position: fixed; left: 0; right: 0; height: 3px; z-index: 9997; pointer-events: none;
+    background: linear-gradient(transparent, rgba(0,245,255,0.25), transparent);
+    animation: scan 5s linear infinite;
+  }
+  /* ── Corner brackets ──────────────────────────────── */
+  .bracket::before, .bracket::after {
+    content: ''; position: absolute;
+    width: 12px; height: 12px;
+    border-color: rgba(0,245,255,0.5); border-style: solid;
+  }
+  .bracket::before { top: 0; left: 0; border-width: 1.5px 0 0 1.5px; }
+  .bracket::after  { bottom: 0; right: 0; border-width: 0 1.5px 1.5px 0; }
+  .bracket-inner::before, .bracket-inner::after {
+    content: ''; position: absolute;
+    width: 12px; height: 12px;
+    border-color: rgba(0,245,255,0.5); border-style: solid;
+  }
+  .bracket-inner::before { top: 0; right: 0; border-width: 1.5px 1.5px 0 0; }
+  .bracket-inner::after  { bottom: 0; left: 0; border-width: 0 0 1.5px 1.5px; }
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    overflow: hidden;
-    background: #0a0e27;
-    top: 0 !important;
-}
+  /* ── Glassmorphism panel ───────────────────────────── */
+  .glass {
+    background: rgba(6,10,26,0.88);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid rgba(0,245,255,0.12);
+    box-shadow: 0 0 0 1px rgba(0,245,255,0.06) inset,
+                0 20px 60px rgba(0,0,0,0.6),
+                0 0 40px rgba(0,245,255,0.04);
+  }
+  .glass:hover {
+    border-color: rgba(0,245,255,0.25);
+    box-shadow: 0 0 0 1px rgba(0,245,255,0.1) inset,
+                0 20px 60px rgba(0,0,0,0.6),
+                0 0 40px rgba(0,245,255,0.1);
+    transition: all 0.3s ease;
+  }
+  .glass-violet {
+    background: rgba(6,10,26,0.9);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(191,0,255,0.15);
+    box-shadow: 0 0 0 1px rgba(191,0,255,0.06) inset, 0 20px 60px rgba(0,0,0,0.6);
+  }
 
-#map {
-    height: 100vh;
-    width: 100vw;
-}
+  /* ── Neon text glow ────────────────────────────────── */
+  .glow-cyan   { text-shadow: 0 0 10px #00f5ff, 0 0 30px #00f5ff66; }
+  .glow-violet { text-shadow: 0 0 10px #bf00ff, 0 0 30px #bf00ff66; }
+  .glow-green  { text-shadow: 0 0 10px #00ff87, 0 0 30px #00ff8766; }
+  .glow-pink   { text-shadow: 0 0 10px #ff0090, 0 0 30px #ff009066; }
 
-/* Version Badge */
-.version {
-    position: absolute;
-    bottom: 16px;
-    left: 16px;
-    z-index: 1000;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    border-radius: 8px;
-    padding: 8px 16px;
-    color: #94a3b8;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 1px;
-}
+  /* ── Neon border glow ──────────────────────────────── */
+  .border-neon-cyan   { border-color: #00f5ff; box-shadow: 0 0 12px #00f5ff88; }
+  .border-neon-violet { border-color: #bf00ff; box-shadow: 0 0 12px #bf00ff88; }
+  .border-neon-green  { border-color: #00ff87; box-shadow: 0 0 12px #00ff8788; }
+  .border-neon-pink   { border-color: #ff0090; box-shadow: 0 0 12px #ff009088; }
+  .border-neon-amber  { border-color: #ffb300; box-shadow: 0 0 12px #ffb30088; }
 
-/* Google Translate */
-.lang-selector {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    z-index: 1000;
-}
+  /* ── Neon button ──────────────────────────────────── */
+  .btn-neon {
+    position: relative; overflow: hidden;
+    background: rgba(0,245,255,0.06);
+    border: 1px solid rgba(0,245,255,0.3);
+    color: #00f5ff;
+    transition: all 0.25s ease;
+  }
+  .btn-neon::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,245,255,0.15) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .btn-neon:hover { border-color: #00f5ff; box-shadow: 0 0 16px #00f5ff55; }
+  .btn-neon:hover::before { opacity: 1; }
+  .btn-neon.active {
+    background: rgba(0,245,255,0.18);
+    border-color: #00f5ff;
+    box-shadow: 0 0 20px #00f5ff66, inset 0 0 12px rgba(0,245,255,0.15);
+    color: #fff;
+  }
+  .btn-neon-violet {
+    background: rgba(191,0,255,0.06);
+    border: 1px solid rgba(191,0,255,0.3);
+    color: #bf00ff;
+    transition: all 0.25s;
+  }
+  .btn-neon-violet:hover { border-color: #bf00ff; box-shadow: 0 0 16px #bf00ff55; }
+  .btn-neon-violet.active {
+    background: rgba(191,0,255,0.18);
+    border-color: #bf00ff;
+    box-shadow: 0 0 20px #bf00ff66, inset 0 0 12px rgba(191,0,255,0.15);
+    color: #fff;
+  }
 
-#google_translate_element {
-    background: transparent;
-}
-
-.goog-te-combo {
-    background: rgba(15, 23, 42, 0.95) !important;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(148, 163, 184, 0.1) !important;
-    border-radius: 8px !important;
-    color: #cbd5e1 !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    cursor: pointer !important;
-    outline: none !important;
-    padding: 10px 12px !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  /* ── Input neon focus ──────────────────────────────── */
+  .input-neon {
+    background: rgba(6,10,26,0.9);
+    border: 1px solid rgba(0,245,255,0.15);
+    color: #e0f8ff; caret-color: #00f5ff;
     transition: all 0.2s;
-}
-
-.goog-te-combo:hover {
-    background: rgba(30, 41, 59, 0.95) !important;
-    border-color: rgba(148, 163, 184, 0.3) !important;
-}
-
-.goog-te-gadget {
-    color: transparent !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-}
-
-.goog-te-gadget span {
-    display: none !important;
-}
-
-.goog-te-gadget .goog-te-combo {
-    margin: 0 !important;
-}
-
-.goog-te-banner-frame {
-    display: none !important;
-}
-
-.skiptranslate {
-    display: block !important;
-}
-
-/* Top Right Controls */
-.top-right-controls {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    z-index: 1002;
-    display: flex;
-    gap: 8px;
-}
-
-.github-login {
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    border-radius: 8px;
-    padding: 10px;
-    color: #cbd5e1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    width: 44px;
-    height: 44px;
-}
-
-.github-login:hover {
-    background: rgba(30, 41, 59, 0.95);
-    border-color: rgba(148, 163, 184, 0.3);
-    transform: scale(1.05);
-}
-
-.github-login.logged-in {
-    background: rgba(34, 197, 94, 0.2);
-    border-color: rgba(34, 197, 94, 0.3);
-    color: #22c55e;
-}
-
-.github-login svg {
-    width: 20px;
-    height: 20px;
-}
-
-.menu-toggle {
-    width: 44px;
-    height: 44px;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.menu-toggle:hover {
-    background: rgba(30, 41, 59, 0.95);
-    border-color: rgba(148, 163, 184, 0.3);
-}
-
-.hamburger {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.hamburger span {
-    width: 22px;
-    height: 2px;
-    background: #cbd5e1;
-    border-radius: 2px;
-    transition: all 0.3s;
-}
-
-.menu-toggle.active .hamburger span:nth-child(1) {
-    transform: rotate(45deg) translate(6px, 6px);
-}
-
-.menu-toggle.active .hamburger span:nth-child(2) {
-    opacity: 0;
-}
-
-.menu-toggle.active .hamburger span:nth-child(3) {
-    transform: rotate(-45deg) translate(6px, -6px);
-}
-
-/* Menu Overlay */
-.menu-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    display: none;
-}
-
-.menu-overlay.active {
-    display: block;
-}
-
-/* Menu Sidebar */
-.menu-sidebar {
-    position: fixed;
-    top: 0;
-    left: -350px;
-    width: 350px;
-    height: 100vh;
-    background: rgba(15, 23, 42, 0.98);
-    backdrop-filter: blur(10px);
-    border-right: 1px solid rgba(148, 163, 184, 0.1);
-    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.4);
-    z-index: 1001;
-    transition: left 0.3s ease;
-    overflow-y: auto;
-}
-
-.menu-sidebar.active {
-    left: 0;
-}
-
-.menu-header {
-    padding: 24px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.menu-header h2 {
-    color: #f1f5f9;
-    font-size: 20px;
-    font-weight: 700;
-}
-
-.close-btn {
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    font-size: 24px;
-    cursor: pointer;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    transition: all 0.2s;
-    flex-shrink: 0;
-}
-
-.close-btn:hover {
-    background: rgba(148, 163, 184, 0.1);
-}
-
-.menu-content {
-    padding: 24px;
-}
-
-.menu-section-btn {
-    width: 100%;
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    border-radius: 8px;
-    padding: 12px 16px;
-    color: #cbd5e1;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.menu-section-btn:hover {
-    background: rgba(30, 41, 59, 0.8);
-    border-color: rgba(148, 163, 184, 0.3);
-}
-
-.menu-section-btn .arrow {
-    transition: transform 0.3s;
-    font-size: 12px;
-}
-
-.menu-section-btn.active .arrow {
-    transform: rotate(180deg);
-}
-
-.menu-section {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-    margin-bottom: 16px;
-}
-
-.menu-section.active {
-    max-height: 500px;
-    padding-top: 12px;
-}
-
-.control-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.control-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px;
-    background: rgba(30, 41, 59, 0.3);
-    border-radius: 8px;
-    color: #cbd5e1;
-    font-size: 13px;
-}
-
-.control-icon {
-    font-size: 18px;
-}
-
-.contact-info {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.contact-link {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    background: rgba(30, 41, 59, 0.3);
-    border-radius: 8px;
-    color: #cbd5e1;
-    text-decoration: none;
-    font-size: 13px;
-    transition: all 0.2s;
-}
-
-.contact-link:hover {
-    background: rgba(167, 139, 250, 0.2);
-    color: #f1f5f9;
-}
-
-.menu-divider {
-    height: 1px;
-    background: rgba(148, 163, 184, 0.1);
-    margin: 24px 0;
-}
-
-.menu-section-static h3 {
-    color: #94a3b8;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 16px;
-    font-weight: 600;
-}
-
-.menu-badges {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-}
-
-.menu-badge {
-    width: 80px;
-    height: 15px;
-    object-fit: contain;
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-
-.menu-badge:hover {
-    opacity: 0.8;
-}
-
-.translate-credit {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    background: rgba(30, 41, 59, 0.3);
-    border-radius: 8px;
-    margin-top: 16px;
-}
-
-.translate-credit img {
-    height: 16px;
-}
-
-.translate-credit span {
-    color: #94a3b8;
-    font-size: 11px;
-}
-
-/* Search Panel */
-.search-panel {
-    position: absolute;
-    top: 72px;
-    right: 16px;
-    z-index: 1000;
-    width: 280px;
-}
-
-.search-input {
-    width: 100%;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    border-radius: 8px;
-    padding: 12px 16px;
-    color: #f1f5f9;
-    font-size: 14px;
+  }
+  .input-neon::placeholder { color: rgba(0,245,255,0.3); }
+  .input-neon:focus {
     outline: none;
-    transition: all 0.2s;
-}
+    border-color: #00f5ff;
+    box-shadow: 0 0 0 3px rgba(0,245,255,0.1), 0 0 20px rgba(0,245,255,0.15);
+  }
 
-.search-input::placeholder {
-    color: #64748b;
-}
+  /* ── Legend dots ───────────────────────────────────── */
+  .dot-glow {
+    box-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
+  }
 
-.search-input:focus {
-    border-color: #a78bfa;
-    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
-}
+  /* ── Scroll bar ────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: rgba(6,10,26,0.5); }
+  ::-webkit-scrollbar-thumb { background: rgba(0,245,255,0.3); border-radius: 2px; }
 
-.search-results {
-    margin-top: 8px;
-    background: rgba(15, 23, 42, 0.98);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    border-radius: 8px;
-    max-height: 400px;
-    overflow-y: auto;
-    display: none;
-}
+  /* ── Active hamburger ──────────────────────────────── */
+  .hamburger-active-1 { transform: rotate(45deg) translate(5px, 6px); }
+  .hamburger-active-2 { opacity: 0; }
+  .hamburger-active-3 { transform: rotate(-45deg) translate(5px, -6px); }
 
-.search-results.show {
-    display: block;
-}
+  /* ── Sidebar open ──────────────────────────────────── */
+  .sidebar-open  { transform: translateX(0) !important; }
+  .overlay-show  { display: block !important; }
 
-.search-result-item {
-    padding: 12px 16px;
-    cursor: pointer;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-    transition: all 0.2s;
-    color: #cbd5e1;
-    font-size: 13px;
-}
+  /* ── Google Translate hide branding ────────────────── */
+  .goog-te-gadget { color: transparent !important; }
+  .goog-te-gadget span { display: none !important; }
+  .goog-te-banner-frame { display: none !important; }
+  .goog-te-combo {
+    background: rgba(6,10,26,0.9) !important;
+    border: 1px solid rgba(0,245,255,0.2) !important;
+    border-radius: 8px !important;
+    color: #00f5ff !important;
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: 11px !important;
+    padding: 10px 12px !important;
+    outline: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    letter-spacing: 0.05em !important;
+  }
+  .goog-te-combo:focus {
+    border-color: #00f5ff !important;
+    box-shadow: 0 0 16px rgba(0,245,255,0.3) !important;
+  }
 
-.search-result-item:last-child {
-    border-bottom: none;
-}
+  /* ── Ambient orbs ──────────────────────────────────── */
+  .orb {
+    position: fixed; border-radius: 50%; pointer-events: none;
+    filter: blur(80px); opacity: 0.18; z-index: 0;
+  }
+</style>
+</head>
+<body class="bg-space-950 overflow-hidden font-mono" style="font-family:'Share Tech Mono',monospace">
 
-.search-result-item:hover {
-    background: rgba(167, 139, 250, 0.1);
-    color: #f1f5f9;
-}
+  <!-- Ambient light orbs -->
+  <div class="orb w-96 h-96 -top-20 -left-20 animate-pulse-neon" style="background:#00f5ff"></div>
+  <div class="orb w-80 h-80 top-1/3 -right-20 animate-pulse-neon" style="background:#bf00ff;animation-delay:1.5s"></div>
+  <div class="orb w-64 h-64 -bottom-10 left-1/4 animate-pulse-neon" style="background:#00ff87;animation-delay:3s"></div>
 
-/* Info Panel (Right Middle) */
-.info-panel {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    border-radius: 12px;
-    padding: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    color: #e2e8f0;
-    z-index: 1000;
-}
+  <!-- MAP placeholder -->
+  <div id="map" class="absolute inset-0 z-0">
+    <!-- Real Leaflet/Mapbox map mounts here -->
+    <div class="absolute inset-0 flex items-center justify-center">
+      <span class="text-neon-cyan/20 font-orbitron text-2xl tracking-widest animate-pulse-neon">MAP SURFACE</span>
+    </div>
+  </div>
 
-.info-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    margin-bottom: 12px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-}
+  <!-- ══════════════════════════════════════════
+       VERSION BADGE
+  ══════════════════════════════════════════ -->
+  <div class="fixed bottom-4 left-4 z-50 glass rounded-lg px-4 py-2 bracket bracket-inner">
+    <span class="font-orbitron text-[10px] tracking-[0.2em] text-neon-cyan glow-cyan animate-flicker">
+      v2.4.0 — ORBITWATCH
+    </span>
+  </div>
 
-.stat-label {
-    font-size: 9px;
-    color: #94a3b8;
-    font-weight: 600;
-    letter-spacing: 1px;
-}
+  <!-- ══════════════════════════════════════════
+       LANG SELECTOR
+  ══════════════════════════════════════════ -->
+  <div class="fixed top-4 left-4 z-50">
+    <div id="google_translate_element"></div>
+  </div>
 
-.stat-value {
-    font-size: 20px;
-    font-weight: 700;
-    color: #f1f5f9;
-}
+  <!-- ══════════════════════════════════════════
+       TOP RIGHT CONTROLS
+  ══════════════════════════════════════════ -->
+  <div class="fixed top-4 right-4 z-50 flex gap-2">
 
-.legend {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
+    <!-- GitHub Login -->
+    <button id="githubBtn" class="btn-neon w-11 h-11 rounded-xl flex items-center justify-center relative group" title="Sign in with GitHub">
+      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+      </svg>
+      <span class="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[10px] font-orbitron text-neon-cyan/70 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">GITHUB</span>
+    </button>
 
-.legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    cursor: help;
-}
+    <!-- Menu Toggle -->
+    <button id="menuToggle" class="btn-neon w-11 h-11 rounded-xl flex items-center justify-center" title="Menu">
+      <div class="flex flex-col gap-[5px]" id="hamburger">
+        <span id="h1" class="block w-5 h-[2px] bg-current rounded-sm transition-all duration-300"></span>
+        <span id="h2" class="block w-5 h-[2px] bg-current rounded-sm transition-all duration-300"></span>
+        <span id="h3" class="block w-5 h-[2px] bg-current rounded-sm transition-all duration-300"></span>
+      </div>
+    </button>
+  </div>
 
-/* Left Control Buttons */
-.controls {
-    position: absolute;
-    left: 16px;
-    top: 80px;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
+  <!-- ══════════════════════════════════════════
+       MENU OVERLAY
+  ══════════════════════════════════════════ -->
+  <div id="menuOverlay" class="fixed inset-0 bg-black/60 z-40 hidden backdrop-blur-sm" onclick="closeMenu()"></div>
 
-.control-btn {
-    width: 40px;
-    height: 40px;
-    background: rgba(15, 23, 42, 0.95);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #e2e8f0;
-    font-size: 18px;
-    transition: all 0.2s;
-    backdrop-filter: blur(10px);
-}
+  <!-- ══════════════════════════════════════════
+       MENU SIDEBAR (Left)
+  ══════════════════════════════════════════ -->
+  <aside id="menuSidebar" class="fixed top-0 left-0 h-full w-[340px] glass-violet z-50 overflow-y-auto
+         translate-x-[-100%] transition-transform duration-[350ms] ease-[cubic-bezier(0.16,1,0.3,1)]">
 
-.control-btn:hover {
-    background: rgba(30, 41, 59, 0.95);
-    border-color: rgba(148, 163, 184, 0.3);
-    transform: scale(1.05);
-}
+    <!-- Header -->
+    <div class="px-6 py-5 border-b border-neon-violet/20 flex items-center justify-between">
+      <div>
+        <div class="font-orbitron text-xs text-neon-violet/60 tracking-[0.3em] mb-1">SYSTEM MENU</div>
+        <h2 class="font-orbitron text-lg font-bold text-white glow-violet">ORBITWATCH</h2>
+      </div>
+      <button onclick="closeMenu()" class="w-8 h-8 rounded-lg border border-neon-violet/20 flex items-center justify-center text-neon-violet/70 hover:text-neon-violet hover:border-neon-violet transition-all hover:shadow-[0_0_12px_#bf00ff55]">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
 
-.control-btn.active {
-    background: rgba(167, 139, 250, 0.3);
-    border-color: #a78bfa;
-}
+    <div class="p-6 space-y-3">
 
-/* Time Warp Panel */
-.timewarp-panel {
-    position: absolute;
-    bottom: 16px;
-    right: 16px;
-    z-index: 1000;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    border-radius: 12px;
-    padding: 16px;
-    min-width: 280px;
-}
+      <!-- Keyboard Controls -->
+      <button onclick="toggleSection('sec-controls')" class="w-full btn-neon-violet rounded-xl px-4 py-3 font-orbitron text-xs tracking-[0.1em] flex justify-between items-center">
+        <span>⌨ CONTROLS</span>
+        <span id="arr-controls" class="text-xs transition-transform duration-300">▾</span>
+      </button>
+      <div id="sec-controls" class="hidden space-y-2 animate-fade-in">
+        <div class="grid grid-cols-1 gap-2">
+          <div class="glass rounded-lg px-3 py-2 flex items-center gap-3 text-xs">
+            <span class="text-xl">🖱️</span>
+            <span class="text-neon-cyan/80">Drag — Pan map surface</span>
+          </div>
+          <div class="glass rounded-lg px-3 py-2 flex items-center gap-3 text-xs">
+            <span class="text-xl">🔍</span>
+            <span class="text-neon-cyan/80">Scroll — Zoom in / out</span>
+          </div>
+          <div class="glass rounded-lg px-3 py-2 flex items-center gap-3 text-xs">
+            <span class="text-xl">🛰️</span>
+            <span class="text-neon-cyan/80">Click satellite — Details</span>
+          </div>
+          <div class="glass rounded-lg px-3 py-2 flex items-center gap-3 text-xs">
+            <span class="text-xl">⌨️</span>
+            <span class="text-neon-cyan/80">/ — Focus search bar</span>
+          </div>
+          <div class="glass rounded-lg px-3 py-2 flex items-center gap-3 text-xs">
+            <span class="text-xl">🕒</span>
+            <span class="text-neon-cyan/80">T — Toggle time warp</span>
+          </div>
+        </div>
+      </div>
 
-.timewarp-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-}
+      <!-- Contact -->
+      <button onclick="toggleSection('sec-contact')" class="w-full btn-neon-violet rounded-xl px-4 py-3 font-orbitron text-xs tracking-[0.1em] flex justify-between items-center">
+        <span>📡 CONTACT</span>
+        <span id="arr-contact" class="text-xs transition-transform duration-300">▾</span>
+      </button>
+      <div id="sec-contact" class="hidden space-y-2 animate-fade-in">
+        <a href="#" class="flex items-center gap-3 glass rounded-lg px-3 py-2.5 text-xs text-neon-cyan/80 hover:text-neon-cyan hover:border-neon-cyan/30 transition-all group">
+          <span class="text-base">🐙</span>
+          <span class="group-hover:glow-cyan transition-all">GitHub Repository</span>
+        </a>
+        <a href="#" class="flex items-center gap-3 glass rounded-lg px-3 py-2.5 text-xs text-neon-cyan/80 hover:text-neon-cyan transition-all group">
+          <span class="text-base">🐦</span>
+          <span>Twitter / X</span>
+        </a>
+        <a href="#" class="flex items-center gap-3 glass rounded-lg px-3 py-2.5 text-xs text-neon-cyan/80 hover:text-neon-cyan transition-all group">
+          <span class="text-base">✉️</span>
+          <span>contact@orbitwatch.io</span>
+        </a>
+      </div>
 
-.timewarp-controls {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-}
+      <div class="border-t border-neon-violet/10 my-4"></div>
 
-.timewarp-btn {
-    flex: 1;
-    min-width: 48px;
-    padding: 8px 12px;
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    border-radius: 6px;
-    color: #cbd5e1;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-}
+      <!-- Badges -->
+      <div>
+        <div class="font-orbitron text-[9px] text-neon-violet/40 tracking-[0.3em] mb-3">AVAILABLE ON</div>
+        <div class="flex gap-3">
+          <img src="https://img.shields.io/badge/App_Store-0D96F6?style=flat&logo=app-store&logoColor=white" alt="App Store" class="h-5 cursor-pointer hover:opacity-80 transition-opacity rounded" />
+          <img src="https://img.shields.io/badge/Google_Play-3DDC84?style=flat&logo=google-play&logoColor=white" alt="Google Play" class="h-5 cursor-pointer hover:opacity-80 transition-opacity rounded" />
+        </div>
+      </div>
 
-.timewarp-btn:hover {
-    background: rgba(30, 41, 59, 0.8);
-    border-color: rgba(148, 163, 184, 0.3);
-}
+      <!-- Translate credit -->
+      <div class="glass rounded-xl px-3 py-3 flex items-center gap-2 mt-2">
+        <span class="text-xs text-neon-cyan/40">Powered by</span>
+        <span class="font-orbitron text-[10px] text-neon-cyan/60 tracking-widest">GOOGLE TRANSLATE</span>
+      </div>
 
-.timewarp-btn.active {
-    background: rgba(167, 139, 250, 0.3);
-    border-color: #a78bfa;
-    color: #f1f5f9;
-}
+    </div>
+  </aside>
 
-.timewarp-reset {
-    width: 100%;
-    margin-top: 4px;
-}
+  <!-- ══════════════════════════════════════════
+       SEARCH PANEL
+  ══════════════════════════════════════════ -->
+  <div class="fixed top-[72px] right-4 z-40 w-72">
+    <div class="relative">
+      <input id="searchInput" type="text" placeholder="SEARCH SATELLITE..." class="input-neon w-full rounded-xl px-4 py-3 font-orbitron text-xs tracking-[0.1em] pr-10" autocomplete="off" />
+      <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neon-cyan/40 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+    </div>
+    <div id="searchResults" class="hidden mt-2 glass rounded-xl overflow-hidden max-h-80 overflow-y-auto animate-fade-in">
+      <div class="search-result-item px-4 py-3 cursor-pointer text-xs text-neon-cyan/80 hover:bg-neon-cyan/10 hover:text-neon-cyan border-b border-neon-cyan/10 transition-all font-orbitron tracking-widest">ISS — INT'L SPACE STATION</div>
+      <div class="search-result-item px-4 py-3 cursor-pointer text-xs text-neon-cyan/80 hover:bg-neon-cyan/10 hover:text-neon-cyan border-b border-neon-cyan/10 transition-all font-orbitron tracking-widest">HUBBLE SPACE TELESCOPE</div>
+      <div class="search-result-item px-4 py-3 cursor-pointer text-xs text-neon-cyan/80 hover:bg-neon-cyan/10 hover:text-neon-cyan transition-all font-orbitron tracking-widest">TIANGONG SPACE STATION</div>
+    </div>
+  </div>
 
-.timewarp-date {
-    font-size: 11px;
-    color: #94a3b8;
-    text-align: center;
-    padding-top: 8px;
-    border-top: 1px solid rgba(148, 163, 184, 0.1);
-}
+  <!-- ══════════════════════════════════════════
+       LEFT ZOOM / CONTROL BUTTONS
+  ══════════════════════════════════════════ -->
+  <div class="fixed left-4 top-20 z-40 flex flex-col gap-2">
+    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold transition-all" title="Zoom In">+</button>
+    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold transition-all" title="Zoom Out">−</button>
+    <div class="w-10 h-[1px] bg-neon-cyan/20 my-1"></div>
+    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center transition-all" title="My Location">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+    </button>
+    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center active transition-all" title="Toggle Orbits">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 5a7 7 0 0 1 7 7" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke-dasharray="4 2"/></svg>
+    </button>
+    <button class="btn-neon w-10 h-10 rounded-xl flex items-center justify-center transition-all" title="Night View">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
 
-/* Sidebar Overlay */
-.sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    display: none;
-}
+  <!-- ══════════════════════════════════════════
+       INFO PANEL — Right Center
+  ══════════════════════════════════════════ -->
+  <div class="fixed right-4 top-1/2 -translate-y-1/2 z-40 glass rounded-2xl p-4 flex flex-col items-center gap-0 bracket animate-float" style="min-width:80px">
 
-.sidebar-overlay.active {
-    display: block;
-}
+    <!-- Stat: Total Satellites -->
+    <div class="flex flex-col items-center mb-3 pb-3 border-b border-neon-cyan/10 w-full">
+      <span class="font-orbitron text-[8px] tracking-[0.2em] text-neon-cyan/50 mb-1">ACTIVE</span>
+      <span class="font-orbitron text-2xl font-black text-white glow-cyan animate-pulse-neon">8,426</span>
+    </div>
 
-/* Satellite Info Sidebar */
-.sidebar {
-    position: absolute;
-    right: -420px;
-    top: 0;
-    bottom: 0;
-    width: 100%;
-    max-width: 420px;
-    background: rgba(15, 23, 42, 0.98);
-    backdrop-filter: blur(10px);
-    border-left: 1px solid rgba(148, 163, 184, 0.1);
-    box-shadow: -4px 0 32px rgba(0, 0, 0, 0.4);
-    z-index: 1001;
-    transition: right 0.3s;
-    overflow-y: auto;
-    color: #e2e8f0;
-}
+    <!-- Stat: Debris -->
+    <div class="flex flex-col items-center mb-3 pb-3 border-b border-neon-cyan/10 w-full">
+      <span class="font-orbitron text-[8px] tracking-[0.2em] text-neon-pink/50 mb-1">DEBRIS</span>
+      <span class="font-orbitron text-2xl font-black text-neon-pink glow-pink">27K+</span>
+    </div>
 
-.sidebar.active {
-    right: 0;
-}
+    <!-- Stat: Visible -->
+    <div class="flex flex-col items-center mb-4 w-full">
+      <span class="font-orbitron text-[8px] tracking-[0.2em] text-neon-green/50 mb-1">VISIBLE</span>
+      <span class="font-orbitron text-2xl font-black text-neon-green glow-green">312</span>
+    </div>
 
-.sidebar-header {
-    padding: 24px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+    <!-- Legend dots -->
+    <div class="flex flex-col gap-2 items-center">
+      <div class="w-3 h-3 rounded-full bg-neon-cyan dot-glow cursor-help" style="color:#00f5ff" title="Navigation"></div>
+      <div class="w-3 h-3 rounded-full bg-neon-violet dot-glow cursor-help" style="color:#bf00ff" title="Communication"></div>
+      <div class="w-3 h-3 rounded-full bg-neon-green dot-glow cursor-help" style="color:#00ff87" title="Weather"></div>
+      <div class="w-3 h-3 rounded-full bg-neon-pink dot-glow cursor-help" style="color:#ff0090" title="Military"></div>
+      <div class="w-3 h-3 rounded-full bg-neon-amber dot-glow cursor-help" style="color:#ffb300" title="Research"></div>
+    </div>
+  </div>
 
-.sidebar-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: #f1f5f9;
-    max-width: 320px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+  <!-- ══════════════════════════════════════════
+       TIMEWARP PANEL — Bottom Right
+  ══════════════════════════════════════════ -->
+  <div class="fixed bottom-4 right-4 z-40 glass rounded-2xl p-4 min-w-[300px]">
+    <div class="font-orbitron text-[9px] tracking-[0.3em] text-neon-violet/60 mb-3">⏱ TIME WARP ENGINE</div>
 
-.sidebar-content {
-    padding: 24px;
-}
+    <div class="flex gap-1.5 mb-2 flex-wrap">
+      <button class="timewarp-btn btn-neon-violet flex-1 min-w-[46px] rounded-lg py-2 font-orbitron text-[10px] tracking-wider transition-all">1×</button>
+      <button class="timewarp-btn btn-neon-violet flex-1 min-w-[46px] rounded-lg py-2 font-orbitron text-[10px] tracking-wider active transition-all">10×</button>
+      <button class="timewarp-btn btn-neon-violet flex-1 min-w-[46px] rounded-lg py-2 font-orbitron text-[10px] tracking-wider transition-all">60×</button>
+      <button class="timewarp-btn btn-neon-violet flex-1 min-w-[46px] rounded-lg py-2 font-orbitron text-[10px] tracking-wider transition-all">1000×</button>
+    </div>
 
-.sat-image-container {
-    width: 100%;
-    height: 280px;
-    background: #1a1d29;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    overflow: hidden;
-    position: relative;
-}
+    <button class="w-full btn-neon-violet rounded-lg py-2 font-orbitron text-[10px] tracking-[0.2em] mb-3 transition-all">⟳ RESET TO NOW</button>
 
-.sat-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+    <div class="border-t border-neon-violet/10 pt-2 text-center font-mono text-[11px] text-neon-violet/60 tracking-wider">
+      2025 · FEB · 21 — 14:32:07 UTC
+    </div>
+  </div>
 
-.image-loading {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #94a3b8;
-    font-size: 14px;
-}
+  <!-- ══════════════════════════════════════════
+       SATELLITE DETAIL SIDEBAR (Right)
+  ══════════════════════════════════════════ -->
+  <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden backdrop-blur-sm" onclick="closeSidebar()"></div>
 
-.sat-info-item {
-    margin-bottom: 16px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-}
+  <aside id="satSidebar" class="fixed top-0 right-0 h-full w-full max-w-[420px] glass z-50 overflow-y-auto
+         translate-x-full transition-transform duration-[350ms] ease-[cubic-bezier(0.16,1,0.3,1)]">
 
-.sat-info-item:last-child {
-    border-bottom: none;
-}
+    <!-- Header -->
+    <div class="px-6 py-5 border-b border-neon-cyan/15 flex items-start justify-between sticky top-0 glass z-10">
+      <div>
+        <div class="font-orbitron text-[9px] text-neon-cyan/40 tracking-[0.3em] mb-1.5">OBJECT DETAILS</div>
+        <div id="sidebarTitle" class="font-orbitron text-base font-bold text-white glow-cyan max-w-[300px] truncate">
+          ISS (ZARYA)
+        </div>
+      </div>
+      <button onclick="closeSidebar()" class="mt-1 w-8 h-8 rounded-lg border border-neon-cyan/20 flex items-center justify-center text-neon-cyan/60 hover:text-neon-cyan hover:border-neon-cyan transition-all hover:shadow-[0_0_12px_#00f5ff44]">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
 
-.info-label {
-    font-size: 11px;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
+    <div class="p-6 space-y-5">
 
-.info-value {
-    font-size: 15px;
-    color: #f1f5f9;
-    font-weight: 500;
-}
+      <!-- Image -->
+      <div class="w-full h-56 rounded-2xl overflow-hidden relative bracket bracket-inner" style="background:linear-gradient(135deg,#060a1a 0%,#0f1a35 100%)">
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="text-center">
+            <div class="font-orbitron text-5xl text-neon-cyan/10 animate-spin-slow mb-2">⬡</div>
+            <div class="font-orbitron text-xs text-neon-cyan/30 tracking-widest">LOADING TELEMETRY…</div>
+          </div>
+        </div>
+        <!-- Fake scanline on image -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+          <div class="h-full w-full" style="background:repeating-linear-gradient(to bottom,transparent 0,transparent 3px,rgba(0,245,255,0.03) 3px,rgba(0,245,255,0.03) 4px)"></div>
+        </div>
+      </div>
 
-/* Tooltip */
-.tooltip {
-    position: absolute;
-    background: rgba(15, 23, 42, 0.98);
-    color: #f1f5f9;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 500;
-    pointer-events: none;
-    z-index: 2000;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    display: none;
-    backdrop-filter: blur(10px);
-    white-space: nowrap;
-}
+      <!-- Info Grid -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="glass rounded-xl p-3">
+          <div class="font-orbitron text-[8px] tracking-[0.2em] text-neon-cyan/40 mb-1.5">NORAD ID</div>
+          <div class="font-mono text-sm text-neon-cyan glow-cyan">25544</div>
+        </div>
+        <div class="glass rounded-xl p-3">
+          <div class="font-orbitron text-[8px] tracking-[0.2em] text-neon-cyan/40 mb-1.5">CATEGORY</div>
+          <div class="font-mono text-sm text-white">CREWED</div>
+        </div>
+        <div class="glass rounded-xl p-3">
+          <div class="font-orbitron text-[8px] tracking-[0.2em] text-neon-green/40 mb-1.5">ALTITUDE</div>
+          <div class="font-mono text-sm text-neon-green glow-green">418 km</div>
+        </div>
+        <div class="glass rounded-xl p-3">
+          <div class="font-orbitron text-[8px] tracking-[0.2em] text-neon-green/40 mb-1.5">VELOCITY</div>
+          <div class="font-mono text-sm text-neon-green glow-green">7.66 km/s</div>
+        </div>
+        <div class="glass rounded-xl p-3">
+          <div class="font-orbitron text-[8px] tracking-[0.2em] text-neon-amber/40 mb-1.5">LATITUDE</div>
+          <div class="font-mono text-sm text-neon-amber" style="text-shadow:0 0 10px #ffb300">48.24°</div>
+        </div>
+        <div class="glass rounded-xl p-3">
+          <div class="font-orbitron text-[8px] tracking-[0.2em] text-neon-amber/40 mb-1.5">LONGITUDE</div>
+          <div class="font-mono text-sm text-neon-amber" style="text-shadow:0 0 10px #ffb300">−112.7°</div>
+        </div>
+      </div>
 
-.user-location {
-    width: 16px;
-    height: 16px;
-    background: #22c55e;
-    border: 3px solid #fff;
-    border-radius: 50%;
-    box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
-}
+      <!-- Full-width stats -->
+      <div class="glass rounded-xl p-4 space-y-3">
+        <div class="flex justify-between items-center border-b border-neon-cyan/10 pb-3">
+          <span class="font-orbitron text-[9px] tracking-widest text-neon-cyan/40">INCLINATION</span>
+          <span class="font-mono text-sm text-white">51.64°</span>
+        </div>
+        <div class="flex justify-between items-center border-b border-neon-cyan/10 pb-3">
+          <span class="font-orbitron text-[9px] tracking-widest text-neon-cyan/40">PERIOD</span>
+          <span class="font-mono text-sm text-white">92.68 min</span>
+        </div>
+        <div class="flex justify-between items-center border-b border-neon-cyan/10 pb-3">
+          <span class="font-orbitron text-[9px] tracking-widest text-neon-cyan/40">LAUNCH DATE</span>
+          <span class="font-mono text-sm text-white">1998-11-20</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="font-orbitron text-[9px] tracking-widest text-neon-cyan/40">COUNTRY</span>
+          <span class="font-mono text-sm text-white">MULTI</span>
+        </div>
+      </div>
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    .menu-sidebar {
-        width: 100%;
-        left: -100%;
+      <!-- Status pill -->
+      <div class="flex justify-center">
+        <div class="inline-flex items-center gap-2 border border-neon-green/30 rounded-full px-4 py-1.5 bg-neon-green/5">
+          <span class="w-2 h-2 rounded-full bg-neon-green animate-pulse-neon shadow-neon-green"></span>
+          <span class="font-orbitron text-[10px] tracking-widest text-neon-green glow-green">SIGNAL ACTIVE</span>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════
+       TOOLTIP
+  ══════════════════════════════════════════ -->
+  <div id="tooltip" class="glass hidden fixed text-xs font-orbitron tracking-widest text-neon-cyan glow-cyan px-3 py-1.5 rounded-lg pointer-events-none z-[9999]"></div>
+
+  <!-- ══════════════════════════════════════════
+       SCRIPTS
+  ══════════════════════════════════════════ -->
+  <script>
+    /* ─── Menu ─────────────────────────────────────────── */
+    const menuToggle  = document.getElementById('menuToggle');
+    const menuSidebar = document.getElementById('menuSidebar');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const h1 = document.getElementById('h1');
+    const h2 = document.getElementById('h2');
+    const h3 = document.getElementById('h3');
+
+    let menuOpen = false;
+    menuToggle.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      if (menuOpen) {
+        menuSidebar.style.transform = 'translateX(0)';
+        menuOverlay.classList.remove('hidden');
+        h1.style.transform = 'rotate(45deg) translate(5px, 6px)';
+        h2.style.opacity   = '0';
+        h3.style.transform = 'rotate(-45deg) translate(5px, -6px)';
+      } else closeMenu();
+    });
+
+    function closeMenu() {
+      menuOpen = false;
+      menuSidebar.style.transform = '';
+      menuOverlay.classList.add('hidden');
+      h1.style.transform = '';
+      h2.style.opacity   = '';
+      h3.style.transform = '';
     }
 
-    .info-panel {
-        right: 8px;
-        top: auto;
-        bottom: 100px;
-        transform: none;
+    /* ─── Collapsible sections ──────────────────────────── */
+    function toggleSection(id) {
+      const el = document.getElementById(id);
+      const arrowId = 'arr-' + id.replace('sec-','');
+      const arrow = document.getElementById(arrowId);
+      const hidden = el.classList.contains('hidden');
+      el.classList.toggle('hidden', !hidden);
+      if (arrow) arrow.style.transform = hidden ? 'rotate(180deg)' : '';
     }
 
-    .search-panel {
-        top: 72px;
-        left: 8px;
-        right: 72px;
-        width: auto;
+    /* ─── Satellite Sidebar ─────────────────────────────── */
+    const satSidebar     = document.getElementById('satSidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    function openSidebar(name) {
+      document.getElementById('sidebarTitle').textContent = name || 'UNKNOWN OBJECT';
+      satSidebar.style.transform = 'translateX(0)';
+      sidebarOverlay.classList.remove('hidden');
+    }
+    function closeSidebar() {
+      satSidebar.style.transform = '';
+      sidebarOverlay.classList.add('hidden');
     }
 
-    .controls {
-        left: 8px;
-        top: 140px;
-    }
+    /* ─── Search ────────────────────────────────────────── */
+    const searchInput   = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
 
-    .control-btn {
-        width: 36px;
-        height: 36px;
-        font-size: 16px;
-    }
+    searchInput.addEventListener('input', () => {
+      searchResults.classList.toggle('hidden', searchInput.value.trim() === '');
+    });
+    searchInput.addEventListener('blur', () => {
+      setTimeout(() => searchResults.classList.add('hidden'), 200);
+    });
+    document.querySelectorAll('.search-result-item').forEach(el => {
+      el.addEventListener('click', () => {
+        openSidebar(el.textContent.trim());
+        searchResults.classList.add('hidden');
+        searchInput.value = '';
+      });
+    });
 
-    .timewarp-panel {
-        bottom: 8px;
-        right: 8px;
-        left: 8px;
-        min-width: auto;
-        padding: 12px;
-    }
+    /* ─── Timewarp buttons ──────────────────────────────── */
+    document.querySelectorAll('.timewarp-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.timewarp-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
 
-    .timewarp-controls {
-        gap: 4px;
-    }
+    /* ─── GitHub ────────────────────────────────────────── */
+    let githubLoggedIn = false;
+    document.getElementById('githubBtn').addEventListener('click', () => {
+      githubLoggedIn = !githubLoggedIn;
+      const btn = document.getElementById('githubBtn');
+      if (githubLoggedIn) {
+        btn.style.background = 'rgba(0,255,135,0.12)';
+        btn.style.borderColor = 'rgba(0,255,135,0.4)';
+        btn.style.color = '#00ff87';
+        btn.style.boxShadow = '0 0 16px rgba(0,255,135,0.3)';
+      } else {
+        btn.style.background = ''; btn.style.borderColor = '';
+        btn.style.color = ''; btn.style.boxShadow = '';
+      }
+    });
 
-    .timewarp-btn {
-        min-width: 42px;
-        padding: 6px 8px;
-        font-size: 11px;
-    }
+    /* ─── Demo: click on map to open sidebar ────────────── */
+    document.getElementById('map').addEventListener('click', (e) => {
+      if (e.target.id === 'map' || e.target.parentElement?.id === 'map') {
+        openSidebar('SATELLITE — NORAD #' + Math.floor(Math.random() * 99999));
+      }
+    });
 
-    .version {
-        bottom: 8px;
-        left: 8px;
-        padding: 6px 12px;
-        font-size: 10px;
-    }
+    /* ─── Keyboard shortcut ─────────────────────────────── */
+    document.addEventListener('keydown', e => {
+      if (e.key === '/' && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+      }
+      if (e.key === 'Escape') { closeMenu(); closeSidebar(); }
+    });
 
-    .lang-selector {
-        top: 8px;
-        left: 8px;
+    /* ─── Dynamic time display ──────────────────────────── */
+    function updateTime() {
+      const now = new Date();
+      const pad = n => String(n).padStart(2,'0');
+      const dateStr = `${now.getUTCFullYear()} · ${['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][now.getUTCMonth()]} · ${pad(now.getUTCDate())} — ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} UTC`;
+      document.querySelectorAll('.timewarp-date, .timewarp-panel > .border-t').forEach(el => {
+        if(el.textContent.includes('UTC')) el.textContent = dateStr;
+      });
     }
+    setInterval(updateTime, 1000);
+  </script>
 
-    .top-right-controls {
-        top: 8px;
-        right: 8px;
-    }
-
-    .sidebar {
-        max-width: 100%;
-    }
-}
+</body>
+</html>
