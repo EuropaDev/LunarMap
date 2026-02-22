@@ -817,3 +817,30 @@ body {
         max-width: 100%;
     }
 }
+/* Dynamic Glow Effects */
+.glow-hover:hover {
+    box-shadow: 0 0 30px rgba(167, 139, 250, 0.5), 0 0 60px rgba(167, 139, 250, 0.3);
+    transition: all 0.3s ease;
+}
+
+.control-btn:hover,
+.github-login:hover,
+.menu-toggle:hover {
+    box-shadow: 0 0 20px rgba(167, 139, 250, 0.4);
+}
+
+/* Orbit Path Animation */
+@keyframes orbitDash {
+    to {
+        stroke-dashoffset: -100;
+    }
+}
+
+.orbit-path {
+    stroke: #a78bfa;
+    stroke-width: 2;
+    stroke-dasharray: 5, 5;
+    fill: none;
+    opacity: 0.6;
+    animation: orbitDash 20s linear infinite;
+}
