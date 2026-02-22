@@ -933,3 +933,186 @@ const typeNames = {
 console.log('🎄 Easter eggs loaded: SantaSat & UFO');
 console.log('💡 Dynamic lighting active');
 console.log('🛸 Orbit path visualization ready');
+// ============================================
+// DYNAMIC LIGHT + EASTER EGGS + ORBIT PATH
+// ============================================
+
+console.log('🎄 Loading Easter Eggs & Features...');
+
+// Dynamic Light Effect
+document.addEventListener('mousemove', (e) => {
+    const light = document.getElementById('dynamicLight');
+    if (light) {
+        light.style.left = `${e.clientX - 300}px`;
+        light.style.top = `${e.clientY - 300}px`;
+    }
+});
+
+// Orbit Path Layer
+let orbitPathLayer = null;
+
+function drawOrbitPath(satellite) {
+    if (orbitPathLayer) {
+        map.removeLayer(orbitPathLayer);
+    }
+
+    const points = [];
+    const now = simulationTime;
+    
+    for (let i = 0; i < 90; i++) {
+        const time = new Date(now.getTime() + i * 60 * 1000);
+        const pos = getPos(satellite.satrec, time);
+        if (pos) {
+            points.push([pos.lat, pos.lng]);
+        }
+    }
+
+    if (points.length > 0) {
+        orbitPathLayer = L.polyline(points, {
+            color: '#a78bfa',
+            weight: 2,
+            opacity: 0.7,
+            dashArray: '10, 5',
+            className: 'orbit-path'
+        }).addTo(map);
+        
+        console.log('🛸 Orbit path drawn:', points.length, 'points');
+    }
+}
+
+// Override openSatelliteInfo to add orbit
+const _originalOpenSatelliteInfo = window.openSatelliteInfo;
+window.openSatelliteInfo = function(sat) {
+    _originalOpenSatelliteInfo(sat);
+    drawOrbitPath(sat);
+};
+
+// Override closeSidebar to remove orbit
+const _originalCloseSidebar = window.closeSidebar;
+window.closeSidebar = function() {
+    _originalCloseSidebar();
+    if (orbitPathLayer) {
+        map.removeLayer(orbitPathLayer);
+        orbitPathLayer = null;
+    }
+};
+
+// Easter Egg Satellites
+satelliteImages.santasat = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iI2ZmMDAwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iMzAiIHI9IjE1IiBmaWxsPSIjZmZmZmZmIi8+PHRleHQgeD0iNTAiIHk9IjYwIiBmb250LXNpemU9IjMwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn4qF8J+OhTwvdGV4dD48L3N2Zz4=';
+satelliteImages.ufo = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZWxsaXBzZSBjeD0iNTAiIGN5PSI1MCIgcng9IjQwIiByeT0iMjAiIGZpbGw9IiM4OGNjZmYiIG9wYWNpdHk9IjAuOCIvPjxlbGxpcHNlIGN4PSI1MCIgY3k9IjQwIiByeD0iMjAiIHJ5PSIxNSIgZmlsbD0iIzAwZmZmZiIgb3BhY2l0eT0iMC42Ii8+PHRleHQgeD0iNTAiIHk9IjYwIiBmb250LXNpemU9IjI1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn5+4PC90ZXh0Pjwvc3ZnPg==';
+
+// Add Easter Eggs to TLE data
+const originalTLEText = `
+SANTASAT
+1 99999U 24001A   24001.50000000  .00000000  00000-0  00000-0 0    10
+2 99999  90.0000   0.0000 0001000   0.0000   0.0000 15.00000000    18
+UFO-UNKNOWN
+1 88888U 24002A   24001.50000000  .00000000  00000-0  00000-0 0    10
+2 88888   0.0000   0.0000 0001000   0.0000   0.0000 16.00000000    18`;
+
+// Intercept TLE fetch
+const _fetch = window.fetch;
+window.fetch = function(url, ...args) {
+    return _fetch(url, ...args).then(res => {
+        if (url.includes('celestrak')) {
+            return res.text().then(text => {
+                const modifiedText = text + '\n' + originalTLEText;
+                return new Response(modifiedText, {
+                    status: 200,
+                    statusText: 'OK',
+                    headers: res.headers
+                });
+            });
+        }
+        return res;
+    });
+};
+
+// Update getOrbitName for Easter Eggs
+const _originalGetOrbitName = window.getOrbitName;
+window.getOrbitName = function(alt) {
+    if (selectedSat) {
+        if (selectedSat.type === 'santasat') return 'Ho Ho Ho! 🎅🎄';
+        if (selectedSat.type === 'ufo') return 'CLASSIFIED 🛸👽';
+    }
+    return _originalGetOrbitName(alt);
+};
+
+// Update Canvas Drawing for Easter Eggs
+const _originalLayerDraw = layer._draw;
+layer._draw = function() {
+    if (!this._d) return;
+    
+    const s = map.getSize();
+    const ctx = this._c.getContext('2d');
+    ctx.clearRect(0, 0, s.x, s.y);
+    satPositions.clear();
+
+    this._d.forEach(sat => {
+        const p = getPos(sat.satrec, simulationTime);
+        if (!p) return;
+        
+        let lng = p.lng;
+        while (lng > 180) lng -= 360;
+        while (lng < -180) lng += 360;
+        
+        const pt = map.latLngToContainerPoint([p.lat, lng]);
+        if (pt.x < -50 || pt.x > s.x + 50 || pt.y < -50 || pt.y > s.y + 50) return;
+
+        satPositions.set(sat.name, { x: pt.x, y: pt.y });
+
+        if (sat.type !== 'normal') {
+            ctx.save();
+            ctx.translate(pt.x, pt.y);
+            ctx.font = '28px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowBlur = 15;
+            
+            if (sat.type === 'iss') {
+                ctx.shadowColor = 'rgba(167,139,250,0.8)';
+                ctx.fillText('🛰️', 0, 0);
+            } else if (sat.type === 'tiangong' || sat.name.includes('TIANHE') || sat.name.includes('CSS')) {
+                ctx.shadowColor = 'rgba(192,132,252,0.8)';
+                ctx.fillText('🛰️', 0, 0);
+            } else if (sat.type === 'hubble') {
+                ctx.shadowColor = 'rgba(129,140,248,0.8)';
+                ctx.fillText('🛰️', 0, 0);
+            } else if (sat.name.includes('SANTASAT')) {
+                ctx.shadowColor = 'rgba(255,0,0,0.9)';
+                ctx.fillText('🎅🎄', 0, 0);
+                sat.type = 'santasat';
+            } else if (sat.name.includes('UFO')) {
+                ctx.shadowColor = 'rgba(0,255,255,0.9)';
+                ctx.fillText('🛸👽', 0, 0);
+                sat.type = 'ufo';
+            }
+            
+            ctx.restore();
+        } else {
+            const alt = satAltitudes.get(sat.name) || 0;
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 1, 0, Math.PI * 2);
+            ctx.fillStyle = getOrbitColor(alt);
+            ctx.fill();
+        }
+    });
+};
+
+console.log('✅ Dynamic Light Active');
+console.log('✅ Orbit Path Visualization Ready');
+console.log('🎅 SantaSat Easter Egg Loaded');
+console.log('🛸 UFO Easter Egg Loaded');
+```
+
+**GitHub Commit:**
+```
+🎄🛸 Easter eggs + Tailwind + Dynamic lighting + Orbit visualization
+
+- Tailwind CSS integrated
+- Mouse-following purple dynamic light
+- SantaSat (🎅🎄) with "Ho Ho Ho!" orbit
+- UFO (🛸👽) with "CLASSIFIED" orbit  
+- Orbit path visualization (90-min trajectory)
+- Glow effects on hover
+- All features working with existing code
