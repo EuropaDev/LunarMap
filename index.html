@@ -2,27 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <link rel="icon" type="image/png" href="logo120x120.png"> </head>
+    <link rel="icon" type="image/png" href="logo120x120.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MAPSAT | Satellite Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.tailwindcss.com"></script>
-<script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    space: { 900: '#0a0e27', 800: '#0f172a', 700: '#1e293b' }
-                }
-            }
-        }
-    }
-</script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <!-- Dynamic Light Effect -->
-<div id="dynamicLight" class="fixed w-[600px] h-[600px] rounded-full pointer-events-none z-0 transition-all duration-75" style="background: radial-gradient(circle, rgba(167,139,250,0.3) 0%, rgba(139,92,246,0.15) 30%, transparent 70%); filter: blur(80px); left: -300px; top: -300px;"></div>
+<div id="dynamicLight" style="position: fixed; width: 600px; height: 600px; border-radius: 50%; pointer-events: none; z-index: 0; background: radial-gradient(circle, rgba(167,139,250,0.25) 0%, rgba(139,92,246,0.15) 30%, transparent 70%); filter: blur(80px); left: -300px; top: -300px; transition: all 0.1s ease-out;"></div>
 
 <!-- Google Translate Widget -->
 <div class="lang-selector">
@@ -87,10 +77,6 @@
                     <span>Toggle country borders</span>
                 </div>
                 <div class="control-item">
-                    <span class="control-icon">☁️</span>
-                    <span>Toggle cloud layer</span>
-                </div>
-                <div class="control-item">
                     <span class="control-icon">🎨</span>
                     <span>Cycle map styles</span>
                 </div>
@@ -104,7 +90,7 @@
         </button>
         <div class="menu-section" id="contactSection">
             <div class="contact-info">
-                <a href="mailto:contact.maps@gmail.com" class="contact-link">
+                <a href="mailto:contact.mapsat@gmail.com" class="contact-link">
                     <span>📧</span>
                     <span>contact.mapsat@gmail.com</span>
                 </a>
@@ -245,23 +231,23 @@
 </script>
 <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 <script src="script.js"></script>
-    <div id="custom-header-unique">
+
+<div id="custom-header-unique">
     <img src="logo120x120.png" alt="Logo" class="header-logo-unique">
     <span class="header-title-unique">MapSat</span>
 </div>
 
 <style>
-    /* ID ve Class isimlerini çakışma olmaması için özelleştirdim */
     #custom-header-unique {
-        position: fixed !important; /* Absolute yerine Fixed kullanarak ekrana sabitledik */
+        position: fixed !important;
         top: 30px !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
-        z-index: 99999 !important; /* En üstte olduğundan emin oluyoruz */
+        z-index: 99999 !important;
         display: flex !important;
         align-items: center !important;
         pointer-events: none;
-        white-space: nowrap; /* Satır kaymasını önler */
+        white-space: nowrap;
     }
 
     .header-logo-unique {
@@ -278,13 +264,10 @@
         color: #ffffff !important;
         text-transform: uppercase !important;
         letter-spacing: 4px !important;
-        
-        /* Glow (Parlama) Efekti */
         text-shadow: 
             0 0 10px rgba(0, 150, 255, 1),
             0 0 20px rgba(0, 150, 255, 0.8),
             0 0 30px rgba(0, 150, 255, 0.6) !important;
-        
         line-height: 1 !important;
     }
 </style>
