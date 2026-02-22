@@ -844,3 +844,22 @@ body {
     opacity: 0.6;
     animation: orbitDash 20s linear infinite;
 }
+/* Glow Effects */
+.control-btn:hover,
+.github-login:hover,
+.menu-toggle:hover,
+.timewarp-btn:hover {
+    box-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
+}
+
+/* Orbit Path */
+.orbit-path {
+    stroke-dasharray: 10, 5;
+    animation: dash 20s linear infinite;
+}
+
+@keyframes dash {
+    to {
+        stroke-dashoffset: -100;
+    }
+}
