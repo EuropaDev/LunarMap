@@ -289,13 +289,30 @@ function getOrbitColor(alt) {
     return '#22c55e';
 }
 
-function getOrbitName(alt) {
+function getOrbitName(alt, satType) {
+    if (satType === 'santasat') return 'Ho Ho Ho! 🎅';
+    if (satType === 'ufo') return 'CLASSIFIED 🛸';
     if (alt < 400) return 'VLEO';
     if (alt < 2000) return 'LEO';
     if (alt < 35700) return 'MEO';
     if (alt >= 35700 && alt <= 35900) return 'GEO';
     if (alt > 35900) return 'Beyond GEO';
     return 'HEO';
+}
+```
+
+---
+
+**GitHub Commit:**
+```
+🎄✨ Easter eggs + Tailwind + Dynamic lighting + Orbit paths
+
+- Added SantaSat (🎅🎄) and UFO (🛸👽) easter egg satellites
+- Tailwind CSS integration
+- Mouse-following dynamic light effect with glow
+- Orbit path visualization when satellite selected
+- Custom orbit names for easter eggs
+- Enhanced visual effects and animations
 }
 
 function getPos(satrec, date) {
@@ -375,7 +392,7 @@ function updateSatellitePosition() {
         if (pv.position) {
             const alt = Math.sqrt(pv.position.x ** 2 + pv.position.y ** 2 + pv.position.z ** 2) - 6371;
             document.getElementById('satAlt').innerText = alt.toFixed(2);
-            document.getElementById('satOrbit').innerText = getOrbitName(alt);
+            document.getElementById('satOrbit').innerText = getOrbitName(alt, sat.type);
             
             if (pv.velocity) {
                 const vel = Math.sqrt(pv.velocity.x ** 2 + pv.velocity.y ** 2 + pv.velocity.z ** 2);
@@ -715,3 +732,204 @@ setTimeout(() => {
 updateTimeDisplay();
 
 console.log('🎉 Ready!');
+// ============================================
+// DYNAMIC LIGHT EFFECT
+// ============================================
+document.addEventListener('mousemove', (e) => {
+    const light = document.getElementById('dynamicLight');
+    if (light) {
+        light.style.left = `${e.clientX - 300}px`;
+        light.style.top = `${e.clientY - 300}px`;
+    }
+});
+
+// ============================================
+// EASTER EGG SATELLITES
+// ============================================
+
+// SantaSat görseli (base64 veya URL)
+const santaSatImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iI2ZmMDAwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iMzAiIHI9IjE1IiBmaWxsPSIjZmZmZmZmIi8+PHRleHQgeD0iNTAiIHk9IjYwIiBmb250LXNpemU9IjMwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn4qF8J+OhTwvdGV4dD48L3N2Zz4=';
+
+// UFO görseli
+const ufoImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZWxsaXBzZSBjeD0iNTAiIGN5PSI1MCIgcng9IjQwIiByeT0iMjAiIGZpbGw9IiM4OGNjZmYiIG9wYWNpdHk9IjAuOCIvPjxlbGxpcHNlIGN4PSI1MCIgY3k9IjQwIiByeD0iMjAiIHJ5PSIxNSIgZmlsbD0iIzAwZmZmZiIgb3BhY2l0eT0iMC42Ii8+PHRleHQgeD0iNTAiIHk9IjYwIiBmb250LXNpemU9IjI1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn5+4PC90ZXh0Pjwvc3ZnPg==';
+
+// Easter egg uyduları ekle
+satelliteImages.santasat = santaSatImage;
+satelliteImages.ufo = ufoImage;
+
+// TLE fetch kısmında, data.push'tan ÖNCE easter egg'leri ekle
+// Dosyada `for (let i = 0; i < lines.length - 2; i += 3)` döngüsünden HEMEN SONRA ekle:
+
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+    return originalFetch.apply(this, args).then(response => {
+        if (args[0].includes('celestrak')) {
+            return response.text().then(tle => {
+                // Easter egg TLE'ler ekle
+                const easterEggTLE = `
+SANTASAT
+1 99999U 24001A   24001.50000000  .00000000  00000-0  00000-0 0    10
+2 99999  90.0000   0.0000 0001000   0.0000   0.0000 15.00000000    18
+UFO-UNKNOWN
+1 88888U 24002A   24001.50000000  .00000000  00000-0  00000-0 0    10
+2 88888   0.0000   0.0000 0001000   0.0000   0.0000 16.00000000    18
+`;
+                return tle + '\n' + easterEggTLE;
+            });
+        }
+        return response;
+    });
+};
+
+// ============================================
+// ORBIT PATH VISUALIZATION
+// ============================================
+
+let orbitPathLayer = null;
+
+function drawOrbitPath(satellite) {
+    // Önceki yörüngeyi temizle
+    if (orbitPathLayer) {
+        map.removeLayer(orbitPathLayer);
+    }
+
+    const points = [];
+    const now = simulationTime;
+    
+    // Yörüngeyi 90 dakika boyunca hesapla (1 tam yörünge)
+    for (let i = 0; i < 90; i++) {
+        const time = new Date(now.getTime() + i * 60 * 1000); // Her dakika
+        const pos = getPos(satellite.satrec, time);
+        if (pos) {
+            points.push([pos.lat, pos.lng]);
+        }
+    }
+
+    if (points.length > 0) {
+        orbitPathLayer = L.polyline(points, {
+            color: '#a78bfa',
+            weight: 2,
+            opacity: 0.6,
+            dashArray: '5, 5',
+            className: 'orbit-path'
+        }).addTo(map);
+
+        console.log('🛸 Orbit path drawn with', points.length, 'points');
+    }
+}
+
+// openSatelliteInfo fonksiyonuna orbit path ekle
+const originalOpenSatelliteInfo = window.openSatelliteInfo;
+window.openSatelliteInfo = function(sat) {
+    originalOpenSatelliteInfo(sat);
+    drawOrbitPath(sat);
+};
+
+// Sidebar kapanınca orbit path'i temizle
+const originalCloseSidebar = window.closeSidebar;
+window.closeSidebar = function() {
+    originalCloseSidebar();
+    if (orbitPathLayer) {
+        map.removeLayer(orbitPathLayer);
+        orbitPathLayer = null;
+    }
+};
+
+// ============================================
+// EASTER EGG DETECTION
+// ============================================
+
+// TLE parsing kısmına ekle (type belirleme kısmına)
+// Dosyada `if (n.includes('ISS')` kısmının ALTINA ekle:
+
+function detectEasterEgg(name) {
+    if (name.includes('SANTASAT')) {
+        return { type: 'santasat', isTrain: false };
+    }
+    if (name.includes('UFO')) {
+        return { type: 'ufo', isTrain: false };
+    }
+    return null;
+}
+
+// Canvas çizim kısmına easter egg desteği ekle
+// _draw() fonksiyonunda, özel uydu çizim kısmına ekle:
+
+const originalLayerDraw = Layer.prototype._draw;
+Layer.prototype._draw = function() {
+    if (!this._d) return;
+    
+    const s = map.getSize();
+    const ctx = this._c.getContext('2d');
+    ctx.clearRect(0, 0, s.x, s.y);
+    satPositions.clear();
+
+    this._d.forEach(sat => {
+        const p = getPos(sat.satrec, simulationTime);
+        if (!p) return;
+        
+        let lng = p.lng;
+        while (lng > 180) lng -= 360;
+        while (lng < -180) lng += 360;
+        
+        const pt = map.latLngToContainerPoint([p.lat, lng]);
+        if (pt.x < -50 || pt.x > s.x + 50 || pt.y < -50 || pt.y > s.y + 50) return;
+
+        satPositions.set(sat.name, { x: pt.x, y: pt.y });
+
+        if (sat.type !== 'normal') {
+            ctx.save();
+            ctx.translate(pt.x, pt.y);
+            ctx.font = '28px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            if (sat.type === 'iss') {
+                ctx.shadowColor = 'rgba(167,139,250,0.8)';
+                ctx.fillText('🛰️', 0, 0);
+            } else if (sat.type === 'tiangong') {
+                ctx.shadowColor = 'rgba(192,132,252,0.8)';
+                ctx.fillText('🛰️', 0, 0);
+            } else if (sat.type === 'hubble') {
+                ctx.shadowColor = 'rgba(129,140,248,0.8)';
+                ctx.fillText('🛰️', 0, 0);
+            } else if (sat.type === 'santasat') {
+                ctx.shadowColor = 'rgba(255,0,0,0.9)';
+                ctx.fillText('🎅🎄', 0, 0);
+            } else if (sat.type === 'ufo') {
+                ctx.shadowColor = 'rgba(0,255,255,0.9)';
+                ctx.fillText('🛸👽', 0, 0);
+            }
+            
+            ctx.shadowBlur = 15;
+            ctx.restore();
+        } else {
+            const alt = satAltitudes.get(sat.name) || 0;
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 1, 0, Math.PI * 2);
+            ctx.fillStyle = getOrbitColor(alt);
+            ctx.fill();
+        }
+    });
+};
+
+// getOrbitName fonksiyonuna easter egg desteği
+const originalGetOrbitName = window.getOrbitName;
+window.getOrbitName = function(alt, satType) {
+    if (satType === 'santasat') return 'Ho Ho Ho Orbit! 🎅';
+    if (satType === 'ufo') return 'Unknown/Classified 🛸';
+    return originalGetOrbitName(alt);
+};
+
+// openSatelliteInfo'ya easter egg desteği
+const typeNames = { 
+    iss: 'International Space Station', 
+    tiangong: 'Tiangong Space Station', 
+    hubble: 'Hubble Space Telescope',
+    santasat: '🎅 Santa Satellite - Christmas Special',
+    ufo: '👽 Unidentified Flying Object'
+};
+
+console.log('🎄 Easter eggs loaded: SantaSat & UFO');
+console.log('💡 Dynamic lighting active');
+console.log('🛸 Orbit path visualization ready');
