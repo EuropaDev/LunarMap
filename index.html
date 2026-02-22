@@ -7,8 +7,22 @@
     <title>MAPSAT | Satellite Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    space: { 900: '#0a0e27', 800: '#0f172a', 700: '#1e293b' }
+                }
+            }
+        }
+    }
+</script>
 </head>
 <body>
+<!-- Dynamic Light Effect -->
+<div id="dynamicLight" class="fixed w-[600px] h-[600px] rounded-full pointer-events-none z-0 transition-all duration-75" style="background: radial-gradient(circle, rgba(167,139,250,0.3) 0%, rgba(139,92,246,0.15) 30%, transparent 70%); filter: blur(80px); left: -300px; top: -300px;"></div>
 
 <!-- Google Translate Widget -->
 <div class="lang-selector">
