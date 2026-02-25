@@ -14,13 +14,13 @@
 <!-- Dynamic Light Effect -->
 <div id="dynamicLight" class="dynamic-light"></div>
 
-<!-- Google Translate Widget -->
+<!-- Language Selector -->
 <div class="lang-selector">
-    <div id="google_translate_element"></div>
+    <iframe src="lang.html" frameborder="0" style="width: 150px; height: 45px; border: none; background: transparent;"></iframe>
 </div>
 
 <!-- Version Badge -->
-<div class="version">Alpha 9.0</div>
+<div class="version">Alpha 9.1</div>
 
 <!-- Top Right Controls -->
 <div class="top-right-controls">
@@ -42,28 +42,28 @@
 
 <div class="menu-sidebar" id="menuSidebar">
     <div class="menu-header">
-        <h2>Menu</h2>
+        <h2 data-i18n="menu">Menu</h2>
         <button class="close-btn" onclick="toggleMenu()">×</button>
     </div>
     
     <div class="menu-content">
         <button class="menu-section-btn" onclick="toggleSection('controls')">
-            <span>🎮 Controls</span>
+            <span data-i18n="controls">🎮 Controls</span>
             <span class="arrow">▼</span>
         </button>
         <div class="menu-section" id="controlsSection">
             <div class="control-list">
-                <div class="control-item"><span class="control-icon">🖱️</span><span>Click satellite to view details</span></div>
-                <div class="control-item"><span class="control-icon">🔍</span><span>Search satellites by name</span></div>
-                <div class="control-item"><span class="control-icon">⏱️</span><span>Time Warp: Speed up simulation</span></div>
-                <div class="control-item"><span class="control-icon">🌐</span><span>Toggle grid lines</span></div>
-                <div class="control-item"><span class="control-icon">🗺️</span><span>Toggle country borders</span></div>
-                <div class="control-item"><span class="control-icon">🎨</span><span>Cycle map styles</span></div>
+                <div class="control-item"><span class="control-icon">🖱️</span><span data-i18n="clickSat">Click satellite to view details</span></div>
+                <div class="control-item"><span class="control-icon">🔍</span><span data-i18n="searchSat">Search satellites by name</span></div>
+                <div class="control-item"><span class="control-icon">⏱️</span><span data-i18n="timeWarp">Time Warp: Speed up simulation</span></div>
+                <div class="control-item"><span class="control-icon">🌐</span><span data-i18n="grid">Toggle grid lines</span></div>
+                <div class="control-item"><span class="control-icon">🗺️</span><span data-i18n="borders">Toggle country borders</span></div>
+                <div class="control-item"><span class="control-icon">🎨</span><span data-i18n="mapStyle">Cycle map styles</span></div>
             </div>
         </div>
 
         <button class="menu-section-btn" onclick="toggleSection('contact')">
-            <span>📧 Contact</span>
+            <span data-i18n="contact">📧 Contact</span>
             <span class="arrow">▼</span>
         </button>
         <div class="menu-section" id="contactSection">
@@ -76,14 +76,10 @@
         <div class="menu-divider"></div>
 
         <div class="menu-section-static">
-            <h3>Powered By</h3>
+            <h3 data-i18n="poweredBy">Powered By</h3>
             <div class="menu-badges">
                 <img src="80x15.png" alt="Badge 1" class="menu-badge">
                 <a href="https://claude.ai" target="_blank"><img src="80x15cld.png" alt="Claude AI" class="menu-badge"></a>
-            </div>
-            <div class="translate-credit">
-                <img src="https://www.gstatic.com/images/branding/googlelogo/1x/googlelogo_color_42x16dp.png" alt="Google">
-                <span>Translated by Google</span>
             </div>
         </div>
     </div>
@@ -101,7 +97,7 @@
 </div>
 
 <div class="search-panel">
-    <input type="text" class="search-input" id="searchInput" placeholder="Search satellites... (Try: SANTASAT or UFO)">
+    <input type="text" class="search-input" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search satellites...">
     <div class="search-results" id="searchResults"></div>
 </div>
 
@@ -115,14 +111,14 @@
     <div class="sidebar-content">
         <div class="sat-image-container">
             <img class="sat-image" id="satImage" alt="Satellite" style="display:none;">
-            <div class="image-loading" id="imageLoading">Loading...</div>
+            <div class="image-loading" id="imageLoading" data-i18n="loading">Loading...</div>
         </div>
-        <div class="sat-info-item"><div class="info-label">Type</div><div class="info-value" id="satType">-</div></div>
-        <div class="sat-info-item"><div class="info-label">Orbit</div><div class="info-value" id="satOrbit">-</div></div>
-        <div class="sat-info-item"><div class="info-label">Latitude</div><div class="info-value" id="satLat">-</div></div>
-        <div class="sat-info-item"><div class="info-label">Longitude</div><div class="info-value" id="satLng">-</div></div>
-        <div class="sat-info-item"><div class="info-label">Altitude (km)</div><div class="info-value" id="satAlt">-</div></div>
-        <div class="sat-info-item"><div class="info-label">Velocity (km/s)</div><div class="info-value" id="satVel">-</div></div>
+        <div class="sat-info-item"><div class="info-label" data-i18n="type">Type</div><div class="info-value" id="satType">-</div></div>
+        <div class="sat-info-item"><div class="info-label" data-i18n="orbit">Orbit</div><div class="info-value" id="satOrbit">-</div></div>
+        <div class="sat-info-item"><div class="info-label" data-i18n="latitude">Latitude</div><div class="info-value" id="satLat">-</div></div>
+        <div class="sat-info-item"><div class="info-label" data-i18n="longitude">Longitude</div><div class="info-value" id="satLng">-</div></div>
+        <div class="sat-info-item"><div class="info-label" data-i18n="altitude">Altitude (km)</div><div class="info-value" id="satAlt">-</div></div>
+        <div class="sat-info-item"><div class="info-label" data-i18n="velocity">Velocity (km/s)</div><div class="info-value" id="satVel">-</div></div>
     </div>
 </div>
 
@@ -142,7 +138,7 @@
 </div>
 
 <div class="timewarp-panel">
-    <div class="timewarp-title">Time Warp</div>
+    <div class="timewarp-title" data-i18n="timeWarpTitle">Time Warp</div>
     <div class="timewarp-controls">
         <button class="timewarp-btn" onclick="setTimeWarp(0)">⏸️</button>
         <button class="timewarp-btn active" onclick="setTimeWarp(1)">1x</button>
@@ -160,17 +156,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
-<script type="text/javascript">
-    function googleTranslateElementInit() {
-        new google.translate.TranslateElement({
-            pageLanguage: 'en',
-            includedLanguages: 'en,tr,es,fr,de,it,pt,ru,zh-CN,ja,ko,ar,hi,pl,nl,sv,no,da,fi,cs,el,he,id,th,vi,uk,ro,hu',
-            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-            autoDisplay: false
-        }, 'google_translate_element');
-    }
-</script>
-<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 <script src="script.js"></script>
 
 <div id="custom-header-unique">
@@ -209,8 +194,6 @@
             0 0 30px rgba(0, 150, 255, 0.6) !important;
         line-height: 1 !important;
     }
-    
-    /* Dynamic Light */
     .dynamic-light {
         position: fixed;
         width: 600px;
