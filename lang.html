@@ -35,17 +35,18 @@
     </style>
 </head>
 <body>
-<!-- Language Selector -->
-<div class="lang-selector">
-    <select id="langSelect" onchange="changeLanguage()" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 8px; color: #cbd5e1; font-size: 13px; font-weight: 500; cursor: pointer; outline: none; padding: 10px 12px;">
+    <select id="langSelect" onchange="changeLanguage()">
         <option value="en">🇬🇧 English</option>
         <option value="tr">🇹🇷 Türkçe</option>
         <option value="es">🇪🇸 Español</option>
         <option value="fr">🇫🇷 Français</option>
         <option value="de">🇩🇪 Deutsch</option>
         <option value="ru">🇷🇺 Русский</option>
+        <option value="zh">🇨🇳 中文</option>
+        <option value="ja">🇯🇵 日本語</option>
+        <option value="ar">🇸🇦 العربية</option>
     </select>
-</div>
+
     <script>
         const translations = {
             en: {
