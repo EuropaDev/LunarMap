@@ -12,7 +12,7 @@
 <body>
 
 <!-- Dynamic Light Effect -->
-<div id="dynamicLight" style="position: fixed; width: 600px; height: 600px; border-radius: 50%; pointer-events: none; z-index: 0; background: radial-gradient(circle, rgba(167,139,250,0.25) 0%, rgba(139,92,246,0.15) 30%, transparent 70%); filter: blur(80px); left: -300px; top: -300px; transition: all 0.1s ease-out;"></div>
+<div id="dynamicLight" class="dynamic-light"></div>
 
 <!-- Google Translate Widget -->
 <div class="lang-selector">
@@ -20,7 +20,7 @@
 </div>
 
 <!-- Version Badge -->
-<div class="version">Alpha 8.6</div>
+<div class="version">Alpha 9.0</div>
 
 <!-- Top Right Controls -->
 <div class="top-right-controls">
@@ -38,10 +38,8 @@
     </button>
 </div>
 
-<!-- Menu Overlay -->
 <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 
-<!-- Left Menu Sidebar -->
 <div class="menu-sidebar" id="menuSidebar">
     <div class="menu-header">
         <h2>Menu</h2>
@@ -49,68 +47,39 @@
     </div>
     
     <div class="menu-content">
-        <!-- Controls Section -->
         <button class="menu-section-btn" onclick="toggleSection('controls')">
             <span>🎮 Controls</span>
             <span class="arrow">▼</span>
         </button>
         <div class="menu-section" id="controlsSection">
             <div class="control-list">
-                <div class="control-item">
-                    <span class="control-icon">🖱️</span>
-                    <span>Click satellite to view details</span>
-                </div>
-                <div class="control-item">
-                    <span class="control-icon">🔍</span>
-                    <span>Search satellites by name</span>
-                </div>
-                <div class="control-item">
-                    <span class="control-icon">⏱️</span>
-                    <span>Time Warp: Speed up simulation</span>
-                </div>
-                <div class="control-item">
-                    <span class="control-icon">🌐</span>
-                    <span>Toggle grid lines</span>
-                </div>
-                <div class="control-item">
-                    <span class="control-icon">🗺️</span>
-                    <span>Toggle country borders</span>
-                </div>
-                <div class="control-item">
-                    <span class="control-icon">🎨</span>
-                    <span>Cycle map styles</span>
-                </div>
+                <div class="control-item"><span class="control-icon">🖱️</span><span>Click satellite to view details</span></div>
+                <div class="control-item"><span class="control-icon">🔍</span><span>Search satellites by name</span></div>
+                <div class="control-item"><span class="control-icon">⏱️</span><span>Time Warp: Speed up simulation</span></div>
+                <div class="control-item"><span class="control-icon">🌐</span><span>Toggle grid lines</span></div>
+                <div class="control-item"><span class="control-icon">🗺️</span><span>Toggle country borders</span></div>
+                <div class="control-item"><span class="control-icon">🎨</span><span>Cycle map styles</span></div>
             </div>
         </div>
 
-        <!-- Contact Section -->
         <button class="menu-section-btn" onclick="toggleSection('contact')">
             <span>📧 Contact</span>
             <span class="arrow">▼</span>
         </button>
         <div class="menu-section" id="contactSection">
             <div class="contact-info">
-                <a href="mailto:contact.mapsat@gmail.com" class="contact-link">
-                    <span>📧</span>
-                    <span>contact.mapsat@gmail.com</span>
-                </a>
-                <a href="https://github.com/EuropaDev/LunarMap" target="_blank" class="contact-link">
-                    <span>💻</span>
-                    <span>GitHub Repository</span>
-                </a>
+                <a href="mailto:contact.mapsat@gmail.com" class="contact-link"><span>📧</span><span>contact.mapsat@gmail.com</span></a>
+                <a href="https://github.com/EuropaDev/LunarMap" target="_blank" class="contact-link"><span>💻</span><span>GitHub Repository</span></a>
             </div>
         </div>
 
         <div class="menu-divider"></div>
 
-        <!-- Powered By Section -->
         <div class="menu-section-static">
             <h3>Powered By</h3>
             <div class="menu-badges">
                 <img src="80x15.png" alt="Badge 1" class="menu-badge">
-                <a href="https://claude.ai" target="_blank">
-                    <img src="80x15cld.png" alt="Claude AI" class="menu-badge">
-                </a>
+                <a href="https://claude.ai" target="_blank"><img src="80x15cld.png" alt="Claude AI" class="menu-badge"></a>
             </div>
             <div class="translate-credit">
                 <img src="https://www.gstatic.com/images/branding/googlelogo/1x/googlelogo_color_42x16dp.png" alt="Google">
@@ -120,7 +89,6 @@
     </div>
 </div>
 
-<!-- Left Control Buttons -->
 <div class="controls">
     <button class="control-btn" onclick="map.zoomIn()" title="Zoom In">+</button>
     <button class="control-btn" onclick="map.zoomOut()" title="Zoom Out">−</button>
@@ -132,16 +100,13 @@
     <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
 </div>
 
-<!-- Search Panel -->
 <div class="search-panel">
-    <input type="text" class="search-input" id="searchInput" placeholder="Search satellites...">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search satellites... (Try: SANTASAT or UFO)">
     <div class="search-results" id="searchResults"></div>
 </div>
 
-<!-- Satellite Info Sidebar Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- Satellite Info Sidebar -->
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="sidebar-title" id="satName">-</div>
@@ -152,34 +117,15 @@
             <img class="sat-image" id="satImage" alt="Satellite" style="display:none;">
             <div class="image-loading" id="imageLoading">Loading...</div>
         </div>
-        <div class="sat-info-item">
-            <div class="info-label">Type</div>
-            <div class="info-value" id="satType">-</div>
-        </div>
-        <div class="sat-info-item">
-            <div class="info-label">Orbit</div>
-            <div class="info-value" id="satOrbit">-</div>
-        </div>
-        <div class="sat-info-item">
-            <div class="info-label">Latitude</div>
-            <div class="info-value" id="satLat">-</div>
-        </div>
-        <div class="sat-info-item">
-            <div class="info-label">Longitude</div>
-            <div class="info-value" id="satLng">-</div>
-        </div>
-        <div class="sat-info-item">
-            <div class="info-label">Altitude (km)</div>
-            <div class="info-value" id="satAlt">-</div>
-        </div>
-        <div class="sat-info-item">
-            <div class="info-label">Velocity (km/s)</div>
-            <div class="info-value" id="satVel">-</div>
-        </div>
+        <div class="sat-info-item"><div class="info-label">Type</div><div class="info-value" id="satType">-</div></div>
+        <div class="sat-info-item"><div class="info-label">Orbit</div><div class="info-value" id="satOrbit">-</div></div>
+        <div class="sat-info-item"><div class="info-label">Latitude</div><div class="info-value" id="satLat">-</div></div>
+        <div class="sat-info-item"><div class="info-label">Longitude</div><div class="info-value" id="satLng">-</div></div>
+        <div class="sat-info-item"><div class="info-label">Altitude (km)</div><div class="info-value" id="satAlt">-</div></div>
+        <div class="sat-info-item"><div class="info-label">Velocity (km/s)</div><div class="info-value" id="satVel">-</div></div>
     </div>
 </div>
 
-<!-- Info Panel (Right Middle) -->
 <div class="info-panel">
     <div class="info-stat">
         <span class="stat-value" id="info">---</span>
@@ -195,7 +141,6 @@
     </div>
 </div>
 
-<!-- Time Warp Panel (Bottom Right) -->
 <div class="timewarp-panel">
     <div class="timewarp-title">Time Warp</div>
     <div class="timewarp-controls">
@@ -209,13 +154,9 @@
     <div class="timewarp-date" id="timeDisplay">-</div>
 </div>
 
-<!-- Tooltip -->
 <div class="tooltip" id="tooltip"></div>
-
-<!-- Map Container -->
 <div id="map"></div>
 
-<!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
@@ -249,14 +190,12 @@
         pointer-events: none;
         white-space: nowrap;
     }
-
     .header-logo-unique {
         height: 30px !important;
         width: auto !important;
         margin-right: 15px !important;
         filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8)) !important;
     }
-
     .header-title-unique {
         font-family: 'Arial Black', sans-serif !important;
         font-size: 26px !important;
@@ -269,6 +208,21 @@
             0 0 20px rgba(0, 150, 255, 0.8),
             0 0 30px rgba(0, 150, 255, 0.6) !important;
         line-height: 1 !important;
+    }
+    
+    /* Dynamic Light */
+    .dynamic-light {
+        position: fixed;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 0;
+        background: radial-gradient(circle, rgba(167,139,250,0.3) 0%, rgba(139,92,246,0.15) 30%, transparent 70%);
+        filter: blur(80px);
+        left: -300px;
+        top: -300px;
+        transition: left 0.1s ease-out, top 0.1s ease-out;
     }
 </style>
 </body>
