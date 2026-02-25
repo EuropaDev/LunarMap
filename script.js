@@ -967,3 +967,275 @@ console.log('✅ Dynamic Light Active');
 console.log('✅ Orbit Path Ready');
 console.log('🎅 SantaSat Loaded');
 console.log('🛸 UFO Loaded');
+
+// ============================================
+// ÇEVIRME SISTEMI
+// ============================================
+const translations = {
+    en: {
+        menu: "Menu", controls: "🎮 Controls", contact: "📧 Contact", poweredBy: "Powered By",
+        clickSat: "Click satellite to view details", searchSat: "Search satellites by name",
+        timeWarp: "Time Warp: Speed up simulation", grid: "Toggle grid lines",
+        borders: "Toggle country borders", mapStyle: "Cycle map styles",
+        searchPlaceholder: "Search satellites...", timeWarpTitle: "TIME WARP",
+        loading: "Loading...", type: "Type", orbit: "Orbit", latitude: "Latitude",
+        longitude: "Longitude", altitude: "Altitude (km)", velocity: "Velocity (km/s)"
+    },
+    tr: {
+        menu: "Menü", controls: "🎮 Kontroller", contact: "📧 İletişim", poweredBy: "Destekleyen",
+        clickSat: "Detayları görmek için uyduya tıklayın", searchSat: "Uyduları ada göre arayın",
+        timeWarp: "Zaman Hızlandırma", grid: "Izgara çizgilerini aç/kapat",
+        borders: "Ülke sınırlarını aç/kapat", mapStyle: "Harita stillerini değiştir",
+        searchPlaceholder: "Uydu ara...", timeWarpTitle: "ZAMAN HIZLANDIRMA",
+        loading: "Yükleniyor...", type: "Tür", orbit: "Yörünge", latitude: "Enlem",
+        longitude: "Boylam", altitude: "Yükseklik (km)", velocity: "Hız (km/s)"
+    },
+    es: {
+        menu: "Menú", controls: "🎮 Controles", contact: "📧 Contacto", poweredBy: "Desarrollado",
+        clickSat: "Haz clic en el satélite", searchSat: "Buscar satélites",
+        timeWarp: "Aceleración temporal", grid: "Líneas de cuadrícula",
+        borders: "Fronteras", mapStyle: "Estilos de mapa",
+        searchPlaceholder: "Buscar...", timeWarpTitle: "ACELERACIÓN",
+        loading: "Cargando...", type: "Tipo", orbit: "Órbita", latitude: "Latitud",
+        longitude: "Longitud", altitude: "Altitud (km)", velocity: "Velocidad (km/s)"
+    },
+    fr: {
+        menu: "Menu", controls: "🎮 Contrôles", contact: "📧 Contact", poweredBy: "Propulsé",
+        clickSat: "Cliquez satellite", searchSat: "Rechercher satellites",
+        timeWarp: "Accélération", grid: "Grille",
+        borders: "Frontières", mapStyle: "Styles carte",
+        searchPlaceholder: "Rechercher...", timeWarpTitle: "ACCÉLÉRATION",
+        loading: "Chargement...", type: "Type", orbit: "Orbite", latitude: "Latitude",
+        longitude: "Longitude", altitude: "Altitude (km)", velocity: "Vitesse (km/s)"
+    },
+    de: {
+        menu: "Menü", controls: "🎮 Steuerung", contact: "📧 Kontakt", poweredBy: "Bereitgestellt",
+        clickSat: "Satellit klicken", searchSat: "Satelliten suchen",
+        timeWarp: "Zeitbeschleunigung", grid: "Gitterlinien",
+        borders: "Grenzen", mapStyle: "Kartenstile",
+        searchPlaceholder: "Suchen...", timeWarpTitle: "ZEITBESCHLEUNIGUNG",
+        loading: "Lädt...", type: "Typ", orbit: "Umlaufbahn", latitude: "Breitengrad",
+        longitude: "Längengrad", altitude: "Höhe (km)", velocity: "Geschwindigkeit (km/s)"
+    },
+    ru: {
+        menu: "Меню", controls: "🎮 Управление", contact: "📧 Контакт", poweredBy: "Поддержка",
+        clickSat: "Нажмите спутник", searchSat: "Поиск спутников",
+        timeWarp: "Ускорение", grid: "Сетка",
+        borders: "Границы", mapStyle: "Стили карты",
+        searchPlaceholder: "Поиск...", timeWarpTitle: "УСКОРЕНИЕ",
+        loading: "Загрузка...", type: "Тип", orbit: "Орбита", latitude: "Широта",
+        longitude: "Долгота", altitude: "Высота (км)", velocity: "Скорость (км/с)"
+    }
+};
+
+function changeLanguage() {
+    const lang = document.getElementById('langSelect').value;
+    const t = translations[lang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.textContent = t[key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (t[key]) el.placeholder = t[key];
+    });
+    localStorage.setItem('selectedLang', lang);
+    console.log('✅ Language:', lang);
+}
+
+// Dil yükle
+const savedLang = localStorage.getItem('selectedLang') || 'en';
+setTimeout(() => {
+    document.getElementById('langSelect').value = savedLang;
+    changeLanguage();
+}, 100);
+
+// ============================================
+// DİNAMİK IŞIK
+// ============================================
+document.addEventListener('mousemove', (e) => {
+    const light = document.getElementById('dynamicLight');
+    if (light) {
+        light.style.left = `${e.clientX - 300}px`;
+        light.style.top = `${e.clientY - 300}px`;
+    }
+});
+
+// ============================================
+// GECE/GÜNDÜZ KAPALI
+// ============================================
+setTimeout(() => {
+    map.eachLayer((lyr) => {
+        if (lyr._c && lyr._c.style && lyr._c.style.pointerEvents === 'none') {
+            const ctx = lyr._c.getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0, 0, lyr._c.width, lyr._c.height);
+                lyr._draw = function() {}; // Gece katmanını durdur
+            }
+        }
+    });
+    console.log('🌙 Night/Day cycle disabled');
+}, 1000);
+
+// ============================================
+// EASTER EGG - TEK UYDU GARANTİSİ
+// ============================================
+
+satelliteImages.santasat = 'https://upload.wikimedia.org/wikipedia/commons/0/04/International_Space_Station_after_undocking_of_STS-132.jpg';
+satelliteImages.ufo = 'https://upload.wikimedia.org/wikipedia/commons/3/3f/HST-SM4.jpeg';
+
+let easterEggsAdded = false;
+
+const origFetch = window.fetch;
+window.fetch = function(url, ...args) {
+    return origFetch(url, ...args).then(res => {
+        if (url.includes('celestrak') && !easterEggsAdded) {
+            easterEggsAdded = true;
+            return res.text().then(txt => {
+                const extra = `
+SANTASAT
+1 99999U 24001A   24001.50000000  .00000000  00000-0  00000-0 0    10
+2 99999  90.0000   0.0000 0001000   0.0000   0.0000 15.00000000    18
+UFO-UNKNOWN
+1 88888U 24002A   24001.50000000  .00000000  00000-0  00000-0 0    10
+2 88888  45.0000 180.0000 0001000   0.0000   0.0000 16.00000000    18`;
+                return new Response(txt + extra, {status: res.status, headers: res.headers});
+            });
+        }
+        return res;
+    });
+};
+
+// TEK UYDU FİLTRESİ
+setTimeout(() => {
+    const seen = {};
+    allSatellites = allSatellites.filter(s => {
+        if (s.name.includes('SANTASAT')) { if (seen.santa) return false; seen.santa = true; s.type = 'santasat'; return true; }
+        if (s.name.includes('UFO')) { if (seen.ufo) return false; seen.ufo = true; s.type = 'ufo'; return true; }
+        if (s.name.includes('ISS') && !s.name.includes('PROGRESS') && !s.name.includes('DRAGON')) { if (seen.iss) return false; seen.iss = true; s.type = 'iss'; return true; }
+        if (s.name.includes('TIANHE') || s.name.includes('TIANGONG') || s.name.includes('CSS')) { if (seen.tian) return false; seen.tian = true; s.type = 'tiangong'; return true; }
+        if (s.name.includes('HUBBLE') || s.name.includes('HST')) { if (seen.hub) return false; seen.hub = true; s.type = 'hubble'; return true; }
+        return true;
+    });
+    layer._d = allSatellites;
+    document.getElementById('info').innerText = allSatellites.length;
+    console.log('✅ Loaded:', allSatellites.length, 'satellites');
+    console.log('   🎅 SantaSat:', seen.santa ? 'YES' : 'NO');
+    console.log('   🛸 UFO:', seen.ufo ? 'YES' : 'NO');
+}, 3000);
+
+// ============================================
+// EASTER EGG NOKTA OLARAK ÇİZ
+// ============================================
+const oldDraw = layer._draw;
+layer._draw = function() {
+    if (!this._d) return;
+    const s = map.getSize();
+    const ctx = this._c.getContext('2d');
+    ctx.clearRect(0, 0, s.x, s.y);
+    satPositions.clear();
+
+    this._d.forEach(sat => {
+        const p = getPos(sat.satrec, simulationTime);
+        if (!p) return;
+        let lng = p.lng;
+        while (lng > 180) lng -= 360;
+        while (lng < -180) lng += 360;
+        const pt = map.latLngToContainerPoint([p.lat, lng]);
+        if (pt.x < -50 || pt.x > s.x + 50 || pt.y < -50 || pt.y > s.y + 50) return;
+        satPositions.set(sat.name, {x: pt.x, y: pt.y});
+
+        // EASTER EGG - NOKTA
+        if (sat.type === 'santasat') {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#ff0000';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            return;
+        }
+        if (sat.type === 'ufo') {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#00ffff';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            return;
+        }
+
+        // NORMAL UYDULAR
+        if (sat.type !== 'normal') {
+            ctx.save();
+            ctx.translate(pt.x, pt.y);
+            ctx.font = '24px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowBlur = 10;
+            if (sat.type === 'iss') ctx.shadowColor = 'rgba(167,139,250,0.8)';
+            else if (sat.type === 'tiangong') ctx.shadowColor = 'rgba(192,132,252,0.8)';
+            else if (sat.type === 'hubble') ctx.shadowColor = 'rgba(129,140,248,0.8)';
+            ctx.fillText('🛰️', 0, 0);
+            ctx.restore();
+        } else {
+            const alt = satAltitudes.get(sat.name) || 0;
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 1, 0, Math.PI * 2);
+            ctx.fillStyle = getOrbitColor(alt);
+            ctx.fill();
+        }
+    });
+};
+
+// ============================================
+// YÖRÜNGE ÇİZİMİ
+// ============================================
+let orbitPath = null;
+
+const oldOpen = openSatelliteInfo;
+window.openSatelliteInfo = function(sat) {
+    oldOpen(sat);
+    
+    // Resim güncelle
+    const img = document.getElementById('satImage');
+    if (sat.type === 'santasat') img.src = satelliteImages.santasat;
+    else if (sat.type === 'ufo') img.src = satelliteImages.ufo;
+    
+    // Tip güncelle
+    if (sat.type === 'santasat') document.getElementById('satType').innerText = '🎅 Santa Satellite';
+    if (sat.type === 'ufo') document.getElementById('satType').innerText = '👽 UFO';
+    
+    // Yörünge çiz
+    if (orbitPath) map.removeLayer(orbitPath);
+    const pts = [];
+    for (let i = 0; i < 90; i++) {
+        const t = new Date(simulationTime.getTime() + i * 60000);
+        const pos = getPos(sat.satrec, t);
+        if (pos) pts.push([pos.lat, pos.lng]);
+    }
+    if (pts.length > 0) {
+        orbitPath = L.polyline(pts, {color: '#a78bfa', weight: 3, opacity: 0.7, dashArray: '10, 10'}).addTo(map);
+    }
+};
+
+const oldClose = closeSidebar;
+window.closeSidebar = function() {
+    oldClose();
+    if (orbitPath) { map.removeLayer(orbitPath); orbitPath = null; }
+};
+
+const oldOrbitName = getOrbitName;
+window.getOrbitName = function(alt) {
+    if (selectedSat && selectedSat.type === 'santasat') return 'Ho Ho Ho! 🎅';
+    if (selectedSat && selectedSat.type === 'ufo') return 'CLASSIFIED 🛸';
+    return oldOrbitName(alt);
+};
+
+console.log('✅ Çeviri aktif');
+console.log('✅ Dinamik ışık aktif');
+console.log('🌙 Gece/gündüz kapalı');
+console.log('🎅 SantaSat: Kırmızı nokta');
+console.log('🛸 UFO: Cyan nokta');
