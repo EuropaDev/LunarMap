@@ -73,6 +73,24 @@
             </div>
         </div>
 
+        <!-- API Key -->
+        <button class="menu-section-btn" onclick="toggleSection('apikey')">
+            <span>🔑 AI API Key</span>
+            <span class="arrow">▼</span>
+        </button>
+        <div class="menu-section" id="apikeySection">
+            <div class="apikey-panel">
+                <p class="apikey-hint">Enter your <a href="https://console.anthropic.com/settings/keys" target="_blank">Anthropic API key</a> to enable AI-powered satellite descriptions.</p>
+                <div class="apikey-row">
+                    <input type="password" id="apiKeyInput" class="apikey-input" placeholder="sk-ant-..." autocomplete="off">
+                    <button class="apikey-btn" onclick="saveApiKey()">Save</button>
+                </div>
+                <span id="apiKeyStatus" class="apikey-status"></span>
+            </div>
+        </div>
+
+        <div class="menu-divider"></div>
+
         <!-- Tema Seçici -->
         <button class="menu-section-btn" onclick="toggleSection('theme')">
             <span>🎨 Theme</span>
@@ -240,5 +258,13 @@
         transition: left 0.1s ease-out, top 0.1s ease-out;
     }
 </style>
+<script>
+// Restore saved API key into input on load
+window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('anthropic_api_key');
+    const input = document.getElementById('apiKeyInput');
+    if (saved && input) input.value = saved;
+});
+</script>
 </body>
 </html>
