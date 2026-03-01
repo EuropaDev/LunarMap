@@ -4,8 +4,7 @@
     <meta charset="utf-8">
     <style>
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             background: transparent;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
@@ -20,7 +19,7 @@
             cursor: pointer;
             outline: none;
             padding: 10px 12px;
-            width: 140px;
+            width: 150px;
             transition: all 0.2s;
         }
         select:hover {
@@ -28,10 +27,7 @@
             border-color: rgba(148, 163, 184, 0.3);
             box-shadow: 0 0 20px rgba(167, 139, 250, 0.4);
         }
-        option {
-            background: #1e293b;
-            color: #cbd5e1;
-        }
+        option { background: #1e293b; color: #cbd5e1; }
     </style>
 </head>
 <body>
@@ -45,102 +41,512 @@
         <option value="zh">🇨🇳 中文</option>
         <option value="ja">🇯🇵 日本語</option>
         <option value="ar">🇸🇦 العربية</option>
+        <option value="pt">🇧🇷 Português</option>
+        <option value="it">🇮🇹 Italiano</option>
+        <option value="ko">🇰🇷 한국어</option>
+        <option value="hi">🇮🇳 हिन्दी</option>
+        <option value="nl">🇳🇱 Nederlands</option>
+        <option value="pl">🇵🇱 Polski</option>
+        <option value="sv">🇸🇪 Svenska</option>
+        <option value="no">🇳🇴 Norsk</option>
+        <option value="da">🇩🇰 Dansk</option>
+        <option value="fi">🇫🇮 Suomi</option>
+        <option value="cs">🇨🇿 Čeština</option>
+        <option value="ro">🇷🇴 Română</option>
+        <option value="hu">🇭🇺 Magyar</option>
+        <option value="uk">🇺🇦 Українська</option>
+        <option value="el">🇬🇷 Ελληνικά</option>
+        <option value="he">🇮🇱 עברית</option>
+        <option value="fa">🇮🇷 فارسی</option>
+        <option value="vi">🇻🇳 Tiếng Việt</option>
+        <option value="th">🇹🇭 ภาษาไทย</option>
+        <option value="id">🇮🇩 Indonesia</option>
+        <option value="ms">🇲🇾 Melayu</option>
+        <option value="bn">🇧🇩 বাংলা</option>
+        <option value="tl">🇵🇭 Filipino</option>
+        <option value="sw">🇰🇪 Kiswahili</option>
+        <option value="af">🇿🇦 Afrikaans</option>
+        <option value="ca">🏴 Català</option>
+        <option value="hr">🇭🇷 Hrvatski</option>
+        <option value="sr">🇷🇸 Srpski</option>
+        <option value="bg">🇧🇬 Български</option>
+        <option value="sk">🇸🇰 Slovenčina</option>
+        <option value="lt">🇱🇹 Lietuvių</option>
+        <option value="lv">🇱🇻 Latviešu</option>
+        <option value="et">🇪🇪 Eesti</option>
+        <option value="sl">🇸🇮 Slovenščina</option>
+        <option value="mk">🇲🇰 Македонски</option>
+        <option value="sq">🇦🇱 Shqip</option>
+        <option value="hy">🇦🇲 Հայերեն</option>
+        <option value="ka">🇬🇪 ქართული</option>
+        <option value="az">🇦🇿 Azərbaycan</option>
+        <option value="kk">🇰🇿 Қазақша</option>
+        <option value="uz">🇺🇿 O'zbek</option>
     </select>
 
     <script>
-        const translations = {
-            en: {
-                menu: "Menu", controls: "🎮 Controls", contact: "📧 Contact", poweredBy: "Powered By",
-                clickSat: "Click satellite to view details", searchSat: "Search satellites by name",
-                timeWarp: "Time Warp: Speed up simulation", grid: "Toggle grid lines",
-                borders: "Toggle country borders", mapStyle: "Cycle map styles",
-                searchPlaceholder: "Search satellites...", timeWarpTitle: "TIME WARP",
-                loading: "Loading...", type: "Type", orbit: "Orbit", latitude: "Latitude",
-                longitude: "Longitude", altitude: "Altitude (km)", velocity: "Velocity (km/s)"
-            },
-            tr: {
-                menu: "Menü", controls: "🎮 Kontroller", contact: "📧 İletişim", poweredBy: "Destekleyen",
-                clickSat: "Detayları görmek için uyduya tıklayın", searchSat: "Uyduları ada göre arayın",
-                timeWarp: "Zaman Hızlandırma: Simülasyonu hızlandır", grid: "Izgara çizgilerini aç/kapat",
-                borders: "Ülke sınırlarını aç/kapat", mapStyle: "Harita stillerini değiştir",
-                searchPlaceholder: "Uydu ara...", timeWarpTitle: "ZAMAN HIZLANDIRMA",
-                loading: "Yükleniyor...", type: "Tür", orbit: "Yörünge", latitude: "Enlem",
-                longitude: "Boylam", altitude: "Yükseklik (km)", velocity: "Hız (km/s)"
-            },
-            es: {
-                menu: "Menú", controls: "🎮 Controles", contact: "📧 Contacto", poweredBy: "Desarrollado por",
-                clickSat: "Haz clic en el satélite", searchSat: "Buscar satélites",
-                timeWarp: "Aceleración temporal", grid: "Líneas de cuadrícula",
-                borders: "Fronteras", mapStyle: "Estilos de mapa",
-                searchPlaceholder: "Buscar satélites...", timeWarpTitle: "ACELERACIÓN TEMPORAL",
-                loading: "Cargando...", type: "Tipo", orbit: "Órbita", latitude: "Latitud",
-                longitude: "Longitud", altitude: "Altitud (km)", velocity: "Velocidad (km/s)"
-            },
-            fr: {
-                menu: "Menu", controls: "🎮 Contrôles", contact: "📧 Contact", poweredBy: "Propulsé par",
-                clickSat: "Cliquez sur le satellite", searchSat: "Rechercher satellites",
-                timeWarp: "Accélération temporelle", grid: "Lignes de grille",
-                borders: "Frontières", mapStyle: "Styles de carte",
-                searchPlaceholder: "Rechercher satellites...", timeWarpTitle: "ACCÉLÉRATION",
-                loading: "Chargement...", type: "Type", orbit: "Orbite", latitude: "Latitude",
-                longitude: "Longitude", altitude: "Altitude (km)", velocity: "Vitesse (km/s)"
-            },
-            de: {
-                menu: "Menü", controls: "🎮 Steuerung", contact: "📧 Kontakt", poweredBy: "Bereitgestellt",
-                clickSat: "Satellit klicken", searchSat: "Satelliten suchen",
-                timeWarp: "Zeitbeschleunigung", grid: "Gitterlinien",
-                borders: "Grenzen", mapStyle: "Kartenstile",
-                searchPlaceholder: "Satelliten suchen...", timeWarpTitle: "ZEITBESCHLEUNIGUNG",
-                loading: "Lädt...", type: "Typ", orbit: "Umlaufbahn", latitude: "Breitengrad",
-                longitude: "Längengrad", altitude: "Höhe (km)", velocity: "Geschwindigkeit (km/s)"
-            },
-            ru: {
-                menu: "Меню", controls: "🎮 Управление", contact: "📧 Контакт", poweredBy: "Поддержка",
-                clickSat: "Нажмите на спутник", searchSat: "Поиск спутников",
-                timeWarp: "Ускорение времени", grid: "Сетка",
-                borders: "Границы", mapStyle: "Стили карты",
-                searchPlaceholder: "Поиск спутников...", timeWarpTitle: "УСКОРЕНИЕ",
-                loading: "Загрузка...", type: "Тип", orbit: "Орбита", latitude: "Широта",
-                longitude: "Долгота", altitude: "Высота (км)", velocity: "Скорость (км/с)"
-            },
-            zh: {
-                menu: "菜单", controls: "🎮 控制", contact: "📧 联系", poweredBy: "技术支持",
-                clickSat: "点击卫星", searchSat: "搜索卫星",
-                timeWarp: "时间加速", grid: "网格线",
-                borders: "边界", mapStyle: "地图样式",
-                searchPlaceholder: "搜索卫星...", timeWarpTitle: "时间加速",
-                loading: "加载中...", type: "类型", orbit: "轨道", latitude: "纬度",
-                longitude: "经度", altitude: "高度 (公里)", velocity: "速度 (公里/秒)"
-            },
-            ja: {
-                menu: "メニュー", controls: "🎮 コントロール", contact: "📧 連絡先", poweredBy: "提供元",
-                clickSat: "衛星をクリック", searchSat: "衛星を検索",
-                timeWarp: "タイムワープ", grid: "グリッド線",
-                borders: "境界線", mapStyle: "地図スタイル",
-                searchPlaceholder: "衛星を検索...", timeWarpTitle: "タイムワープ",
-                loading: "読み込み中...", type: "タイプ", orbit: "軌道", latitude: "緯度",
-                longitude: "経度", altitude: "高度 (km)", velocity: "速度 (km/s)"
-            },
-            ar: {
-                menu: "القائمة", controls: "🎮 التحكم", contact: "📧 اتصل", poweredBy: "مدعوم من",
-                clickSat: "انقر على القمر", searchSat: "البحث عن الأقمار",
-                timeWarp: "تسريع الوقت", grid: "خطوط الشبكة",
-                borders: "الحدود", mapStyle: "أنماط الخريطة",
-                searchPlaceholder: "بحث عن الأقمار...", timeWarpTitle: "تسريع الوقت",
-                loading: "جاري التحميل...", type: "النوع", orbit: "المدار", latitude: "خط العرض",
-                longitude: "خط الطول", altitude: "الارتفاع (كم)", velocity: "السرعة (كم/ث)"
-            }
-        };
-
-        function changeLanguage() {
-            const lang = document.getElementById('langSelect').value;
-            localStorage.setItem('selectedLang', lang);
-            window.parent.postMessage({ type: 'langChange', lang: lang, translations: translations[lang] }, '*');
+    const T = {
+        en: {
+            menu:"Menu", controls:"🎮 Controls", contact:"📧 Contact", poweredBy:"Powered By",
+            clickSat:"Click satellite to view details", searchSat:"Search satellites by name",
+            timeWarp:"Time Warp: Speed up simulation", grid:"Toggle grid lines",
+            borders:"Toggle country borders", mapStyle:"Cycle map styles",
+            searchPlaceholder:"Search satellites...", timeWarpTitle:"TIME WARP",
+            loading:"Loading...", type:"Type", orbit:"Orbit", latitude:"Latitude",
+            longitude:"Longitude", altitude:"Altitude (km)", velocity:"Velocity (km/s)"
+        },
+        tr: {
+            menu:"Menü", controls:"🎮 Kontroller", contact:"📧 İletişim", poweredBy:"Destekleyen",
+            clickSat:"Detayları görmek için uyduya tıklayın", searchSat:"Uyduları ada göre arayın",
+            timeWarp:"Zaman Hızlandırma", grid:"Izgara çizgilerini aç/kapat",
+            borders:"Ülke sınırlarını aç/kapat", mapStyle:"Harita stillerini değiştir",
+            searchPlaceholder:"Uydu ara...", timeWarpTitle:"ZAMAN HIZLANDIRMA",
+            loading:"Yükleniyor...", type:"Tür", orbit:"Yörünge", latitude:"Enlem",
+            longitude:"Boylam", altitude:"Yükseklik (km)", velocity:"Hız (km/s)"
+        },
+        es: {
+            menu:"Menú", controls:"🎮 Controles", contact:"📧 Contacto", poweredBy:"Desarrollado por",
+            clickSat:"Haz clic en el satélite para ver detalles", searchSat:"Buscar satélites por nombre",
+            timeWarp:"Aceleración temporal", grid:"Líneas de cuadrícula",
+            borders:"Fronteras de países", mapStyle:"Estilos de mapa",
+            searchPlaceholder:"Buscar satélites...", timeWarpTitle:"ACELERACIÓN TEMPORAL",
+            loading:"Cargando...", type:"Tipo", orbit:"Órbita", latitude:"Latitud",
+            longitude:"Longitud", altitude:"Altitud (km)", velocity:"Velocidad (km/s)"
+        },
+        fr: {
+            menu:"Menu", controls:"🎮 Contrôles", contact:"📧 Contact", poweredBy:"Propulsé par",
+            clickSat:"Cliquez sur le satellite pour les détails", searchSat:"Rechercher des satellites",
+            timeWarp:"Accélération temporelle", grid:"Lignes de grille",
+            borders:"Frontières des pays", mapStyle:"Styles de carte",
+            searchPlaceholder:"Rechercher satellites...", timeWarpTitle:"ACCÉLÉRATION",
+            loading:"Chargement...", type:"Type", orbit:"Orbite", latitude:"Latitude",
+            longitude:"Longitude", altitude:"Altitude (km)", velocity:"Vitesse (km/s)"
+        },
+        de: {
+            menu:"Menü", controls:"🎮 Steuerung", contact:"📧 Kontakt", poweredBy:"Bereitgestellt von",
+            clickSat:"Satellit klicken für Details", searchSat:"Satelliten nach Name suchen",
+            timeWarp:"Zeitbeschleunigung", grid:"Gitterlinien umschalten",
+            borders:"Ländergrenzen umschalten", mapStyle:"Kartenstile wechseln",
+            searchPlaceholder:"Satelliten suchen...", timeWarpTitle:"ZEITBESCHLEUNIGUNG",
+            loading:"Lädt...", type:"Typ", orbit:"Umlaufbahn", latitude:"Breitengrad",
+            longitude:"Längengrad", altitude:"Höhe (km)", velocity:"Geschwindigkeit (km/s)"
+        },
+        ru: {
+            menu:"Меню", controls:"🎮 Управление", contact:"📧 Контакт", poweredBy:"При поддержке",
+            clickSat:"Нажмите на спутник для деталей", searchSat:"Поиск спутников по имени",
+            timeWarp:"Ускорение времени", grid:"Сетка координат",
+            borders:"Границы стран", mapStyle:"Стили карты",
+            searchPlaceholder:"Поиск спутников...", timeWarpTitle:"УСКОРЕНИЕ ВРЕМЕНИ",
+            loading:"Загрузка...", type:"Тип", orbit:"Орбита", latitude:"Широта",
+            longitude:"Долгота", altitude:"Высота (км)", velocity:"Скорость (км/с)"
+        },
+        zh: {
+            menu:"菜单", controls:"🎮 控制", contact:"📧 联系", poweredBy:"技术支持",
+            clickSat:"点击卫星查看详情", searchSat:"按名称搜索卫星",
+            timeWarp:"时间加速", grid:"切换网格线",
+            borders:"切换国界线", mapStyle:"切换地图样式",
+            searchPlaceholder:"搜索卫星...", timeWarpTitle:"时间加速",
+            loading:"加载中...", type:"类型", orbit:"轨道", latitude:"纬度",
+            longitude:"经度", altitude:"高度（公里）", velocity:"速度（公里/秒）"
+        },
+        ja: {
+            menu:"メニュー", controls:"🎮 コントロール", contact:"📧 連絡先", poweredBy:"提供元",
+            clickSat:"衛星をクリックして詳細を表示", searchSat:"名前で衛星を検索",
+            timeWarp:"タイムワープ", grid:"グリッド線の切り替え",
+            borders:"国境線の切り替え", mapStyle:"地図スタイルの切り替え",
+            searchPlaceholder:"衛星を検索...", timeWarpTitle:"タイムワープ",
+            loading:"読み込み中...", type:"タイプ", orbit:"軌道", latitude:"緯度",
+            longitude:"経度", altitude:"高度 (km)", velocity:"速度 (km/s)"
+        },
+        ar: {
+            menu:"القائمة", controls:"🎮 التحكم", contact:"📧 اتصل بنا", poweredBy:"مدعوم من",
+            clickSat:"انقر على القمر الصناعي لعرض التفاصيل", searchSat:"البحث عن الأقمار الصناعية",
+            timeWarp:"تسريع الوقت", grid:"تبديل خطوط الشبكة",
+            borders:"تبديل حدود الدول", mapStyle:"تغيير أنماط الخريطة",
+            searchPlaceholder:"بحث عن الأقمار...", timeWarpTitle:"تسريع الوقت",
+            loading:"جاري التحميل...", type:"النوع", orbit:"المدار", latitude:"خط العرض",
+            longitude:"خط الطول", altitude:"الارتفاع (كم)", velocity:"السرعة (كم/ث)"
+        },
+        pt: {
+            menu:"Menu", controls:"🎮 Controles", contact:"📧 Contato", poweredBy:"Desenvolvido por",
+            clickSat:"Clique no satélite para ver detalhes", searchSat:"Buscar satélites por nome",
+            timeWarp:"Aceleração do Tempo", grid:"Alternar linhas de grade",
+            borders:"Alternar fronteiras", mapStyle:"Alternar estilos de mapa",
+            searchPlaceholder:"Buscar satélites...", timeWarpTitle:"ACELERAÇÃO DO TEMPO",
+            loading:"Carregando...", type:"Tipo", orbit:"Órbita", latitude:"Latitude",
+            longitude:"Longitude", altitude:"Altitude (km)", velocity:"Velocidade (km/s)"
+        },
+        it: {
+            menu:"Menu", controls:"🎮 Controlli", contact:"📧 Contatti", poweredBy:"Sviluppato da",
+            clickSat:"Clicca sul satellite per i dettagli", searchSat:"Cerca satelliti per nome",
+            timeWarp:"Accelerazione temporale", grid:"Attiva/disattiva griglia",
+            borders:"Attiva/disattiva confini", mapStyle:"Cambia stile mappa",
+            searchPlaceholder:"Cerca satelliti...", timeWarpTitle:"ACCELERAZIONE TEMPORALE",
+            loading:"Caricamento...", type:"Tipo", orbit:"Orbita", latitude:"Latitudine",
+            longitude:"Longitudine", altitude:"Altitudine (km)", velocity:"Velocità (km/s)"
+        },
+        ko: {
+            menu:"메뉴", controls:"🎮 컨트롤", contact:"📧 연락처", poweredBy:"제공",
+            clickSat:"위성을 클릭하여 세부 정보 보기", searchSat:"이름으로 위성 검색",
+            timeWarp:"시간 가속", grid:"격자선 전환",
+            borders:"국경선 전환", mapStyle:"지도 스타일 전환",
+            searchPlaceholder:"위성 검색...", timeWarpTitle:"시간 가속",
+            loading:"로딩 중...", type:"유형", orbit:"궤도", latitude:"위도",
+            longitude:"경도", altitude:"고도 (km)", velocity:"속도 (km/s)"
+        },
+        hi: {
+            menu:"मेनू", controls:"🎮 नियंत्रण", contact:"📧 संपर्क", poweredBy:"द्वारा संचालित",
+            clickSat:"विवरण देखने के लिए उपग्रह पर क्लिक करें", searchSat:"नाम से उपग्रह खोजें",
+            timeWarp:"समय त्वरण", grid:"ग्रिड लाइनें टॉगल करें",
+            borders:"देश सीमाएं टॉगल करें", mapStyle:"मानचित्र शैली बदलें",
+            searchPlaceholder:"उपग्रह खोजें...", timeWarpTitle:"समय त्वरण",
+            loading:"लोड हो रहा है...", type:"प्रकार", orbit:"कक्षा", latitude:"अक्षांश",
+            longitude:"देशांतर", altitude:"ऊंचाई (km)", velocity:"वेग (km/s)"
+        },
+        nl: {
+            menu:"Menu", controls:"🎮 Besturing", contact:"📧 Contact", poweredBy:"Aangedreven door",
+            clickSat:"Klik op satelliet voor details", searchSat:"Satellieten zoeken op naam",
+            timeWarp:"Tijdversnelling", grid:"Rasterlijnen wisselen",
+            borders:"Landsgrenzen wisselen", mapStyle:"Kaartsstijl wisselen",
+            searchPlaceholder:"Satellieten zoeken...", timeWarpTitle:"TIJDVERSNELLING",
+            loading:"Laden...", type:"Type", orbit:"Baan", latitude:"Breedtegraad",
+            longitude:"Lengtegraad", altitude:"Hoogte (km)", velocity:"Snelheid (km/s)"
+        },
+        pl: {
+            menu:"Menu", controls:"🎮 Sterowanie", contact:"📧 Kontakt", poweredBy:"Obsługiwane przez",
+            clickSat:"Kliknij satelitę, aby zobaczyć szczegóły", searchSat:"Szukaj satelitów po nazwie",
+            timeWarp:"Przyspieszenie czasu", grid:"Przełącz linie siatki",
+            borders:"Przełącz granice", mapStyle:"Zmień styl mapy",
+            searchPlaceholder:"Szukaj satelitów...", timeWarpTitle:"PRZYSPIESZENIE CZASU",
+            loading:"Ładowanie...", type:"Typ", orbit:"Orbita", latitude:"Szerokość geogr.",
+            longitude:"Długość geogr.", altitude:"Wysokość (km)", velocity:"Prędkość (km/s)"
+        },
+        sv: {
+            menu:"Meny", controls:"🎮 Kontroller", contact:"📧 Kontakt", poweredBy:"Drivs av",
+            clickSat:"Klicka på satelliten för detaljer", searchSat:"Sök satelliter efter namn",
+            timeWarp:"Tidsacceleration", grid:"Växla rutnät",
+            borders:"Växla landsgränser", mapStyle:"Byt kartstil",
+            searchPlaceholder:"Sök satelliter...", timeWarpTitle:"TIDSACCELERATION",
+            loading:"Laddar...", type:"Typ", orbit:"Omloppsbana", latitude:"Latitud",
+            longitude:"Longitud", altitude:"Höjd (km)", velocity:"Hastighet (km/s)"
+        },
+        no: {
+            menu:"Meny", controls:"🎮 Kontroller", contact:"📧 Kontakt", poweredBy:"Drevet av",
+            clickSat:"Klikk på satellitt for detaljer", searchSat:"Søk satellitter etter navn",
+            timeWarp:"Tidsakselerasjon", grid:"Veksle rutenett",
+            borders:"Veksle landegrenser", mapStyle:"Bytt kartstil",
+            searchPlaceholder:"Søk satellitter...", timeWarpTitle:"TIDSAKSELERASJON",
+            loading:"Laster...", type:"Type", orbit:"Bane", latitude:"Breddegrad",
+            longitude:"Lengdegrad", altitude:"Høyde (km)", velocity:"Hastighet (km/s)"
+        },
+        da: {
+            menu:"Menu", controls:"🎮 Kontroller", contact:"📧 Kontakt", poweredBy:"Drevet af",
+            clickSat:"Klik på satellit for detaljer", searchSat:"Søg satellitter efter navn",
+            timeWarp:"Tidsacceleration", grid:"Skift gitterlinjer",
+            borders:"Skift landsgrænser", mapStyle:"Skift kortstil",
+            searchPlaceholder:"Søg satellitter...", timeWarpTitle:"TIDSACCELERATION",
+            loading:"Indlæser...", type:"Type", orbit:"Bane", latitude:"Breddegrad",
+            longitude:"Længdegrad", altitude:"Højde (km)", velocity:"Hastighed (km/s)"
+        },
+        fi: {
+            menu:"Valikko", controls:"🎮 Ohjaimet", contact:"📧 Yhteystiedot", poweredBy:"Palvelun tarjoaja",
+            clickSat:"Napsauta satelliittia nähdäksesi tiedot", searchSat:"Etsi satelliitteja nimellä",
+            timeWarp:"Aikakerrotus", grid:"Vaihda ruudukkoviivat",
+            borders:"Vaihda maarajat", mapStyle:"Vaihda karttamuotoa",
+            searchPlaceholder:"Etsi satelliitteja...", timeWarpTitle:"AIKAKERROTUS",
+            loading:"Ladataan...", type:"Tyyppi", orbit:"Kiertorata", latitude:"Leveysaste",
+            longitude:"Pituusaste", altitude:"Korkeus (km)", velocity:"Nopeus (km/s)"
+        },
+        cs: {
+            menu:"Nabídka", controls:"🎮 Ovládání", contact:"📧 Kontakt", poweredBy:"Poháněno",
+            clickSat:"Klikněte na satelit pro zobrazení detailů", searchSat:"Hledat satelity podle názvu",
+            timeWarp:"Zrychlení času", grid:"Přepnout mřížku",
+            borders:"Přepnout hranice", mapStyle:"Přepnout styl mapy",
+            searchPlaceholder:"Hledat satelity...", timeWarpTitle:"ZRYCHLENÍ ČASU",
+            loading:"Načítání...", type:"Typ", orbit:"Oběžná dráha", latitude:"Zeměpisná šířka",
+            longitude:"Zeměpisná délka", altitude:"Nadmořská výška (km)", velocity:"Rychlost (km/s)"
+        },
+        ro: {
+            menu:"Meniu", controls:"🎮 Controale", contact:"📧 Contact", poweredBy:"Realizat de",
+            clickSat:"Faceți clic pe satelit pentru detalii", searchSat:"Căutați sateliți după nume",
+            timeWarp:"Accelerarea timpului", grid:"Comutați liniile grilei",
+            borders:"Comutați frontierele", mapStyle:"Schimbați stilul hărții",
+            searchPlaceholder:"Căutați sateliți...", timeWarpTitle:"ACCELERAREA TIMPULUI",
+            loading:"Se încarcă...", type:"Tip", orbit:"Orbită", latitude:"Latitudine",
+            longitude:"Longitudine", altitude:"Altitudine (km)", velocity:"Viteză (km/s)"
+        },
+        hu: {
+            menu:"Menü", controls:"🎮 Vezérlők", contact:"📧 Kapcsolat", poweredBy:"Üzemelteti",
+            clickSat:"Kattintson a műholdra a részletekért", searchSat:"Műholdak keresése név szerint",
+            timeWarp:"Időgyorsítás", grid:"Rácsvonalak be/ki",
+            borders:"Országhatárok be/ki", mapStyle:"Térképstílus váltása",
+            searchPlaceholder:"Műholdak keresése...", timeWarpTitle:"IDŐGYORSÍTÁS",
+            loading:"Betöltés...", type:"Típus", orbit:"Pálya", latitude:"Szélességi fok",
+            longitude:"Hosszúsági fok", altitude:"Magasság (km)", velocity:"Sebesség (km/s)"
+        },
+        uk: {
+            menu:"Меню", controls:"🎮 Керування", contact:"📧 Контакт", poweredBy:"Розроблено",
+            clickSat:"Натисніть на супутник для деталей", searchSat:"Пошук супутників за назвою",
+            timeWarp:"Прискорення часу", grid:"Сітка координат",
+            borders:"Кордони країн", mapStyle:"Стиль карти",
+            searchPlaceholder:"Пошук супутників...", timeWarpTitle:"ПРИСКОРЕННЯ ЧАСУ",
+            loading:"Завантаження...", type:"Тип", orbit:"Орбіта", latitude:"Широта",
+            longitude:"Довгота", altitude:"Висота (км)", velocity:"Швидкість (км/с)"
+        },
+        el: {
+            menu:"Μενού", controls:"🎮 Έλεγχοι", contact:"📧 Επικοινωνία", poweredBy:"Υποστηρίζεται από",
+            clickSat:"Κάντε κλικ στον δορυφόρο για λεπτομέρειες", searchSat:"Αναζήτηση δορυφόρων",
+            timeWarp:"Επιτάχυνση χρόνου", grid:"Γραμμές πλέγματος",
+            borders:"Σύνορα χωρών", mapStyle:"Στυλ χάρτη",
+            searchPlaceholder:"Αναζήτηση δορυφόρων...", timeWarpTitle:"ΕΠΙΤΆΧΥΝΣΗ ΧΡΌΝΟΥ",
+            loading:"Φόρτωση...", type:"Τύπος", orbit:"Τροχιά", latitude:"Γεωγραφικό πλάτος",
+            longitude:"Γεωγραφικό μήκος", altitude:"Υψόμετρο (km)", velocity:"Ταχύτητα (km/s)"
+        },
+        he: {
+            menu:"תפריט", controls:"🎮 בקרה", contact:"📧 צור קשר", poweredBy:"מופעל על ידי",
+            clickSat:"לחץ על לוויין לפרטים", searchSat:"חפש לוויינים לפי שם",
+            timeWarp:"האצת זמן", grid:"שינוי קווי רשת",
+            borders:"שינוי גבולות מדינות", mapStyle:"שינוי סגנון מפה",
+            searchPlaceholder:"חפש לוויינים...", timeWarpTitle:"האצת זמן",
+            loading:"טוען...", type:"סוג", orbit:"מסלול", latitude:"קו רוחב",
+            longitude:"קו אורך", altitude:"גובה (ק\"מ)", velocity:"מהירות (ק\"מ/ש)"
+        },
+        fa: {
+            menu:"منو", controls:"🎮 کنترل‌ها", contact:"📧 تماس", poweredBy:"با پشتیبانی",
+            clickSat:"برای مشاهده جزئیات روی ماهواره کلیک کنید", searchSat:"جستجوی ماهواره‌ها",
+            timeWarp:"شتاب زمان", grid:"تغییر خطوط شبکه",
+            borders:"تغییر مرزها", mapStyle:"تغییر سبک نقشه",
+            searchPlaceholder:"جستجوی ماهواره...", timeWarpTitle:"شتاب زمان",
+            loading:"در حال بارگذاری...", type:"نوع", orbit:"مدار", latitude:"عرض جغرافیایی",
+            longitude:"طول جغرافیایی", altitude:"ارتفاع (کیلومتر)", velocity:"سرعت (کیلومتر/ثانیه)"
+        },
+        vi: {
+            menu:"Menu", controls:"🎮 Điều khiển", contact:"📧 Liên hệ", poweredBy:"Được hỗ trợ bởi",
+            clickSat:"Nhấp vào vệ tinh để xem chi tiết", searchSat:"Tìm kiếm vệ tinh theo tên",
+            timeWarp:"Tăng tốc thời gian", grid:"Chuyển đổi đường lưới",
+            borders:"Chuyển đổi biên giới", mapStyle:"Đổi kiểu bản đồ",
+            searchPlaceholder:"Tìm kiếm vệ tinh...", timeWarpTitle:"TĂNG TỐC THỜI GIAN",
+            loading:"Đang tải...", type:"Loại", orbit:"Quỹ đạo", latitude:"Vĩ độ",
+            longitude:"Kinh độ", altitude:"Độ cao (km)", velocity:"Vận tốc (km/s)"
+        },
+        th: {
+            menu:"เมนู", controls:"🎮 ควบคุม", contact:"📧 ติดต่อ", poweredBy:"ขับเคลื่อนโดย",
+            clickSat:"คลิกที่ดาวเทียมเพื่อดูรายละเอียด", searchSat:"ค้นหาดาวเทียมตามชื่อ",
+            timeWarp:"เร่งเวลา", grid:"สลับเส้นกริด",
+            borders:"สลับพรมแดน", mapStyle:"เปลี่ยนสไตล์แผนที่",
+            searchPlaceholder:"ค้นหาดาวเทียม...", timeWarpTitle:"เร่งเวลา",
+            loading:"กำลังโหลด...", type:"ประเภท", orbit:"วงโคจร", latitude:"ละติจูด",
+            longitude:"ลองจิจูด", altitude:"ระดับความสูง (km)", velocity:"ความเร็ว (km/s)"
+        },
+        id: {
+            menu:"Menu", controls:"🎮 Kontrol", contact:"📧 Kontak", poweredBy:"Didukung oleh",
+            clickSat:"Klik satelit untuk melihat detail", searchSat:"Cari satelit berdasarkan nama",
+            timeWarp:"Percepatan Waktu", grid:"Aktifkan garis kisi",
+            borders:"Aktifkan batas negara", mapStyle:"Ganti gaya peta",
+            searchPlaceholder:"Cari satelit...", timeWarpTitle:"PERCEPATAN WAKTU",
+            loading:"Memuat...", type:"Jenis", orbit:"Orbit", latitude:"Lintang",
+            longitude:"Bujur", altitude:"Ketinggian (km)", velocity:"Kecepatan (km/s)"
+        },
+        ms: {
+            menu:"Menu", controls:"🎮 Kawalan", contact:"📧 Hubungi", poweredBy:"Dikuasakan oleh",
+            clickSat:"Klik satelit untuk lihat butiran", searchSat:"Cari satelit mengikut nama",
+            timeWarp:"Pecutan Masa", grid:"Tukar garis grid",
+            borders:"Tukar sempadan negara", mapStyle:"Tukar gaya peta",
+            searchPlaceholder:"Cari satelit...", timeWarpTitle:"PECUTAN MASA",
+            loading:"Memuatkan...", type:"Jenis", orbit:"Orbit", latitude:"Latitud",
+            longitude:"Longitud", altitude:"Altitud (km)", velocity:"Halaju (km/s)"
+        },
+        bn: {
+            menu:"মেনু", controls:"🎮 নিয়ন্ত্রণ", contact:"📧 যোগাযোগ", poweredBy:"চালিত",
+            clickSat:"বিস্তারিত দেখতে স্যাটেলাইটে ক্লিক করুন", searchSat:"নাম দিয়ে স্যাটেলাইট খুঁজুন",
+            timeWarp:"সময় ত্বরণ", grid:"গ্রিড লাইন টগল করুন",
+            borders:"সীমানা টগল করুন", mapStyle:"ম্যাপ স্টাইল পরিবর্তন করুন",
+            searchPlaceholder:"স্যাটেলাইট খুঁজুন...", timeWarpTitle:"সময় ত্বরণ",
+            loading:"লোড হচ্ছে...", type:"ধরন", orbit:"কক্ষপথ", latitude:"অক্ষাংশ",
+            longitude:"দ্রাঘিমাংশ", altitude:"উচ্চতা (km)", velocity:"বেগ (km/s)"
+        },
+        tl: {
+            menu:"Menu", controls:"🎮 Kontrol", contact:"📧 Makipag-ugnayan", poweredBy:"Pinapagana ng",
+            clickSat:"I-click ang satellite para sa mga detalye", searchSat:"Maghanap ng satellite ayon sa pangalan",
+            timeWarp:"Pagpapabilis ng Oras", grid:"I-toggle ang mga linya ng grid",
+            borders:"I-toggle ang mga hangganan", mapStyle:"Palitan ang estilo ng mapa",
+            searchPlaceholder:"Maghanap ng satellite...", timeWarpTitle:"PAGPAPABILIS NG ORAS",
+            loading:"Naglo-load...", type:"Uri", orbit:"Orbit", latitude:"Latitude",
+            longitude:"Longitude", altitude:"Altitude (km)", velocity:"Bilis (km/s)"
+        },
+        sw: {
+            menu:"Menyu", controls:"🎮 Vidhibiti", contact:"📧 Wasiliana", poweredBy:"Imetengenezwa na",
+            clickSat:"Bonyeza setilaiti kuona maelezo", searchSat:"Tafuta setilaiti kwa jina",
+            timeWarp:"Kuharakisha Wakati", grid:"Badilisha mistari ya gridi",
+            borders:"Badilisha mipaka ya nchi", mapStyle:"Badilisha mtindo wa ramani",
+            searchPlaceholder:"Tafuta setilaiti...", timeWarpTitle:"KUHARAKISHA WAKATI",
+            loading:"Inapakia...", type:"Aina", orbit:"Mzunguko", latitude:"Latitudi",
+            longitude:"Longitudi", altitude:"Urefu (km)", velocity:"Kasi (km/s)"
+        },
+        af: {
+            menu:"Kieslys", controls:"🎮 Beheer", contact:"📧 Kontak", poweredBy:"Aangedryf deur",
+            clickSat:"Klik op satelliet vir besonderhede", searchSat:"Soek satellitte op naam",
+            timeWarp:"Tydversnelling", grid:"Wisselpunklyne",
+            borders:"Landsgrense", mapStyle:"Kaartstyle",
+            searchPlaceholder:"Soek satellitte...", timeWarpTitle:"TYDVERSNELLING",
+            loading:"Laai...", type:"Tipe", orbit:"Wentelbaan", latitude:"Breedtegraad",
+            longitude:"Lengtegraad", altitude:"Hoogte (km)", velocity:"Spoed (km/s)"
+        },
+        ca: {
+            menu:"Menú", controls:"🎮 Controls", contact:"📧 Contacte", poweredBy:"Desenvolupat per",
+            clickSat:"Feu clic al satèl·lit per als detalls", searchSat:"Cerca satèl·lits per nom",
+            timeWarp:"Acceleració temporal", grid:"Línies de quadrícula",
+            borders:"Fronteres", mapStyle:"Estils de mapa",
+            searchPlaceholder:"Cerca satèl·lits...", timeWarpTitle:"ACCELERACIÓ TEMPORAL",
+            loading:"Carregant...", type:"Tipus", orbit:"Òrbita", latitude:"Latitud",
+            longitude:"Longitud", altitude:"Altitud (km)", velocity:"Velocitat (km/s)"
+        },
+        hr: {
+            menu:"Izbornik", controls:"🎮 Upravljanje", contact:"📧 Kontakt", poweredBy:"Pokreće",
+            clickSat:"Kliknite na satelit za detalje", searchSat:"Pretražite satelite po imenu",
+            timeWarp:"Ubrzanje vremena", grid:"Uključi linije mreže",
+            borders:"Uključi granice", mapStyle:"Promijeni stil karte",
+            searchPlaceholder:"Pretraži satelite...", timeWarpTitle:"UBRZANJE VREMENA",
+            loading:"Učitavanje...", type:"Vrsta", orbit:"Orbita", latitude:"Zemljopisna širina",
+            longitude:"Zemljopisna dužina", altitude:"Visina (km)", velocity:"Brzina (km/s)"
+        },
+        sr: {
+            menu:"Meni", controls:"🎮 Kontrole", contact:"📧 Kontakt", poweredBy:"Pokреće",
+            clickSat:"Kliknite na satelit za detalje", searchSat:"Pretražite satelite po imenu",
+            timeWarp:"Ubrzanje vremena", grid:"Linije mreže",
+            borders:"Granice zemalja", mapStyle:"Stil mape",
+            searchPlaceholder:"Pretraži satelite...", timeWarpTitle:"UBRZANJE VREMENA",
+            loading:"Učitavanje...", type:"Vrsta", orbit:"Orbita", latitude:"Geografska širina",
+            longitude:"Geografska dužina", altitude:"Visina (km)", velocity:"Brzina (km/s)"
+        },
+        bg: {
+            menu:"Меню", controls:"🎮 Управление", contact:"📧 Контакт", poweredBy:"Разработено от",
+            clickSat:"Кликнете върху спътника за подробности", searchSat:"Търсене на спътници по име",
+            timeWarp:"Ускорение на времето", grid:"Мрежови линии",
+            borders:"Граници на държавите", mapStyle:"Стил на картата",
+            searchPlaceholder:"Търсене на спътници...", timeWarpTitle:"УСКОРЕНИЕ НА ВРЕМЕТО",
+            loading:"Зареждане...", type:"Тип", orbit:"Орбита", latitude:"Географска ширина",
+            longitude:"Географска дължина", altitude:"Височина (km)", velocity:"Скорост (km/s)"
+        },
+        sk: {
+            menu:"Ponuka", controls:"🎮 Ovládanie", contact:"📧 Kontakt", poweredBy:"Prevádzkuje",
+            clickSat:"Kliknite na satelit pre zobrazenie detailov", searchSat:"Vyhľadajte satelity podľa názvu",
+            timeWarp:"Zrýchlenie času", grid:"Mriežkové čiary",
+            borders:"Hranice krajín", mapStyle:"Štýl mapy",
+            searchPlaceholder:"Hľadajte satelity...", timeWarpTitle:"ZRÝCHLENIE ČASU",
+            loading:"Načítavanie...", type:"Typ", orbit:"Obežná dráha", latitude:"Zemepisná šírka",
+            longitude:"Zemepisná dĺžka", altitude:"Nadmorská výška (km)", velocity:"Rýchlosť (km/s)"
+        },
+        lt: {
+            menu:"Meniu", controls:"🎮 Valdymas", contact:"📧 Kontaktai", poweredBy:"Veikia",
+            clickSat:"Spustelėkite palydovą, kad pamatytumėte išsamią informaciją", searchSat:"Ieškokite palydovų pagal pavadinimą",
+            timeWarp:"Laiko pagreitis", grid:"Tinklelio linijos",
+            borders:"Šalių sienos", mapStyle:"Žemėlapio stilius",
+            searchPlaceholder:"Ieškoti palydovų...", timeWarpTitle:"LAIKO PAGREITIS",
+            loading:"Įkeliama...", type:"Tipas", orbit:"Orbita", latitude:"Platuma",
+            longitude:"Ilguma", altitude:"Aukštis (km)", velocity:"Greitis (km/s)"
+        },
+        lv: {
+            menu:"Izvēlne", controls:"🎮 Vadība", contact:"📧 Kontakts", poweredBy:"Darbina",
+            clickSat:"Noklikšķiniet uz satelīta, lai redzētu detaļas", searchSat:"Meklēt satelītus pēc nosaukuma",
+            timeWarp:"Laika paātrināšana", grid:"Režģa līnijas",
+            borders:"Valstu robežas", mapStyle:"Kartes stils",
+            searchPlaceholder:"Meklēt satelītus...", timeWarpTitle:"LAIKA PAĀTRINĀŠANA",
+            loading:"Ielādē...", type:"Tips", orbit:"Orbīta", latitude:"Platums",
+            longitude:"Garums", altitude:"Augstums (km)", velocity:"Ātrums (km/s)"
+        },
+        et: {
+            menu:"Menüü", controls:"🎮 Juhtimine", contact:"📧 Kontakt", poweredBy:"Töötab",
+            clickSat:"Klõpsake satelliidil üksikasjade nägemiseks", searchSat:"Otsi satelliite nime järgi",
+            timeWarp:"Aja kiirendus", grid:"Ruudustiku jooned",
+            borders:"Riigipiirid", mapStyle:"Kaardi stiil",
+            searchPlaceholder:"Otsi satelliite...", timeWarpTitle:"AJA KIIRENDUS",
+            loading:"Laadimine...", type:"Tüüp", orbit:"Orbiit", latitude:"Laius",
+            longitude:"Pikkus", altitude:"Kõrgus (km)", velocity:"Kiirus (km/s)"
+        },
+        sl: {
+            menu:"Meni", controls:"🎮 Upravljanje", contact:"📧 Stik", poweredBy:"Poganja",
+            clickSat:"Kliknite satelit za podrobnosti", searchSat:"Poiščite satelite po imenu",
+            timeWarp:"Pospeševanje časa", grid:"Mrežne linije",
+            borders:"Državne meje", mapStyle:"Slog zemljevida",
+            searchPlaceholder:"Poiščite satelite...", timeWarpTitle:"POSPEŠEVANJE ČASA",
+            loading:"Nalaganje...", type:"Vrsta", orbit:"Orbita", latitude:"Zemljepisna širina",
+            longitude:"Zemljepisna dolžina", altitude:"Višina (km)", velocity:"Hitrost (km/s)"
+        },
+        mk: {
+            menu:"Мени", controls:"🎮 Управување", contact:"📧 Контакт", poweredBy:"Поддржано од",
+            clickSat:"Кликнете на сателитот за детали", searchSat:"Пребарувајте сателити по име",
+            timeWarp:"Забрзување на времето", grid:"Мрежни линии",
+            borders:"Државни граници", mapStyle:"Стил на картата",
+            searchPlaceholder:"Пребарај сателити...", timeWarpTitle:"ЗАБРЗУВАЊЕ НА ВРЕМЕТО",
+            loading:"Вчитување...", type:"Тип", orbit:"Орбита", latitude:"Географска ширина",
+            longitude:"Географска должина", altitude:"Висина (km)", velocity:"Брзина (km/s)"
+        },
+        sq: {
+            menu:"Menuja", controls:"🎮 Kontrollet", contact:"📧 Kontakti", poweredBy:"E mundësuar nga",
+            clickSat:"Klikoni satelitin për detaje", searchSat:"Kërkoni satelitë sipas emrit",
+            timeWarp:"Përshpejtimi i kohës", grid:"Vijat e rrjetit",
+            borders:"Kufijtë e vendeve", mapStyle:"Stili i hartës",
+            searchPlaceholder:"Kërko satelitë...", timeWarpTitle:"PËRSHPEJTIMI I KOHËS",
+            loading:"Duke ngarkuar...", type:"Lloji", orbit:"Orbita", latitude:"Gjerësia gjeografike",
+            longitude:"Gjatësia gjeografike", altitude:"Lartësia (km)", velocity:"Shpejtësia (km/s)"
+        },
+        hy: {
+            menu:"Ցանկ", controls:"🎮 Կառավարում", contact:"📧 Կապ", poweredBy:"Աջակցվում է",
+            clickSat:"Սեղմեք արբանյակի վրա մանրամասների համար", searchSat:"Փնտրել արբանյակներ անունով",
+            timeWarp:"Ժամանակի արագացում", grid:"Ցանցի գծեր",
+            borders:"Երկրի սահմաններ", mapStyle:"Քարտեզի ոճ",
+            searchPlaceholder:"Փնտրել արբանյակներ...", timeWarpTitle:"ԺԱՄԱՆԱԿԻ ԱՐԱԳԱՑՈՒՄ",
+            loading:"Բեռնում...", type:"Տեսակ", orbit:"Ուղեծիր", latitude:"Լայնություն",
+            longitude:"Երկայնություն", altitude:"Բարձրություն (կմ)", velocity:"Արագություն (կմ/վ)"
+        },
+        ka: {
+            menu:"მენიუ", controls:"🎮 კონტროლი", contact:"📧 კონტაქტი", poweredBy:"მხარდაჭერილია",
+            clickSat:"დააჭირეთ თანამგზავრს დეტალებისთვის", searchSat:"ძიება სახელით",
+            timeWarp:"დროის დაჩქარება", grid:"ბადის ხაზები",
+            borders:"ქვეყნის საზღვრები", mapStyle:"რუკის სტილი",
+            searchPlaceholder:"ძიება...", timeWarpTitle:"დროის დაჩქარება",
+            loading:"იტვირთება...", type:"ტიპი", orbit:"ორბიტა", latitude:"განედი",
+            longitude:"გრძედი", altitude:"სიმაღლე (კმ)", velocity:"სიჩქარე (კმ/წ)"
+        },
+        az: {
+            menu:"Menyu", controls:"🎮 İdarəetmə", contact:"📧 Əlaqə", poweredBy:"Dəstəklənir",
+            clickSat:"Təfərrüatlar üçün peykə klikləyin", searchSat:"Peykləri ada görə axtarın",
+            timeWarp:"Zaman sürətlənməsi", grid:"Şəbəkə xətləri",
+            borders:"Ölkə sərhədləri", mapStyle:"Xəritə stili",
+            searchPlaceholder:"Peykləri axtar...", timeWarpTitle:"ZAMAN SÜRƏTLƏNMƏSİ",
+            loading:"Yüklənir...", type:"Növ", orbit:"Orbit", latitude:"Enlik",
+            longitude:"Uzunluq", altitude:"Yüksəklik (km)", velocity:"Sürət (km/s)"
+        },
+        kk: {
+            menu:"Мәзір", controls:"🎮 Басқару", contact:"📧 Байланыс", poweredBy:"Қолдайды",
+            clickSat:"Мәліметтер үшін жерсерікті басыңыз", searchSat:"Жерсеріктерді атауы бойынша іздеңіз",
+            timeWarp:"Уақытты жеделдету", grid:"Тор сызықтары",
+            borders:"Елдің шекаралары", mapStyle:"Карта стилі",
+            searchPlaceholder:"Жерсеріктерді іздеу...", timeWarpTitle:"УАҚЫТТЫ ЖЕДЕЛДЕТУ",
+            loading:"Жүктелуде...", type:"Түр", orbit:"Орбита", latitude:"Ендік",
+            longitude:"Бойлық", altitude:"Биіктік (км)", velocity:"Жылдамдық (км/с)"
+        },
+        uz: {
+            menu:"Menyu", controls:"🎮 Boshqaruv", contact:"📧 Aloqa", poweredBy:"Qo'llab-quvvatlanadi",
+            clickSat:"Tafsilotlar uchun sun'iy yo'ldoshni bosing", searchSat:"Sun'iy yo'ldoshlarni nom bo'yicha qidiring",
+            timeWarp:"Vaqtni tezlashtirish", grid:"Panjara chiziqlari",
+            borders:"Davlat chegaralari", mapStyle:"Xarita uslubi",
+            searchPlaceholder:"Sun'iy yo'ldosh qidirish...", timeWarpTitle:"VAQTNI TEZLASHTIRISH",
+            loading:"Yuklanmoqda...", type:"Tur", orbit:"Orbita", latitude:"Kenglik",
+            longitude:"Uzunlik", altitude:"Balandlik (km)", velocity:"Tezlik (km/s)"
         }
+    };
 
-        const savedLang = localStorage.getItem('selectedLang') || 'en';
-        document.getElementById('langSelect').value = savedLang;
-        setTimeout(() => changeLanguage(), 100);
+    function changeLanguage() {
+        const lang = document.getElementById('langSelect').value;
+        localStorage.setItem('selectedLang', lang);
+        window.parent.postMessage({ type: 'langChange', lang: lang, translations: T[lang] || T['en'] }, '*');
+    }
+
+    const savedLang = localStorage.getItem('selectedLang') || 'en';
+    document.getElementById('langSelect').value = savedLang;
+    setTimeout(() => changeLanguage(), 100);
     </script>
 </body>
 </html>
