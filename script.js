@@ -293,7 +293,15 @@ function selectSatellite(name) {
         openSatelliteInfo(sat);
         searchResults.classList.remove('show');
         searchInput.value = '';
-        console.log(`🔍 Selected: ${name}`);
+        // Haritada uyduya uç
+        const pos = getPos(sat.satrec, simulationTime);
+        if (pos) {
+            let lng = pos.lng;
+            while (lng > 180) lng -= 360;
+            while (lng < -180) lng += 360;
+            map.flyTo([pos.lat, lng], 5, { duration: 1.8, easeLinearity: 0.4 });
+        }
+        console.log(`🔍 Selected & flying to: ${name}`);
     }
 }
 
@@ -648,33 +656,26 @@ fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
             let type = 'normal';
             let isTrain = false;
 
-            // FIX: ISS - sadece gerçek ISS'i yakala (ISS DEB, ISS (ZARYA) vb. değil)
-            // Celestrak'ta ISS genellikle "ISS (ZARYA)" olarak geçer
-            if (n === 'ISS (ZARYA)' || n === 'ISS') {
+            // Kesin tanımlama: NORAD katalog numarasına göre
+            // TLE Line 1'den NORAD ID'yi çek (karakter 3-7)
+            const line1 = lines[i + 1] ? lines[i + 1].trim() : '';
+            const noradId = line1.length > 7 ? parseInt(line1.substring(2, 7).trim()) : -1;
+
+            if (noradId === 25544) {
+                // ISS (ZARYA) — tek ve kesin
                 type = 'iss';
-            }
-            // FIX: Tiangong - Celestrak'ta "CSS (TIANHE-1)" veya "TIANHE" olarak geçer
-            else if (
-                n === 'CSS (TIANHE-1)' ||
-                n.startsWith('CSS (TIANHE') ||
-                n.includes('TIANGONG') ||
-                n.includes('TIANHE') ||
-                n === 'CSS'
-            ) {
+                console.log(`🛰️ ISS bulundu: ${n} (NORAD: ${noradId})`);
+            } else if (noradId === 48274 || noradId === 57053 || noradId === 54216) {
+                // CSS Tianhe-1 (48274), Wentian (57053), Mengtian (54216)
                 type = 'tiangong';
-                console.log(`🇨🇳 Tiangong bulundu: ${n}`);
-            }
-            else if (n.includes('HUBBLE') || n.includes('HST')) {
+                console.log(`🇨🇳 Tiangong modülü: ${n} (NORAD: ${noradId})`);
+            } else if (n.includes('HUBBLE') || n.includes('HST') || noradId === 20580) {
                 type = 'hubble';
-            }
-            else if (n.includes('STARLINK') && n.match(/STARLINK-\d{4,}/)) {
+            } else if (n.includes('STARLINK') && n.match(/STARLINK-\d{4,}/)) {
                 isTrain = true;
-            }
-            // Easter eggs
-            else if (n.includes('SANTASAT')) {
+            } else if (n.includes('SANTASAT')) {
                 type = 'santasat';
-            }
-            else if (n.includes('UFO')) {
+            } else if (n.includes('UFO')) {
                 type = 'ufo';
             }
 
@@ -792,3 +793,30 @@ console.log('✅ Dynamic Light Active');
 console.log('✅ Orbit Path Ready');
 console.log('🎅 SantaSat Loaded (map only)');
 console.log('🛸 UFO Loaded (sidebar only, hidden on map)');
+
+// ============================================
+// TEMA YÖNETİMİ
+// ============================================
+
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('mapsat_theme', theme);
+
+    // Aktif butonu güncelle
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.theme === theme);
+    });
+    console.log(`🎨 Theme set: ${theme}`);
+}
+
+// Kaydedilmiş temayı uygula
+(function() {
+    const saved = localStorage.getItem('mapsat_theme') || 'mission';
+    document.documentElement.setAttribute('data-theme', saved);
+    // DOM hazır olunca butonları güncelle
+    window.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.theme === saved);
+        });
+    });
+})();
