@@ -7,7 +7,7 @@ console.log('🛰️ Satellite Tracker v0.4 - Initializing...');
 // Satellite image URLs
 const satelliteImages = {
     iss: 'https://upload.wikimedia.org/wikipedia/commons/0/04/International_Space_Station_after_undocking_of_STS-132.jpg',
-    tiangong: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/China_Space_Station_%28render%29.jpg',
+    tiangong: 'https://upload.wikimedia.org/wikipedia/commons/2/25/Chinese_Tiangong_Space_Station.jpg',
     hubble: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/HST-SM4.jpeg',
     starlink: 'https://upload.wikimedia.org/wikipedia/commons/9/91/Starlink_Mission_%2847926144123%29.jpg',
     normal: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/International_Space_Station.svg/800px-International_Space_Station.svg.png',
