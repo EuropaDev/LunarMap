@@ -1,212 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="utf-8">
-    <link rel="icon" type="image/png" href="logo120x120.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAPSAT | Satellite Tracker</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        select {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 8px;
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            padding: 10px 12px;
+            width: 140px;
+            transition: all 0.2s;
+        }
+        select:hover {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: rgba(148, 163, 184, 0.3);
+            box-shadow: 0 0 20px rgba(167, 139, 250, 0.4);
+        }
+        option {
+            background: #1e293b;
+            color: #cbd5e1;
+        }
+    </style>
 </head>
 <body>
+    <select id="langSelect" onchange="changeLanguage()">
+        <option value="en">🇬🇧 English</option>
+        <option value="tr">🇹🇷 Türkçe</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="ru">🇷🇺 Русский</option>
+        <option value="zh">🇨🇳 中文</option>
+        <option value="ja">🇯🇵 日本語</option>
+        <option value="ar">🇸🇦 العربية</option>
+    </select>
 
-<!-- Dynamic Light Effect -->
-<div id="dynamicLight" class="dynamic-light"></div>
+    <script>
+        const translations = {
+            en: {
+                menu: "Menu", controls: "🎮 Controls", contact: "📧 Contact", poweredBy: "Powered By",
+                clickSat: "Click satellite to view details", searchSat: "Search satellites by name",
+                timeWarp: "Time Warp: Speed up simulation", grid: "Toggle grid lines",
+                borders: "Toggle country borders", mapStyle: "Cycle map styles",
+                searchPlaceholder: "Search satellites...", timeWarpTitle: "TIME WARP",
+                loading: "Loading...", type: "Type", orbit: "Orbit", latitude: "Latitude",
+                longitude: "Longitude", altitude: "Altitude (km)", velocity: "Velocity (km/s)"
+            },
+            tr: {
+                menu: "Menü", controls: "🎮 Kontroller", contact: "📧 İletişim", poweredBy: "Destekleyen",
+                clickSat: "Detayları görmek için uyduya tıklayın", searchSat: "Uyduları ada göre arayın",
+                timeWarp: "Zaman Hızlandırma: Simülasyonu hızlandır", grid: "Izgara çizgilerini aç/kapat",
+                borders: "Ülke sınırlarını aç/kapat", mapStyle: "Harita stillerini değiştir",
+                searchPlaceholder: "Uydu ara...", timeWarpTitle: "ZAMAN HIZLANDIRMA",
+                loading: "Yükleniyor...", type: "Tür", orbit: "Yörünge", latitude: "Enlem",
+                longitude: "Boylam", altitude: "Yükseklik (km)", velocity: "Hız (km/s)"
+            },
+            es: {
+                menu: "Menú", controls: "🎮 Controles", contact: "📧 Contacto", poweredBy: "Desarrollado por",
+                clickSat: "Haz clic en el satélite", searchSat: "Buscar satélites",
+                timeWarp: "Aceleración temporal", grid: "Líneas de cuadrícula",
+                borders: "Fronteras", mapStyle: "Estilos de mapa",
+                searchPlaceholder: "Buscar satélites...", timeWarpTitle: "ACELERACIÓN TEMPORAL",
+                loading: "Cargando...", type: "Tipo", orbit: "Órbita", latitude: "Latitud",
+                longitude: "Longitud", altitude: "Altitud (km)", velocity: "Velocidad (km/s)"
+            },
+            fr: {
+                menu: "Menu", controls: "🎮 Contrôles", contact: "📧 Contact", poweredBy: "Propulsé par",
+                clickSat: "Cliquez sur le satellite", searchSat: "Rechercher satellites",
+                timeWarp: "Accélération temporelle", grid: "Lignes de grille",
+                borders: "Frontières", mapStyle: "Styles de carte",
+                searchPlaceholder: "Rechercher satellites...", timeWarpTitle: "ACCÉLÉRATION",
+                loading: "Chargement...", type: "Type", orbit: "Orbite", latitude: "Latitude",
+                longitude: "Longitude", altitude: "Altitude (km)", velocity: "Vitesse (km/s)"
+            },
+            de: {
+                menu: "Menü", controls: "🎮 Steuerung", contact: "📧 Kontakt", poweredBy: "Bereitgestellt",
+                clickSat: "Satellit klicken", searchSat: "Satelliten suchen",
+                timeWarp: "Zeitbeschleunigung", grid: "Gitterlinien",
+                borders: "Grenzen", mapStyle: "Kartenstile",
+                searchPlaceholder: "Satelliten suchen...", timeWarpTitle: "ZEITBESCHLEUNIGUNG",
+                loading: "Lädt...", type: "Typ", orbit: "Umlaufbahn", latitude: "Breitengrad",
+                longitude: "Längengrad", altitude: "Höhe (km)", velocity: "Geschwindigkeit (km/s)"
+            },
+            ru: {
+                menu: "Меню", controls: "🎮 Управление", contact: "📧 Контакт", poweredBy: "Поддержка",
+                clickSat: "Нажмите на спутник", searchSat: "Поиск спутников",
+                timeWarp: "Ускорение времени", grid: "Сетка",
+                borders: "Границы", mapStyle: "Стили карты",
+                searchPlaceholder: "Поиск спутников...", timeWarpTitle: "УСКОРЕНИЕ",
+                loading: "Загрузка...", type: "Тип", orbit: "Орбита", latitude: "Широта",
+                longitude: "Долгота", altitude: "Высота (км)", velocity: "Скорость (км/с)"
+            },
+            zh: {
+                menu: "菜单", controls: "🎮 控制", contact: "📧 联系", poweredBy: "技术支持",
+                clickSat: "点击卫星", searchSat: "搜索卫星",
+                timeWarp: "时间加速", grid: "网格线",
+                borders: "边界", mapStyle: "地图样式",
+                searchPlaceholder: "搜索卫星...", timeWarpTitle: "时间加速",
+                loading: "加载中...", type: "类型", orbit: "轨道", latitude: "纬度",
+                longitude: "经度", altitude: "高度 (公里)", velocity: "速度 (公里/秒)"
+            },
+            ja: {
+                menu: "メニュー", controls: "🎮 コントロール", contact: "📧 連絡先", poweredBy: "提供元",
+                clickSat: "衛星をクリック", searchSat: "衛星を検索",
+                timeWarp: "タイムワープ", grid: "グリッド線",
+                borders: "境界線", mapStyle: "地図スタイル",
+                searchPlaceholder: "衛星を検索...", timeWarpTitle: "タイムワープ",
+                loading: "読み込み中...", type: "タイプ", orbit: "軌道", latitude: "緯度",
+                longitude: "経度", altitude: "高度 (km)", velocity: "速度 (km/s)"
+            },
+            ar: {
+                menu: "القائمة", controls: "🎮 التحكم", contact: "📧 اتصل", poweredBy: "مدعوم من",
+                clickSat: "انقر على القمر", searchSat: "البحث عن الأقمار",
+                timeWarp: "تسريع الوقت", grid: "خطوط الشبكة",
+                borders: "الحدود", mapStyle: "أنماط الخريطة",
+                searchPlaceholder: "بحث عن الأقمار...", timeWarpTitle: "تسريع الوقت",
+                loading: "جاري التحميل...", type: "النوع", orbit: "المدار", latitude: "خط العرض",
+                longitude: "خط الطول", altitude: "الارتفاع (كم)", velocity: "السرعة (كم/ث)"
+            }
+        };
 
-<!-- Language Selector -->
-<div class="lang-selector">
-    <iframe src="lang.html" frameborder="0" style="width: 150px; height: 45px; border: none; background: transparent;"></iframe>
-</div>
+        function changeLanguage() {
+            const lang = document.getElementById('langSelect').value;
+            localStorage.setItem('selectedLang', lang);
+            window.parent.postMessage({ type: 'langChange', lang: lang, translations: translations[lang] }, '*');
+        }
 
-<!-- Version Badge -->
-<div class="version">Alpha 9.2</div>
-
-<!-- Top Right Controls -->
-<div class="top-right-controls">
-    <button class="github-login" onclick="githubLogin()" id="githubBtn" title="Sign in with GitHub">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-        </svg>
-    </button>
-    <button class="menu-toggle" onclick="toggleMenu()">
-        <div class="hamburger">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-    </button>
-</div>
-
-<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
-
-<div class="menu-sidebar" id="menuSidebar">
-    <div class="menu-header">
-        <h2 data-i18n="menu">Menu</h2>
-        <button class="close-btn" onclick="toggleMenu()">×</button>
-    </div>
-    
-    <div class="menu-content">
-        <button class="menu-section-btn" onclick="toggleSection('controls')">
-            <span data-i18n="controls">🎮 Controls</span>
-            <span class="arrow">▼</span>
-        </button>
-        <div class="menu-section" id="controlsSection">
-            <div class="control-list">
-                <div class="control-item"><span class="control-icon">🖱️</span><span data-i18n="clickSat">Click satellite to view details</span></div>
-                <div class="control-item"><span class="control-icon">🔍</span><span data-i18n="searchSat">Search satellites by name</span></div>
-                <div class="control-item"><span class="control-icon">⏱️</span><span data-i18n="timeWarp">Time Warp: Speed up simulation</span></div>
-                <div class="control-item"><span class="control-icon">🌐</span><span data-i18n="grid">Toggle grid lines</span></div>
-                <div class="control-item"><span class="control-icon">🗺️</span><span data-i18n="borders">Toggle country borders</span></div>
-                <div class="control-item"><span class="control-icon">🎨</span><span data-i18n="mapStyle">Cycle map styles</span></div>
-            </div>
-        </div>
-
-        <button class="menu-section-btn" onclick="toggleSection('contact')">
-            <span data-i18n="contact">📧 Contact</span>
-            <span class="arrow">▼</span>
-        </button>
-        <div class="menu-section" id="contactSection">
-            <div class="contact-info">
-                <a href="mailto:contact.mapsat@gmail.com" class="contact-link"><span>📧</span><span>contact.mapsat@gmail.com</span></a>
-                <a href="https://github.com/EuropaDev/LunarMap" target="_blank" class="contact-link"><span>💻</span><span>GitHub Repository</span></a>
-            </div>
-        </div>
-
-        <div class="menu-divider"></div>
-
-        <div class="menu-section-static">
-            <h3 data-i18n="poweredBy">Powered By</h3>
-            <div class="menu-badges">
-                <img src="80x15.png" alt="Badge 1" class="menu-badge">
-                <a href="https://claude.ai" target="_blank"><img src="80x15cld.png" alt="Claude AI" class="menu-badge"></a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="controls">
-    <button class="control-btn" onclick="map.zoomIn()" title="Zoom In">+</button>
-    <button class="control-btn" onclick="map.zoomOut()" title="Zoom Out">−</button>
-    <button class="control-btn" onclick="goToLocation()" title="My Location">📍</button>
-    <button class="control-btn active" id="labelBtn" onclick="toggleLabels()" title="Toggle Labels">🏷️</button>
-    <button class="control-btn" id="gridBtn" onclick="toggleGrid()" title="Toggle Grid">🌐</button>
-    <button class="control-btn" id="borderBtn" onclick="toggleBorders()" title="Toggle Borders">🗺️</button>
-    <button class="control-btn" id="mapBtn" onclick="cycleMapStyle()" title="Map Style">🎨</button>
-    <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
-</div>
-
-<div class="search-panel">
-    <input type="text" class="search-input" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search satellites...">
-    <div class="search-results" id="searchResults"></div>
-</div>
-
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-
-<div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <div class="sidebar-title" id="satName">-</div>
-        <button class="close-btn" onclick="closeSidebar()">×</button>
-    </div>
-    <div class="sidebar-content">
-        <div class="sat-image-container">
-            <img class="sat-image" id="satImage" alt="Satellite" style="display:none;">
-            <div class="image-loading" id="imageLoading" data-i18n="loading">Loading...</div>
-        </div>
-        <div class="sat-info-item"><div class="info-label" data-i18n="type">Type</div><div class="info-value" id="satType">-</div></div>
-        <div class="sat-info-item"><div class="info-label" data-i18n="orbit">Orbit</div><div class="info-value" id="satOrbit">-</div></div>
-        <div class="sat-info-item"><div class="info-label" data-i18n="latitude">Latitude</div><div class="info-value" id="satLat">-</div></div>
-        <div class="sat-info-item"><div class="info-label" data-i18n="longitude">Longitude</div><div class="info-value" id="satLng">-</div></div>
-        <div class="sat-info-item"><div class="info-label" data-i18n="altitude">Altitude (km)</div><div class="info-value" id="satAlt">-</div></div>
-        <div class="sat-info-item"><div class="info-label" data-i18n="velocity">Velocity (km/s)</div><div class="info-value" id="satVel">-</div></div>
-    </div>
-</div>
-
-<div class="info-panel">
-    <div class="info-stat">
-        <span class="stat-value" id="info">---</span>
-        <span class="stat-label">SAT</span>
-    </div>
-    <div class="legend">
-        <div class="legend-dot" style="background:#ef4444" title="VLEO"></div>
-        <div class="legend-dot" style="background:#f97316" title="LEO"></div>
-        <div class="legend-dot" style="background:#eab308" title="MEO"></div>
-        <div class="legend-dot" style="background:#22c55e" title="HEO"></div>
-        <div class="legend-dot" style="background:#3b82f6" title="GEO"></div>
-        <div class="legend-dot" style="background:#a855f7" title="Beyond"></div>
-    </div>
-</div>
-
-<div class="timewarp-panel">
-    <div class="timewarp-title" data-i18n="timeWarpTitle">Time Warp</div>
-    <div class="timewarp-controls">
-        <button class="timewarp-btn" onclick="setTimeWarp(0)">⏸️</button>
-        <button class="timewarp-btn active" onclick="setTimeWarp(1)">1x</button>
-        <button class="timewarp-btn" onclick="setTimeWarp(10)">10x</button>
-        <button class="timewarp-btn" onclick="setTimeWarp(100)">100x</button>
-        <button class="timewarp-btn" onclick="setTimeWarp(1000)">1000x</button>
-        <button class="timewarp-btn timewarp-reset" onclick="resetTime()">🔄</button>
-    </div>
-    <div class="timewarp-date" id="timeDisplay">-</div>
-</div>
-
-<div class="tooltip" id="tooltip"></div>
-<div id="map"></div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
-<script src="script.js"></script>
-
-<div id="custom-header-unique">
-    <img src="logo120x120.png" alt="Logo" class="header-logo-unique">
-    <span class="header-title-unique">MapSat</span>
-</div>
-
-<style>
-    #custom-header-unique {
-        position: fixed !important;
-        top: 30px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        z-index: 99999 !important;
-        display: flex !important;
-        align-items: center !important;
-        pointer-events: none;
-        white-space: nowrap;
-    }
-    .header-logo-unique {
-        height: 30px !important;
-        width: auto !important;
-        margin-right: 15px !important;
-        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8)) !important;
-    }
-    .header-title-unique {
-        font-family: 'Arial Black', sans-serif !important;
-        font-size: 26px !important;
-        font-weight: 900 !important;
-        color: #ffffff !important;
-        text-transform: uppercase !important;
-        letter-spacing: 4px !important;
-        text-shadow: 
-            0 0 10px rgba(0, 150, 255, 1),
-            0 0 20px rgba(0, 150, 255, 0.8),
-            0 0 30px rgba(0, 150, 255, 0.6) !important;
-        line-height: 1 !important;
-    }
-    .dynamic-light {
-        position: fixed;
-        width: 600px;
-        height: 600px;
-        border-radius: 50%;
-        pointer-events: none;
-        z-index: 0;
-        background: radial-gradient(circle, rgba(167,139,250,0.3) 0%, rgba(139,92,246,0.15) 30%, transparent 70%);
-        filter: blur(80px);
-        left: -300px;
-        top: -300px;
-        transition: left 0.1s ease-out, top 0.1s ease-out;
-    }
-</style>
+        const savedLang = localStorage.getItem('selectedLang') || 'en';
+        document.getElementById('langSelect').value = savedLang;
+        setTimeout(() => changeLanguage(), 100);
+    </script>
 </body>
 </html>
