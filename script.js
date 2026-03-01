@@ -7,7 +7,7 @@ console.log('🛰️ Satellite Tracker v0.4 - Initializing...');
 // Satellite image URLs
 const satelliteImages = {
     iss: 'https://upload.wikimedia.org/wikipedia/commons/0/04/International_Space_Station_after_undocking_of_STS-132.jpg',
-    tiangong: 'https://upload.wikimedia.org/wikipedia/commons/2/25/Chinese_Tiangong_Space_Station.jpg',
+    tiangong: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/China_Space_Station_%28render%29.jpg',
     hubble: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/HST-SM4.jpeg',
     starlink: 'https://upload.wikimedia.org/wikipedia/commons/9/91/Starlink_Mission_%2847926144123%29.jpg',
     normal: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/International_Space_Station.svg/800px-International_Space_Station.svg.png',
@@ -425,12 +425,10 @@ async function loadSatAIInfo(satName) {
     const descEl = document.getElementById('satDesc');
     const section= document.getElementById('aiDescSection');
 
-    // Reset UI
     opEl.innerText   = '...';
     descEl.innerText = '...';
     section.classList.add('loading');
 
-    // Cache hit
     if (aiInfoCache[satName]) {
         const d = aiInfoCache[satName];
         opEl.innerText   = d.operator;
@@ -439,44 +437,71 @@ async function loadSatAIInfo(satName) {
         return;
     }
 
-    // Detect current UI language for response language
+    const apiKey = localStorage.getItem('anthropic_api_key') || '';
+    if (!apiKey) {
+        opEl.innerText   = '-';
+        descEl.innerText = '🔑 Enter your Anthropic API key in the menu to enable AI descriptions.';
+        section.classList.remove('loading');
+        return;
+    }
+
     const lang = localStorage.getItem('selectedLang') || 'en';
 
     try {
         const res = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'anthropic-version': '2023-06-01',
+                'anthropic-dangerous-direct-browser-access': 'true'
+            },
             body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
-                max_tokens: 1000,
-                system: `You are a satellite encyclopedia. Always respond ONLY with valid JSON, no markdown, no extra text.`,
+                model: 'claude-haiku-4-5-20251001',
+                max_tokens: 400,
+                system: 'You are a satellite encyclopedia. Respond ONLY with a valid JSON object, no markdown, no extra text.',
                 messages: [{
                     role: 'user',
-                    content: `Satellite: "${satName}"
-Return a JSON object with exactly these two keys:
-- "operator": the organization/company that operates or built this satellite (1 short line). If unknown write "Unknown".
-- "description": 2-3 sentence factual description of this satellite in language code "${lang}". Include launch year, purpose, orbit type, and any notable facts.
-
-Respond ONLY with the JSON object.`
+                    content: `Satellite name: "${satName}". Return JSON with two keys: "operator" (who built/operates it, 1 line, "Unknown" if unsure) and "description" (2-3 sentences in language "${lang}": launch year, purpose, orbit, notable facts). JSON only.`
                 }]
             })
         });
 
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err?.error?.message || `HTTP ${res.status}`);
+        }
+
         const data = await res.json();
-        const text = data.content?.[0]?.text || '{}';
-        const clean = text.replace(/\`\`\`json|\`\`\`/g, '').trim();
-        const parsed = JSON.parse(clean);
+        const text = (data.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim();
+        const parsed = JSON.parse(text);
 
         aiInfoCache[satName] = parsed;
         opEl.innerText   = parsed.operator   || 'Unknown';
         descEl.innerText = parsed.description || '-';
     } catch (e) {
         opEl.innerText   = 'Unknown';
-        descEl.innerText = 'Could not load description.';
+        descEl.innerText = `⚠️ ${e.message || 'Request failed'}`;
         console.warn('AI info failed:', e);
     }
 
     section.classList.remove('loading');
+}
+
+function saveApiKey() {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    if (key) {
+        localStorage.setItem('anthropic_api_key', key);
+        document.getElementById('apiKeyStatus').textContent = '✅ Saved';
+        document.getElementById('apiKeyStatus').style.color = 'var(--accent-green)';
+    } else {
+        localStorage.removeItem('anthropic_api_key');
+        document.getElementById('apiKeyStatus').textContent = '🗑 Cleared';
+        document.getElementById('apiKeyStatus').style.color = 'var(--accent-red)';
+    }
+    setTimeout(() => {
+        document.getElementById('apiKeyStatus').textContent = '';
+    }, 2000);
 }
 
 function updateSatellitePosition() {
