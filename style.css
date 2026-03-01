@@ -865,3 +865,78 @@ html, body {
     background: #fafafa;
     font-size: 13px;
 }
+
+/* ─── API Key Panel ─── */
+.apikey-panel {
+    padding: 10px 4px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.apikey-hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+}
+
+.apikey-hint a {
+    color: var(--accent-main);
+    text-decoration: none;
+}
+
+.apikey-hint a:hover { text-decoration: underline; }
+
+.apikey-row {
+    display: flex;
+    gap: 6px;
+}
+
+.apikey-input {
+    flex: 1;
+    padding: 8px 10px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-sub);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.apikey-input:focus {
+    border-color: var(--border-main);
+    box-shadow: var(--glow-main);
+}
+
+[data-theme="modern"] .apikey-input {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.apikey-btn {
+    padding: 8px 14px;
+    background: color-mix(in srgb, var(--accent-main) 12%, var(--bg-surface));
+    border: 1px solid var(--border-main);
+    border-radius: var(--radius-sm);
+    color: var(--accent-main);
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.apikey-btn:hover {
+    background: color-mix(in srgb, var(--accent-main) 20%, var(--bg-surface));
+    box-shadow: var(--glow-main);
+}
+
+.apikey-status {
+    font-size: 11px;
+    font-weight: 600;
+    min-height: 16px;
+    transition: color 0.2s;
+}
