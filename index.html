@@ -73,6 +73,30 @@
             </div>
         </div>
 
+        <!-- Tema Seçici -->
+        <button class="menu-section-btn" onclick="toggleSection('theme')">
+            <span>🎨 Theme</span>
+            <span class="arrow">▼</span>
+        </button>
+        <div class="menu-section" id="themeSection">
+            <div class="theme-selector">
+                <button class="theme-btn active" data-theme="mission" onclick="setTheme('mission')">
+                    <span class="theme-preview mission-preview"></span>
+                    <span class="theme-info">
+                        <span class="theme-name">Mission Control</span>
+                        <span class="theme-desc">Retro-futuristic dark</span>
+                    </span>
+                </button>
+                <button class="theme-btn" data-theme="modern" onclick="setTheme('modern')">
+                    <span class="theme-preview modern-preview"></span>
+                    <span class="theme-info">
+                        <span class="theme-name">Clean Modern</span>
+                        <span class="theme-desc">Minimal & light</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+
         <div class="menu-divider"></div>
 
         <div class="menu-section-static">
