@@ -801,3 +801,67 @@ html, body {
     .controls { gap: 4px; padding: 6px 4px; }
     .control-btn { width: 32px; height: 32px; font-size: 14px; }
 }
+
+/* ─── AI Description Panel ─── */
+.sat-info-item .info-value#satOperator {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.ai-desc-section {
+    margin-top: 10px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-sub);
+    transition: opacity 0.2s;
+}
+
+.ai-desc-section.loading { opacity: 0.5; }
+
+.ai-desc-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px 6px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-sub);
+}
+
+.ai-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, var(--accent-main), var(--accent-alt));
+    color: #fff;
+    flex-shrink: 0;
+}
+
+[data-theme="modern"] .ai-badge {
+    background: linear-gradient(90deg, #2563eb, #7c3aed);
+}
+
+.ai-desc-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+
+.ai-desc-text {
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+    background: var(--bg-deep);
+}
+
+[data-theme="modern"] .ai-desc-text {
+    background: #fafafa;
+    font-size: 13px;
+}
