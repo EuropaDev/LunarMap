@@ -656,20 +656,12 @@ fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
             let type = 'normal';
             let isTrain = false;
 
-            // Kesin tanımlama: NORAD katalog numarasına göre
-            // TLE Line 1'den NORAD ID'yi çek (karakter 3-7)
-            const line1 = lines[i + 1] ? lines[i + 1].trim() : '';
-            const noradId = line1.length > 7 ? parseInt(line1.substring(2, 7).trim()) : -1;
-
-            if (noradId === 25544) {
-                // ISS (ZARYA) — tek ve kesin
+            // Kesin isim eşleşmesi (kullanıcı doğruladı)
+            if (n === 'ISS (ZARYA)') {
                 type = 'iss';
-                console.log(`🛰️ ISS bulundu: ${n} (NORAD: ${noradId})`);
-            } else if (noradId === 48274 || noradId === 57053 || noradId === 54216) {
-                // CSS Tianhe-1 (48274), Wentian (57053), Mengtian (54216)
+            } else if (n === 'CSS (MENGTIAN)') {
                 type = 'tiangong';
-                console.log(`🇨🇳 Tiangong modülü: ${n} (NORAD: ${noradId})`);
-            } else if (n.includes('HUBBLE') || n.includes('HST') || noradId === 20580) {
+            } else if (n === 'HST') {
                 type = 'hubble';
             } else if (n.includes('STARLINK') && n.match(/STARLINK-\d{4,}/)) {
                 isTrain = true;
