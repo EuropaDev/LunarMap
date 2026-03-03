@@ -7,7 +7,7 @@ console.log('🛰️ Satellite Tracker v0.4 - Initializing...');
 // Satellite image URLs
 const satelliteImages = {
     iss: 'https://upload.wikimedia.org/wikipedia/commons/0/04/International_Space_Station_after_undocking_of_STS-132.jpg',
-    tiangong: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/China_Space_Station_%28render%29.jpg',
+    tiangong: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Chinese_Tiangong_Space_Station.jpg/1280px-Chinese_Tiangong_Space_Station.jpg?_=20221203083003',
     hubble: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/HST-SM4.jpeg',
     starlink: 'https://upload.wikimedia.org/wikipedia/commons/9/91/Starlink_Mission_%2847926144123%29.jpg',
     normal: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/International_Space_Station.svg/800px-International_Space_Station.svg.png',
@@ -420,13 +420,14 @@ function openSatelliteInfo(sat) {
 
 let aiInfoCache = {};
 
-// ── AI KEY — tek yerden yönet ─────────────────────────────
-// Buraya Anthropic API key'ini yaz, herkes kullanabilir:
-const ANTHROPIC_KEY = 'YOUR_API_KEY_HERE';
+// ── GEMINI API — Ucretsiz ─────────────────────────────────
+// aistudio.google.com -> Get API Key -> buraya yapistir:
+const GEMINI_KEY = 'AIzaSyBSaPUESmqGGfQ8KP2myWanPo7v_QQ9LFY';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=';
 // ──────────────────────────────────────────────────────────
 
-function aiCacheGet(k){try{const v=sessionStorage.getItem('ai_'+k);return v?JSON.parse(v):null;}catch{return null;}}
-function aiCacheSet(k,v){try{sessionStorage.setItem('ai_'+k,JSON.stringify(v));}catch{}}
+function aiCacheGet(k){try{const v=sessionStorage.getItem('ai_'+k);return v?JSON.parse(v):null;}catch(e){return null;}}
+function aiCacheSet(k,v){try{sessionStorage.setItem('ai_'+k,JSON.stringify(v));}catch(e){}}
 const aiInflight = new Set();
 
 async function loadSatAIInfo(satName) {
@@ -443,49 +444,39 @@ async function loadSatAIInfo(satName) {
 
     if (aiInflight.has(satName)) return;
     aiInflight.add(satName);
-
-    opEl.innerText   = '...';
-    descEl.innerText = '...';
+    opEl.innerText = descEl.innerText = '...';
     section.classList.add('loading');
 
-    const lang = localStorage.getItem('selectedLang') || 'en';
-    const prompt = 'Satellite:"' + satName + '" lang:"' + lang + '". Reply ONLY valid JSON: {"operator":"<1-line owner>","description":"<2-3 sentences: launch year,purpose,orbit,notable facts>"}';
+    const lang   = localStorage.getItem('selectedLang') || 'en';
+    const prompt = 'Satellite:"' + satName + '" lang:"' + lang + '". Reply ONLY valid JSON: {"operator":"<builder/operator, 1 line>","description":"<2-3 sentences: launch year, purpose, orbit, notable facts>"}';
 
     try {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': ANTHROPIC_KEY,
-                'anthropic-version': '2023-06-01',
-                'anthropic-dangerous-direct-browser-access': 'true'
-            },
-            body: JSON.stringify({
-                model: 'claude-haiku-4-5-20251001',
-                max_tokens: 220,
-                messages: [{ role: 'user', content: prompt }]
+        const res  = await fetch(GEMINI_URL + GEMINI_KEY, {
+            method : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body   : JSON.stringify({
+                contents          : [{ parts: [{ text: prompt }] }],
+                generationConfig  : { maxOutputTokens: 220, temperature: 0.2 }
             })
         });
-
         const data = await res.json();
         if (data.error) throw new Error(data.error.message);
 
-        const raw = (data.content?.[0]?.text || '{}').replace(/```[a-z]*/g,'').trim();
+        const raw = (data.candidates[0].content.parts[0].text || '{}')
+                        .replace(/```json|```/g, '').trim();
         const obj = JSON.parse(raw);
 
         aiCacheSet(satName, obj);
         opEl.innerText   = obj.operator    || 'Unknown';
         descEl.innerText = obj.description || '-';
     } catch (e) {
-        opEl.innerText   = '-';
-        descEl.innerText = '-';
-        console.warn('AI:', satName, e.message);
+        opEl.innerText = descEl.innerText = '-';
+        console.warn('Gemini:', satName, e.message);
     }
 
     aiInflight.delete(satName);
     section.classList.remove('loading');
 }
-
 
 function updateSatellitePosition() {
     if (!selectedSat) return;
