@@ -422,7 +422,7 @@ let aiInfoCache = {};
 
 // ── GEMINI API — Ucretsiz ─────────────────────────────────
 // aistudio.google.com -> Get API Key -> buraya yapistir:
-const GEMINI_KEY = 'AIzaSyBSaPUESmqGGfQ8KP2myWanPo7v_QQ9LFY';
+const GEMINI_KEY = 'AIzaSyAypd7t_gDUcmjIKhwPXffcn9-G2o50b3s';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=';
 // ──────────────────────────────────────────────────────────
 
