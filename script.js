@@ -7,7 +7,7 @@ console.log('🛰️ Satellite Tracker v0.4 - Initializing...');
 // Satellite image URLs
 const satelliteImages = {
     iss: 'https://upload.wikimedia.org/wikipedia/commons/0/04/International_Space_Station_after_undocking_of_STS-132.jpg',
-    tiangong: 'https://upload.wikimedia.org/wikipedia/commons/2/25/Chinese_Tiangong_Space_Station.jpg',
+    tiangong: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/China_Space_Station_%28render%29.jpg',
     hubble: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/HST-SM4.jpeg',
     starlink: 'https://upload.wikimedia.org/wikipedia/commons/9/91/Starlink_Mission_%2847926144123%29.jpg',
     normal: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/International_Space_Station.svg/800px-International_Space_Station.svg.png',
@@ -420,89 +420,72 @@ function openSatelliteInfo(sat) {
 
 let aiInfoCache = {};
 
+// ── AI KEY — tek yerden yönet ─────────────────────────────
+// Buraya Anthropic API key'ini yaz, herkes kullanabilir:
+const ANTHROPIC_KEY = 'YOUR_API_KEY_HERE';
+// ──────────────────────────────────────────────────────────
+
+function aiCacheGet(k){try{const v=sessionStorage.getItem('ai_'+k);return v?JSON.parse(v):null;}catch{return null;}}
+function aiCacheSet(k,v){try{sessionStorage.setItem('ai_'+k,JSON.stringify(v));}catch{}}
+const aiInflight = new Set();
+
 async function loadSatAIInfo(satName) {
-    const opEl   = document.getElementById('satOperator');
-    const descEl = document.getElementById('satDesc');
-    const section= document.getElementById('aiDescSection');
+    const opEl    = document.getElementById('satOperator');
+    const descEl  = document.getElementById('satDesc');
+    const section = document.getElementById('aiDescSection');
+
+    const cached = aiCacheGet(satName);
+    if (cached) {
+        opEl.innerText   = cached.operator;
+        descEl.innerText = cached.description;
+        return;
+    }
+
+    if (aiInflight.has(satName)) return;
+    aiInflight.add(satName);
 
     opEl.innerText   = '...';
     descEl.innerText = '...';
     section.classList.add('loading');
 
-    if (aiInfoCache[satName]) {
-        const d = aiInfoCache[satName];
-        opEl.innerText   = d.operator;
-        descEl.innerText = d.description;
-        section.classList.remove('loading');
-        return;
-    }
-
-    const apiKey = localStorage.getItem('anthropic_api_key') || '';
-    if (!apiKey) {
-        opEl.innerText   = '-';
-        descEl.innerText = '🔑 Enter your Anthropic API key in the menu to enable AI descriptions.';
-        section.classList.remove('loading');
-        return;
-    }
-
     const lang = localStorage.getItem('selectedLang') || 'en';
+    const prompt = 'Satellite:"' + satName + '" lang:"' + lang + '". Reply ONLY valid JSON: {"operator":"<1-line owner>","description":"<2-3 sentences: launch year,purpose,orbit,notable facts>"}';
 
     try {
         const res = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-api-key': apiKey,
+                'x-api-key': ANTHROPIC_KEY,
                 'anthropic-version': '2023-06-01',
                 'anthropic-dangerous-direct-browser-access': 'true'
             },
             body: JSON.stringify({
                 model: 'claude-haiku-4-5-20251001',
-                max_tokens: 400,
-                system: 'You are a satellite encyclopedia. Respond ONLY with a valid JSON object, no markdown, no extra text.',
-                messages: [{
-                    role: 'user',
-                    content: `Satellite name: "${satName}". Return JSON with two keys: "operator" (who built/operates it, 1 line, "Unknown" if unsure) and "description" (2-3 sentences in language "${lang}": launch year, purpose, orbit, notable facts). JSON only.`
-                }]
+                max_tokens: 220,
+                messages: [{ role: 'user', content: prompt }]
             })
         });
 
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err?.error?.message || `HTTP ${res.status}`);
-        }
-
         const data = await res.json();
-        const text = (data.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim();
-        const parsed = JSON.parse(text);
+        if (data.error) throw new Error(data.error.message);
 
-        aiInfoCache[satName] = parsed;
-        opEl.innerText   = parsed.operator   || 'Unknown';
-        descEl.innerText = parsed.description || '-';
+        const raw = (data.content?.[0]?.text || '{}').replace(/```[a-z]*/g,'').trim();
+        const obj = JSON.parse(raw);
+
+        aiCacheSet(satName, obj);
+        opEl.innerText   = obj.operator    || 'Unknown';
+        descEl.innerText = obj.description || '-';
     } catch (e) {
-        opEl.innerText   = 'Unknown';
-        descEl.innerText = `⚠️ ${e.message || 'Request failed'}`;
-        console.warn('AI info failed:', e);
+        opEl.innerText   = '-';
+        descEl.innerText = '-';
+        console.warn('AI:', satName, e.message);
     }
 
+    aiInflight.delete(satName);
     section.classList.remove('loading');
 }
 
-function saveApiKey() {
-    const key = document.getElementById('apiKeyInput').value.trim();
-    if (key) {
-        localStorage.setItem('anthropic_api_key', key);
-        document.getElementById('apiKeyStatus').textContent = '✅ Saved';
-        document.getElementById('apiKeyStatus').style.color = 'var(--accent-green)';
-    } else {
-        localStorage.removeItem('anthropic_api_key');
-        document.getElementById('apiKeyStatus').textContent = '🗑 Cleared';
-        document.getElementById('apiKeyStatus').style.color = 'var(--accent-red)';
-    }
-    setTimeout(() => {
-        document.getElementById('apiKeyStatus').textContent = '';
-    }, 2000);
-}
 
 function updateSatellitePosition() {
     if (!selectedSat) return;
