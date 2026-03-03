@@ -435,10 +435,18 @@ async function loadSatAIInfo(satName) {
     const descEl  = document.getElementById('satDesc');
     const section = document.getElementById('aiDescSection');
 
+    // Önbellekte varsa anında göster
     const cached = aiCacheGet(satName);
     if (cached) {
         opEl.innerText   = cached.operator;
         descEl.innerText = cached.description;
+        return;
+    }
+
+    // Key kontrolü
+    if (!GEMINI_KEY || GEMINI_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+        opEl.innerText   = '-';
+        descEl.innerText = '🔑 script.js dosyasında GEMINI_KEY alanına API key girin.';
         return;
     }
 
@@ -448,30 +456,37 @@ async function loadSatAIInfo(satName) {
     section.classList.add('loading');
 
     const lang   = localStorage.getItem('selectedLang') || 'en';
-    const prompt = 'Satellite:"' + satName + '" lang:"' + lang + '". Reply ONLY valid JSON: {"operator":"<builder/operator, 1 line>","description":"<2-3 sentences: launch year, purpose, orbit, notable facts>"}';
+    const prompt = 'Satellite:"' + satName + '" lang:"' + lang + '". Respond with ONLY a raw JSON object (no markdown, no extra text): {"operator":"<builder/operator>","description":"<2-3 sentences: launch year, purpose, orbit, notable facts>"}';
 
     try {
         const res  = await fetch(GEMINI_URL + GEMINI_KEY, {
             method : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body   : JSON.stringify({
-                contents          : [{ parts: [{ text: prompt }] }],
-                generationConfig  : { maxOutputTokens: 220, temperature: 0.2 }
+                contents        : [{ parts: [{ text: prompt }] }],
+                generationConfig: { maxOutputTokens: 250, temperature: 0.1 }
             })
         });
+
         const data = await res.json();
         if (data.error) throw new Error(data.error.message);
+        if (!data.candidates?.length) throw new Error('Empty response');
 
-        const raw = (data.candidates[0].content.parts[0].text || '{}')
-                        .replace(/```json|```/g, '').trim();
-        const obj = JSON.parse(raw);
+        // Metni al, markdown fence varsa temizle, JSON bul
+        let raw = data.candidates[0]?.content?.parts?.[0]?.text || '';
+        raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
+        const match = raw.match(/\{[\s\S]*\}/);
+        if (!match) throw new Error('No JSON found: ' + raw.slice(0,60));
 
+        const obj = JSON.parse(match[0]);
         aiCacheSet(satName, obj);
         opEl.innerText   = obj.operator    || 'Unknown';
         descEl.innerText = obj.description || '-';
+
     } catch (e) {
-        opEl.innerText = descEl.innerText = '-';
-        console.warn('Gemini:', satName, e.message);
+        opEl.innerText   = '-';
+        descEl.innerText = '⚠️ ' + e.message;
+        console.error('Gemini AI error [' + satName + ']:', e);
     }
 
     aiInflight.delete(satName);
