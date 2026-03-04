@@ -5,9 +5,12 @@
     <link rel="icon" type="image/png" href="logo120x120.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MAPSAT | Satellite Tracker</title>
+    <!-- Leaflet CSS (critical) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- App styles -->
     <link rel="stylesheet" href="style.css">
+    <!-- Tailwind (utility-only, non-critical) -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
 </head>
 <body>
 
@@ -16,7 +19,7 @@
 
 <!-- Language Selector -->
 <div class="lang-selector">
-    <iframe src="lang.html" frameborder="0" style="width: 150px; height: 45px; border: none; background: transparent;"></iframe>
+    <iframe src="lang.html" frameborder="0" style="width:150px;height:45px;border:none;background:transparent;" loading="lazy"></iframe>
 </div>
 
 <!-- Version Badge -->
@@ -24,32 +27,29 @@
 
 <!-- Top Right Controls -->
 <div class="top-right-controls">
-    <button class="github-login" onclick="githubLogin()" id="githubBtn" title="Sign in with GitHub">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+    <button class="github-login" onclick="githubLogin()" id="githubBtn" title="Sign in with GitHub" aria-label="Sign in with GitHub">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
         </svg>
     </button>
-    <button class="menu-toggle" onclick="toggleMenu()">
-        <div class="hamburger">
-            <span></span>
-            <span></span>
-            <span></span>
+    <button class="menu-toggle" onclick="toggleMenu()" aria-label="Open menu">
+        <div class="hamburger" aria-hidden="true">
+            <span></span><span></span><span></span>
         </div>
     </button>
 </div>
 
 <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 
-<div class="menu-sidebar" id="menuSidebar">
+<div class="menu-sidebar" id="menuSidebar" role="dialog" aria-label="Menu">
     <div class="menu-header">
         <h2 data-i18n="menu">Menu</h2>
-        <button class="close-btn" onclick="toggleMenu()">×</button>
+        <button class="close-btn" onclick="toggleMenu()" aria-label="Close menu">×</button>
     </div>
-    
     <div class="menu-content">
         <button class="menu-section-btn" onclick="toggleSection('controls')">
             <span data-i18n="controls">🎮 Controls</span>
-            <span class="arrow">▼</span>
+            <span class="arrow" aria-hidden="true">▼</span>
         </button>
         <div class="menu-section" id="controlsSection">
             <div class="control-list">
@@ -64,19 +64,18 @@
 
         <button class="menu-section-btn" onclick="toggleSection('contact')">
             <span data-i18n="contact">📧 Contact</span>
-            <span class="arrow">▼</span>
+            <span class="arrow" aria-hidden="true">▼</span>
         </button>
         <div class="menu-section" id="contactSection">
             <div class="contact-info">
                 <a href="mailto:contact.mapsat@gmail.com" class="contact-link"><span>📧</span><span>contact.mapsat@gmail.com</span></a>
-                <a href="https://github.com/EuropaDev/LunarMap" target="_blank" class="contact-link"><span>💻</span><span>GitHub Repository</span></a>
+                <a href="https://github.com/EuropaDev/LunarMap" target="_blank" rel="noopener" class="contact-link"><span>💻</span><span>GitHub Repository</span></a>
             </div>
         </div>
 
-        <!-- Tema Seçici -->
         <button class="menu-section-btn" onclick="toggleSection('theme')">
             <span>🎨 Theme</span>
-            <span class="arrow">▼</span>
+            <span class="arrow" aria-hidden="true">▼</span>
         </button>
         <div class="menu-section" id="themeSection">
             <div class="theme-selector">
@@ -91,7 +90,7 @@
                     <span class="theme-preview modern-preview"></span>
                     <span class="theme-info">
                         <span class="theme-name">Clean Modern</span>
-                        <span class="theme-desc">Minimal & light</span>
+                        <span class="theme-desc">Minimal &amp; light</span>
                     </span>
                 </button>
             </div>
@@ -102,40 +101,44 @@
         <div class="menu-section-static">
             <h3 data-i18n="poweredBy">Powered By</h3>
             <div class="menu-badges">
-                <img src="80x15.png" alt="Badge 1" class="menu-badge">
-                <a href="https://claude.ai" target="_blank"><img src="80x15cld.png" alt="Claude AI" class="menu-badge"></a>
+                <img src="80x15.png" alt="TLE data badge" class="menu-badge" loading="lazy">
+                <a href="https://claude.ai" target="_blank" rel="noopener"><img src="80x15cld.png" alt="Claude AI" class="menu-badge" loading="lazy"></a>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Left control strip -->
 <div class="controls">
-    <button class="control-btn" onclick="map.zoomIn()" title="Zoom In">+</button>
-    <button class="control-btn" onclick="map.zoomOut()" title="Zoom Out">−</button>
-    <button class="control-btn" onclick="goToLocation()" title="My Location">📍</button>
-    <button class="control-btn active" id="labelBtn" onclick="toggleLabels()" title="Toggle Labels">🏷️</button>
-    <button class="control-btn" id="gridBtn" onclick="toggleGrid()" title="Toggle Grid">🌐</button>
-    <button class="control-btn" id="borderBtn" onclick="toggleBorders()" title="Toggle Borders">🗺️</button>
-    <button class="control-btn" id="mapBtn" onclick="cycleMapStyle()" title="Map Style">🎨</button>
-    <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+    <button class="control-btn" onclick="map.zoomIn()" title="Zoom In"  aria-label="Zoom in">+</button>
+    <button class="control-btn" onclick="map.zoomOut()" title="Zoom Out" aria-label="Zoom out">−</button>
+    <button class="control-btn" onclick="goToLocation()" title="My Location" aria-label="My location">📍</button>
+    <button class="control-btn active" id="labelBtn" onclick="toggleLabels()" title="Toggle Labels" aria-label="Toggle labels">🏷️</button>
+    <button class="control-btn" id="gridBtn"   onclick="toggleGrid()"    title="Toggle Grid"    aria-label="Toggle grid">🌐</button>
+    <button class="control-btn" id="borderBtn" onclick="toggleBorders()" title="Toggle Borders" aria-label="Toggle borders">🗺️</button>
+    <button class="control-btn" id="mapBtn"    onclick="cycleMapStyle()" title="Map Style"      aria-label="Cycle map style">🎨</button>
+    <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen" aria-label="Toggle fullscreen">⛶</button>
 </div>
 
+<!-- Search -->
 <div class="search-panel">
-    <input type="text" class="search-input" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search satellites...">
-    <div class="search-results" id="searchResults"></div>
+    <input type="text" class="search-input" id="searchInput"
+           data-i18n-placeholder="searchPlaceholder" placeholder="Search satellites…"
+           autocomplete="off" spellcheck="false">
+    <div class="search-results" id="searchResults" role="listbox"></div>
 </div>
 
+<!-- Satellite sidebar -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-
-<div class="sidebar" id="sidebar">
+<div class="sidebar" id="sidebar" role="complementary" aria-label="Satellite info">
     <div class="sidebar-header">
         <div class="sidebar-title" id="satName">-</div>
-        <button class="close-btn" onclick="closeSidebar()">×</button>
+        <button class="close-btn" onclick="closeSidebar()" aria-label="Close">×</button>
     </div>
     <div class="sidebar-content">
         <div class="sat-image-container">
-            <img class="sat-image" id="satImage" alt="Satellite" style="display:none;">
-            <div class="image-loading" id="imageLoading" data-i18n="loading">Loading...</div>
+            <img class="sat-image" id="satImage" alt="Satellite" style="display:none;" loading="lazy">
+            <div class="image-loading" id="imageLoading" data-i18n="loading">Loading…</div>
         </div>
         <div class="sat-info-item"><div class="info-label" data-i18n="type">Type</div><div class="info-value" id="satType">-</div></div>
         <div class="sat-info-item"><div class="info-label" data-i18n="orbit">Orbit</div><div class="info-value" id="satOrbit">-</div></div>
@@ -154,12 +157,13 @@
     </div>
 </div>
 
+<!-- Info + legend -->
 <div class="info-panel">
     <div class="info-stat">
         <span class="stat-value" id="info">---</span>
         <span class="stat-label">SAT</span>
     </div>
-    <div class="legend">
+    <div class="legend" aria-label="Orbit altitude legend">
         <div class="legend-dot" style="background:#ef4444" title="VLEO"></div>
         <div class="legend-dot" style="background:#f97316" title="LEO"></div>
         <div class="legend-dot" style="background:#eab308" title="MEO"></div>
@@ -169,6 +173,7 @@
     </div>
 </div>
 
+<!-- Time Warp -->
 <div class="timewarp-panel">
     <div class="timewarp-title" data-i18n="timeWarpTitle">Time Warp</div>
     <div class="timewarp-controls">
@@ -182,71 +187,21 @@
     <div class="timewarp-date" id="timeDisplay">-</div>
 </div>
 
-<div class="tooltip" id="tooltip"></div>
-<div id="map"></div>
+<div class="tooltip" id="tooltip" role="tooltip"></div>
+<div id="map" aria-label="Satellite map"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
-<script src="script.js"></script>
-
+<!-- Header logo -->
 <div id="custom-header-unique">
-    <img src="logo120x120.png" alt="Logo" class="header-logo-unique">
+    <img src="logo120x120.png" alt="" class="header-logo-unique" aria-hidden="true">
     <span class="header-title-unique">MapSat</span>
 </div>
 
-<style>
-    #custom-header-unique {
-        position: fixed !important;
-        top: 30px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        z-index: 99999 !important;
-        display: flex !important;
-        align-items: center !important;
-        pointer-events: none;
-        white-space: nowrap;
-    }
-    .header-logo-unique {
-        height: 30px !important;
-        width: auto !important;
-        margin-right: 15px !important;
-        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8)) !important;
-    }
-    .header-title-unique {
-        font-family: 'Arial Black', sans-serif !important;
-        font-size: 26px !important;
-        font-weight: 900 !important;
-        color: #ffffff !important;
-        text-transform: uppercase !important;
-        letter-spacing: 4px !important;
-        text-shadow: 
-            0 0 10px rgba(0, 150, 255, 1),
-            0 0 20px rgba(0, 150, 255, 0.8),
-            0 0 30px rgba(0, 150, 255, 0.6) !important;
-        line-height: 1 !important;
-    }
-    .dynamic-light {
-        position: fixed;
-        width: 600px;
-        height: 600px;
-        border-radius: 50%;
-        pointer-events: none;
-        z-index: 0;
-        background: radial-gradient(circle, rgba(167,139,250,0.3) 0%, rgba(139,92,246,0.15) 30%, transparent 70%);
-        filter: blur(80px);
-        left: -300px;
-        top: -300px;
-        transition: left 0.1s ease-out, top 0.1s ease-out;
-    }
-</style>
-<script>
-// Restore saved API key into input on load
-window.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem('anthropic_api_key');
-    const input = document.getElementById('apiKeyInput');
-    if (saved && input) input.value = saved;
-});
-</script>
+<!-- Critical libs (sync — map needs these immediately) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
+<!-- App script -->
+<script src="script.js"></script>
+
 </body>
 </html>
