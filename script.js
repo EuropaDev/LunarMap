@@ -1,52 +1,85 @@
 // ============================================
-// SATELLITE TRACKER - MAIN SCRIPT
+// SATELLITE TRACKER — OPTIMIZED SCRIPT
 // ============================================
 
-console.log('🛰️ Satellite Tracker v0.4 - Initializing...');
+console.log('🛰️ Satellite Tracker v0.4 — Initializing…');
 
-// Satellite image URLs
+// ── Satellite images ──────────────────────────────────────
 const satelliteImages = {
-    iss: 'https://upload.wikimedia.org/wikipedia/commons/0/04/International_Space_Station_after_undocking_of_STS-132.jpg',
+    iss:      'https://upload.wikimedia.org/wikipedia/commons/0/04/International_Space_Station_after_undocking_of_STS-132.jpg',
     tiangong: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Chinese_Tiangong_Space_Station.jpg/1280px-Chinese_Tiangong_Space_Station.jpg?_=20221203083003',
-    hubble: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/HST-SM4.jpeg',
+    hubble:   'https://upload.wikimedia.org/wikipedia/commons/3/3f/HST-SM4.jpeg',
     starlink: 'https://upload.wikimedia.org/wikipedia/commons/9/91/Starlink_Mission_%2847926144123%29.jpg',
-    normal: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/International_Space_Station.svg/800px-International_Space_Station.svg.png',
+    normal:   'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/International_Space_Station.svg/800px-International_Space_Station.svg.png',
     santasat: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Christmas_satellite.jpg/320px-Christmas_satellite.jpg',
-    // FIX: Güvenilir UFO görseli (Wikimedia)
-    ufo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Sputnik_asm.jpg/320px-Sputnik_asm.jpg'
+    ufo:      'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Sputnik_asm.jpg/320px-Sputnik_asm.jpg'
 };
 
-// Global variables
-let layer = null;
-let selectedSat = null;
-let satPositions = new Map();
-let satAltitudes = new Map();
-let showLabels = true;
-let showGrid = false;
-let showBorders = false;
-let showClouds = false;
-let cloudLayer = null;
-let gridLayer = null;
-let borderLayer = null;
-let userMarker = null;
-let mapStyle = 0;
-let baseLayers = [];
-let currentBaseLayer = null;
-let userLocation = null;
-let allSatellites = [];
-let timeWarp = 1;
-let simulationTime = new Date();
-let realStartTime = new Date();
-let orbitPathLayer = null;
+// ── Cached DOM refs (avoid repeated getElementById) ───────
+const DOM = {
+    info:         null,
+    tooltip:      null,
+    timeDisplay:  null,
+    satName:      null,
+    satImage:     null,
+    imageLoading: null,
+    satType:      null,
+    satOrbit:     null,
+    satLat:       null,
+    satLng:       null,
+    satAlt:       null,
+    satVel:       null,
+    satOperator:  null,
+    satDesc:      null,
+    aiDescSection:null,
+    sidebar:      null,
+    sidebarOverlay:null,
+    searchInput:  null,
+    searchResults:null,
+    labelBtn:     null,
+    gridBtn:      null,
+    borderBtn:    null,
+    menuSidebar:  null,
+    menuOverlay:  null,
+    menuToggle:   null,
+    dynamicLight: null,
+};
+
+// ── State ─────────────────────────────────────────────────
+let layer           = null;
+let selectedSat     = null;
+const satPositions  = new Map();
+const satAltitudes  = new Map();
+let showLabels      = true;
+let showGrid        = false;
+let showBorders     = false;
+let showClouds      = false;
+let cloudLayer      = null;
+let gridLayer       = null;
+let borderLayer     = null;
+let userMarker      = null;
+let mapStyle        = 0;
+const baseLayers    = [];
+let currentBaseLayer= null;
+let userLocation    = null;
+let allSatellites   = [];
+let timeWarp        = 1;
+let simulationTime  = new Date();
+let realStartTime   = new Date();
+let orbitPathLayer  = null;
+
+// Animation / throttle flags
+let rafId           = null;
+let nightDirty      = true;      // re-draw night layer?
+let lastNightRedraw = 0;         // real timestamp of last night redraw
+const NIGHT_INTERVAL= 8000;     // ms between night layer redraws (8 s)
+let mouseRafPending = false;     // throttle tooltip mousemove with RAF
 
 console.log('✅ Variables initialized');
 
-// Initialize map
+// ── Map ───────────────────────────────────────────────────
 const map = L.map('map', {
-    center: [20, 0],
-    zoom: 3,
-    minZoom: 2,
-    maxZoom: 8,
+    center: [20, 0], zoom: 3, minZoom: 2, maxZoom: 8,
     maxBounds: [[-85, -180], [85, 180]],
     maxBoundsViscosity: 1.0,
     zoomControl: false
@@ -54,29 +87,16 @@ const map = L.map('map', {
 
 console.log('✅ Leaflet map initialized');
 
-// Base map layers
-baseLayers[0] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    noWrap: true,
-    bounds: [[-85, -180], [85, 180]]
-});
-baseLayers[1] = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    noWrap: true,
-    bounds: [[-85, -180], [85, 180]]
-});
-baseLayers[2] = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    noWrap: true,
-    bounds: [[-85, -180], [85, 180]]
-});
+// Base layers
+baseLayers[0] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',  { noWrap: true, bounds: [[-85,-180],[85,180]] });
+baseLayers[1] = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',                                  { noWrap: true, bounds: [[-85,-180],[85,180]] });
+baseLayers[2] = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',                                             { noWrap: true, bounds: [[-85,-180],[85,180]] });
 
 currentBaseLayer = baseLayers[0];
 currentBaseLayer.addTo(map);
-
 console.log('✅ Base layers loaded');
 
-// ============================================
-// FIX: TRANSLATION (i18n) - postMessage Listener
-// ============================================
-
+// ── i18n ──────────────────────────────────────────────────
 function applyTranslations(t) {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
@@ -87,231 +107,198 @@ function applyTranslations(t) {
         if (t[key]) el.placeholder = t[key];
     });
 }
-
-window.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'langChange' && e.data.translations) {
+window.addEventListener('message', e => {
+    if (e.data?.type === 'langChange' && e.data.translations) {
         applyTranslations(e.data.translations);
-        console.log(`🌐 Language applied: ${e.data.lang}`);
+        console.log(`🌐 Language: ${e.data.lang}`);
     }
 });
 
-// ============================================
-// MENU FUNCTIONS
-// ============================================
+// ── DOM init (after DOMContentLoaded) ────────────────────
+function initDOM() {
+    DOM.info          = document.getElementById('info');
+    DOM.tooltip       = document.getElementById('tooltip');
+    DOM.timeDisplay   = document.getElementById('timeDisplay');
+    DOM.satName       = document.getElementById('satName');
+    DOM.satImage      = document.getElementById('satImage');
+    DOM.imageLoading  = document.getElementById('imageLoading');
+    DOM.satType       = document.getElementById('satType');
+    DOM.satOrbit      = document.getElementById('satOrbit');
+    DOM.satLat        = document.getElementById('satLat');
+    DOM.satLng        = document.getElementById('satLng');
+    DOM.satAlt        = document.getElementById('satAlt');
+    DOM.satVel        = document.getElementById('satVel');
+    DOM.satOperator   = document.getElementById('satOperator');
+    DOM.satDesc       = document.getElementById('satDesc');
+    DOM.aiDescSection = document.getElementById('aiDescSection');
+    DOM.sidebar       = document.getElementById('sidebar');
+    DOM.sidebarOverlay= document.getElementById('sidebarOverlay');
+    DOM.searchInput   = document.getElementById('searchInput');
+    DOM.searchResults = document.getElementById('searchResults');
+    DOM.labelBtn      = document.getElementById('labelBtn');
+    DOM.gridBtn       = document.getElementById('gridBtn');
+    DOM.borderBtn     = document.getElementById('borderBtn');
+    DOM.menuSidebar   = document.getElementById('menuSidebar');
+    DOM.menuOverlay   = document.getElementById('menuOverlay');
+    DOM.menuToggle    = document.querySelector('.menu-toggle');
+    DOM.dynamicLight  = document.getElementById('dynamicLight');
 
+    const saved = localStorage.getItem('anthropic_api_key');
+    const input = document.getElementById('apiKeyInput');
+    if (saved && input) input.value = saved;
+}
+
+// ── Menu ──────────────────────────────────────────────────
 function toggleMenu() {
-    const menuSidebar = document.getElementById('menuSidebar');
-    const menuToggle = document.querySelector('.menu-toggle');
-    const menuOverlay = document.getElementById('menuOverlay');
-    menuSidebar.classList.toggle('active');
-    menuToggle.classList.toggle('active');
-    menuOverlay.classList.toggle('active');
-    console.log('📋 Menu toggled');
+    DOM.menuSidebar.classList.toggle('active');
+    DOM.menuToggle.classList.toggle('active');
+    DOM.menuOverlay.classList.toggle('active');
 }
 
 function toggleSection(sectionId) {
     const section = document.getElementById(sectionId + 'Section');
-    const button = event.currentTarget;
     section.classList.toggle('active');
-    button.classList.toggle('active');
-    console.log(`📂 Section ${sectionId} toggled`);
+    event.currentTarget.classList.toggle('active');
 }
 
-// ============================================
-// TIME WARP FUNCTIONS
-// ============================================
-
+// ── Time Warp ─────────────────────────────────────────────
 function setTimeWarp(speed) {
-    timeWarp = speed;
+    timeWarp      = speed;
     realStartTime = new Date(simulationTime);
-    document.querySelectorAll('.timewarp-btn').forEach(btn => {
-        if (!btn.classList.contains('timewarp-reset')) {
-            btn.classList.remove('active');
-        }
-    });
-    if (event && event.target) {
-        event.target.classList.add('active');
-    }
-    console.log(`⏱️ Time warp set to ${speed}x`);
+    document.querySelectorAll('.timewarp-btn:not(.timewarp-reset)').forEach(b => b.classList.remove('active'));
+    if (event?.target) event.target.classList.add('active');
 }
 
 function resetTime() {
     simulationTime = new Date();
-    realStartTime = new Date();
-    timeWarp = 1;
-    document.querySelectorAll('.timewarp-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
+    realStartTime  = new Date();
+    timeWarp       = 1;
+    document.querySelectorAll('.timewarp-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.timewarp-btn')[1].classList.add('active');
     updateTimeDisplay();
-    console.log('🔄 Time reset to current');
 }
 
+const _timeFmt = { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' };
 function updateTimeDisplay() {
-    const options = {
-        year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
-    };
-    document.getElementById('timeDisplay').innerText = simulationTime.toLocaleString('en-US', options);
+    DOM.timeDisplay.innerText = simulationTime.toLocaleString('en-US', _timeFmt);
 }
 
-// ============================================
-// MAP CONTROL FUNCTIONS
-// ============================================
-
+// ── Map controls ──────────────────────────────────────────
 function cycleMapStyle() {
     map.removeLayer(currentBaseLayer);
     mapStyle = (mapStyle + 1) % 3;
     currentBaseLayer = baseLayers[mapStyle];
     currentBaseLayer.addTo(map);
-    console.log(`🗺️ Map style changed to ${mapStyle}`);
+    nightDirty = true;
 }
 
 function toggleLabels() {
     showLabels = !showLabels;
-    document.getElementById('labelBtn').classList.toggle('active', showLabels);
-    console.log(`🏷️ Labels ${showLabels ? 'enabled' : 'disabled'}`);
+    DOM.labelBtn.classList.toggle('active', showLabels);
 }
 
 function toggleGrid() {
     showGrid = !showGrid;
-    document.getElementById('gridBtn').classList.toggle('active', showGrid);
+    DOM.gridBtn.classList.toggle('active', showGrid);
     if (showGrid) {
         if (!gridLayer) {
             gridLayer = L.layerGroup();
-            for (let lat = -80; lat <= 80; lat += 20) {
-                L.polyline([[lat, -180], [lat, 180]], {
-                    color: 'rgba(148,163,184,0.3)', weight: 1, interactive: false
-                }).addTo(gridLayer);
-            }
-            for (let lng = -180; lng <= 180; lng += 20) {
-                L.polyline([[-85, lng], [85, lng]], {
-                    color: 'rgba(148,163,184,0.3)', weight: 1, interactive: false
-                }).addTo(gridLayer);
-            }
+            const lineStyle = { color: 'rgba(148,163,184,0.3)', weight: 1, interactive: false };
+            for (let lat = -80; lat <= 80; lat += 20)
+                L.polyline([[lat,-180],[lat,180]], lineStyle).addTo(gridLayer);
+            for (let lng = -180; lng <= 180; lng += 20)
+                L.polyline([[-85,lng],[85,lng]], lineStyle).addTo(gridLayer);
         }
         gridLayer.addTo(map);
-    } else {
-        if (gridLayer) map.removeLayer(gridLayer);
+    } else if (gridLayer) {
+        map.removeLayer(gridLayer);
     }
-    console.log(`🌐 Grid ${showGrid ? 'enabled' : 'disabled'}`);
 }
 
 function toggleBorders() {
     showBorders = !showBorders;
-    document.getElementById('borderBtn').classList.toggle('active', showBorders);
+    DOM.borderBtn.classList.toggle('active', showBorders);
     if (showBorders) {
-        if (!borderLayer) {
-            borderLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-                opacity: 0.7, maxZoom: 8
-            });
-        }
+        if (!borderLayer) borderLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { opacity: 0.7, maxZoom: 8 });
         borderLayer.addTo(map);
-    } else {
-        if (borderLayer) map.removeLayer(borderLayer);
+    } else if (borderLayer) {
+        map.removeLayer(borderLayer);
     }
-    console.log(`🗺️ Borders ${showBorders ? 'enabled' : 'disabled'}`);
 }
 
 function toggleClouds() {
     showClouds = !showClouds;
-    document.getElementById('cloudBtn') && document.getElementById('cloudBtn').classList.toggle('active', showClouds);
+    const btn = document.getElementById('cloudBtn');
+    btn && btn.classList.toggle('active', showClouds);
     if (showClouds) {
-        if (!cloudLayer) {
-            cloudLayer = L.tileLayer('https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=546c29aeefa27989df830200ec92848e', {
-                opacity: 0.5, maxZoom: 8
-            });
-        }
+        if (!cloudLayer) cloudLayer = L.tileLayer('https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=546c29aeefa27989df830200ec92848e', { opacity: 0.5, maxZoom: 8 });
         cloudLayer.addTo(map);
-    } else {
-        if (cloudLayer) map.removeLayer(cloudLayer);
+    } else if (cloudLayer) {
+        map.removeLayer(cloudLayer);
     }
-    console.log(`☁️ Clouds ${showClouds ? 'enabled' : 'disabled'}`);
 }
 
 function goToLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
-            map.setView([lat, lng], 5);
-            userLocation = { lat, lng };
-            if (userMarker) map.removeLayer(userMarker);
-            userMarker = L.marker([lat, lng], {
-                icon: L.divIcon({ className: 'user-location', iconSize: [16, 16], iconAnchor: [8, 8] })
-            }).addTo(map);
-            console.log(`📍 Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-        });
-    }
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        map.setView([lat, lng], 5);
+        userLocation = { lat, lng };
+        if (userMarker) map.removeLayer(userMarker);
+        userMarker = L.marker([lat, lng], {
+            icon: L.divIcon({ className: 'user-location', iconSize: [16,16], iconAnchor: [8,8] })
+        }).addTo(map);
+    });
 }
 
 function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-    } else {
-        document.exitFullscreen();
-    }
+    document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 }
 
-// ============================================
-// SEARCH FUNCTIONS
-// ============================================
+// ── Search (debounced) ────────────────────────────────────
+let searchTimer = null;
 
-const searchInput = document.getElementById('searchInput');
-const searchResults = document.getElementById('searchResults');
+function initSearch() {
+    DOM.searchInput.addEventListener('input', e => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => runSearch(e.target.value), 120);
+    });
+    document.addEventListener('click', e => {
+        if (!DOM.searchInput.contains(e.target) && !DOM.searchResults.contains(e.target))
+            DOM.searchResults.classList.remove('show');
+    }, { passive: true });
+}
 
-searchInput.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase().trim();
-    if (query.length < 2) {
-        searchResults.classList.remove('show');
-        return;
-    }
-    // FIX: UFO'yu arama sonuçlarından hariç tut
-    const filtered = allSatellites.filter(sat =>
-        sat.name.toLowerCase().includes(query) && sat.type !== 'ufo'
-    ).slice(0, 10);
-
-    if (filtered.length > 0) {
-        searchResults.innerHTML = filtered.map(sat =>
-            `<div class="search-result-item" onclick="selectSatellite('${sat.name.replace(/'/g, "\\'")}')">${sat.name}</div>`
-        ).join('');
-        searchResults.classList.add('show');
-    } else {
-        searchResults.classList.remove('show');
-    }
-});
-
-document.addEventListener('click', (e) => {
-    if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-        searchResults.classList.remove('show');
-    }
-});
+function runSearch(raw) {
+    const query = raw.toLowerCase().trim();
+    if (query.length < 2) { DOM.searchResults.classList.remove('show'); return; }
+    const filtered = allSatellites.filter(s => s.type !== 'ufo' && s.name.toLowerCase().includes(query)).slice(0, 10);
+    if (!filtered.length) { DOM.searchResults.classList.remove('show'); return; }
+    DOM.searchResults.innerHTML = filtered.map(s =>
+        `<div class="search-result-item" onclick="selectSatellite('${s.name.replace(/'/g,"\\'")}')">${s.name}</div>`
+    ).join('');
+    DOM.searchResults.classList.add('show');
+}
 
 function selectSatellite(name) {
     const sat = allSatellites.find(s => s.name === name);
-    if (sat) {
-        openSatelliteInfo(sat);
-        searchResults.classList.remove('show');
-        searchInput.value = '';
-        // Haritada uyduya uç
-        const pos = getPos(sat.satrec, simulationTime);
-        if (pos) {
-            let lng = pos.lng;
-            while (lng > 180) lng -= 360;
-            while (lng < -180) lng += 360;
-            map.flyTo([pos.lat, lng], 5, { duration: 1.8, easeLinearity: 0.4 });
-        }
-        console.log(`🔍 Selected & flying to: ${name}`);
+    if (!sat) return;
+    openSatelliteInfo(sat);
+    DOM.searchResults.classList.remove('show');
+    DOM.searchInput.value = '';
+    const pos = getPos(sat.satrec, simulationTime);
+    if (pos) {
+        let lng = pos.lng;
+        while (lng > 180) lng -= 360;
+        while (lng < -180) lng += 360;
+        map.flyTo([pos.lat, lng], 5, { duration: 1.8, easeLinearity: 0.4 });
     }
 }
 
-// ============================================
-// ORBIT FUNCTIONS
-// ============================================
-
+// ── Orbit helpers ─────────────────────────────────────────
 function getOrbitColor(alt) {
-    if (alt < 400) return '#ef4444';
-    if (alt < 2000) return '#f97316';
+    if (alt < 400)   return '#ef4444';
+    if (alt < 2000)  return '#f97316';
     if (alt < 35700) return '#eab308';
     if (alt >= 35700 && alt <= 35900) return '#3b82f6';
     if (alt > 35900) return '#a855f7';
@@ -319,330 +306,257 @@ function getOrbitColor(alt) {
 }
 
 function getOrbitName(alt) {
-    if (selectedSat) {
-        if (selectedSat.type === 'santasat') return 'Ho Ho Ho! 🎅🎄';
-        if (selectedSat.type === 'ufo') return 'CLASSIFIED 🛸👽';
-    }
-    if (alt < 400) return 'VLEO';
-    if (alt < 2000) return 'LEO';
+    if (selectedSat?.type === 'santasat') return 'Ho Ho Ho! 🎅🎄';
+    if (selectedSat?.type === 'ufo')      return 'CLASSIFIED 🛸👽';
+    if (alt < 400)   return 'VLEO';
+    if (alt < 2000)  return 'LEO';
     if (alt < 35700) return 'MEO';
     if (alt >= 35700 && alt <= 35900) return 'GEO';
     if (alt > 35900) return 'Beyond GEO';
     return 'HEO';
 }
 
-// ============================================
-// ORBIT PATH
-// ============================================
-
+// ── Orbit path ────────────────────────────────────────────
 function drawOrbitPath(sat) {
-    if (orbitPathLayer) {
-        map.removeLayer(orbitPathLayer);
-        orbitPathLayer = null;
-    }
+    if (orbitPathLayer) { map.removeLayer(orbitPathLayer); orbitPathLayer = null; }
     const points = [];
     const now = simulationTime;
     for (let i = 0; i < 90; i++) {
-        const time = new Date(now.getTime() + i * 60 * 1000);
-        const pos = getPos(sat.satrec, time);
+        const pos = getPos(sat.satrec, new Date(now.getTime() + i * 60000));
         if (pos) points.push([pos.lat, pos.lng]);
     }
-    if (points.length > 0) {
-        orbitPathLayer = L.polyline(points, {
-            color: '#a78bfa', weight: 3, opacity: 0.7, dashArray: '10, 10'
-        }).addTo(map);
-        console.log('🛸 Orbit path drawn');
-    }
+    if (points.length)
+        orbitPathLayer = L.polyline(points, { color:'#a78bfa', weight:3, opacity:0.7, dashArray:'10,10' }).addTo(map);
 }
 
-// ============================================
-// SIDEBAR FUNCTIONS
-// ============================================
-
+// ── Sidebar ───────────────────────────────────────────────
 function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('active');
-    document.getElementById('sidebarOverlay').classList.remove('active');
+    DOM.sidebar.classList.remove('active');
+    DOM.sidebarOverlay.classList.remove('active');
     selectedSat = null;
-    if (orbitPathLayer) {
-        map.removeLayer(orbitPathLayer);
-        orbitPathLayer = null;
-    }
-    console.log('❌ Sidebar closed');
+    if (orbitPathLayer) { map.removeLayer(orbitPathLayer); orbitPathLayer = null; }
 }
 
 function openSatelliteInfo(sat) {
     selectedSat = sat;
-    document.getElementById('sidebar').classList.add('active');
-    document.getElementById('sidebarOverlay').classList.add('active');
-    document.getElementById('satName').innerText = sat.name;
+    DOM.sidebar.classList.add('active');
+    DOM.sidebarOverlay.classList.add('active');
+    DOM.satName.innerText = sat.name;
+    DOM.imageLoading.style.display = 'block';
+    DOM.satImage.style.display = 'none';
 
-    const imgElement = document.getElementById('satImage');
-    const loadingElement = document.getElementById('imageLoading');
-    loadingElement.style.display = 'block';
-    imgElement.style.display = 'none';
+    const typeMap = { iss:'iss', tiangong:'tiangong', hubble:'hubble', santasat:'santasat', ufo:'ufo' };
+    let imgSrc = satelliteImages[typeMap[sat.type]] || (sat.isTrain ? satelliteImages.starlink : satelliteImages.normal);
 
-    let imgSrc = satelliteImages.normal;
-    if (sat.type === 'iss') imgSrc = satelliteImages.iss;
-    else if (sat.type === 'tiangong') imgSrc = satelliteImages.tiangong;
-    else if (sat.type === 'hubble') imgSrc = satelliteImages.hubble;
-    else if (sat.type === 'santasat') imgSrc = satelliteImages.santasat;
-    else if (sat.type === 'ufo') imgSrc = satelliteImages.ufo;
-    else if (sat.isTrain) imgSrc = satelliteImages.starlink;
-
-    imgElement.onload = () => {
-        loadingElement.style.display = 'none';
-        imgElement.style.display = 'block';
-    };
-    imgElement.onerror = () => {
-        loadingElement.innerText = 'Image failed';
-        console.error('❌ Image load failed:', imgSrc);
-    };
-    imgElement.src = imgSrc;
+    DOM.satImage.onload  = () => { DOM.imageLoading.style.display = 'none'; DOM.satImage.style.display = 'block'; };
+    DOM.satImage.onerror = () => { DOM.imageLoading.innerText = 'Image failed'; };
+    DOM.satImage.src = imgSrc;
 
     const typeNames = {
-        iss: 'International Space Station',
-        tiangong: 'Tiangong Space Station',
-        hubble: 'Hubble Space Telescope',
-        santasat: '🎅 Santa Satellite - Christmas Special',
-        ufo: '👽 Unidentified Flying Object'
+        iss:'International Space Station', tiangong:'Tiangong Space Station',
+        hubble:'Hubble Space Telescope', santasat:'🎅 Santa Satellite — Christmas Special',
+        ufo:'👽 Unidentified Flying Object'
     };
-    document.getElementById('satType').innerText = sat.isTrain ? 'Starlink Train' : (typeNames[sat.type] || 'Satellite');
+    DOM.satType.innerText = sat.isTrain ? 'Starlink Train' : (typeNames[sat.type] || 'Satellite');
 
     updateSatellitePosition();
     drawOrbitPath(sat);
     loadSatAIInfo(sat.name);
-    console.log(`ℹ️ Opened info for: ${sat.name}`);
 }
 
-// ============================================
-// AI INFO — Anthropic API
-// ============================================
-
-let aiInfoCache = {};
-
-// ── GEMINI API — Ucretsiz ─────────────────────────────────
-// aistudio.google.com -> Get API Key -> buraya yapistir:
+// ── AI / Gemini ───────────────────────────────────────────
 const GEMINI_KEY = 'AIzaSyAypd7t_gDUcmjIKhwPXffcn9-G2o50b3s';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=';
-// ──────────────────────────────────────────────────────────
 
-function aiCacheGet(k){try{const v=sessionStorage.getItem('ai_'+k);return v?JSON.parse(v):null;}catch(e){return null;}}
-function aiCacheSet(k,v){try{sessionStorage.setItem('ai_'+k,JSON.stringify(v));}catch(e){}}
+function aiCacheGet(k) { try { const v = sessionStorage.getItem('ai_' + k); return v ? JSON.parse(v) : null; } catch { return null; } }
+function aiCacheSet(k, v) { try { sessionStorage.setItem('ai_' + k, JSON.stringify(v)); } catch {} }
 const aiInflight = new Set();
 
 async function loadSatAIInfo(satName) {
-    const opEl    = document.getElementById('satOperator');
-    const descEl  = document.getElementById('satDesc');
-    const section = document.getElementById('aiDescSection');
-
-    // Önbellekte varsa anında göster
     const cached = aiCacheGet(satName);
-    if (cached) {
-        opEl.innerText   = cached.operator;
-        descEl.innerText = cached.description;
-        return;
-    }
-
-    // Key kontrolü
+    if (cached) { DOM.satOperator.innerText = cached.operator; DOM.satDesc.innerText = cached.description; return; }
     if (!GEMINI_KEY || GEMINI_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-        opEl.innerText   = '-';
-        descEl.innerText = '🔑 script.js dosyasında GEMINI_KEY alanına API key girin.';
+        DOM.satOperator.innerText = '-';
+        DOM.satDesc.innerText = '🔑 Set GEMINI_KEY in script.js';
         return;
     }
-
     if (aiInflight.has(satName)) return;
     aiInflight.add(satName);
-    opEl.innerText = descEl.innerText = '...';
-    section.classList.add('loading');
+    DOM.satOperator.innerText = DOM.satDesc.innerText = '…';
+    DOM.aiDescSection.classList.add('loading');
 
     const lang   = localStorage.getItem('selectedLang') || 'en';
-    const prompt = 'Satellite:"' + satName + '" lang:"' + lang + '". Respond with ONLY a raw JSON object (no markdown, no extra text): {"operator":"<builder/operator>","description":"<2-3 sentences: launch year, purpose, orbit, notable facts>"}';
+    const prompt = `Satellite:"${satName}" lang:"${lang}". Respond ONLY raw JSON (no markdown): {"operator":"<builder/operator>","description":"<2-3 sentences: launch year, purpose, orbit, notable facts>"}`;
 
     try {
         const res  = await fetch(GEMINI_URL + GEMINI_KEY, {
-            method : 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body   : JSON.stringify({
-                contents        : [{ parts: [{ text: prompt }] }],
-                generationConfig: { maxOutputTokens: 250, temperature: 0.1 }
-            })
+            method: 'POST', headers: { 'Content-Type':'application/json' },
+            body: JSON.stringify({ contents:[{ parts:[{ text:prompt }] }], generationConfig:{ maxOutputTokens:250, temperature:0.1 } })
         });
-
         const data = await res.json();
         if (data.error) throw new Error(data.error.message);
         if (!data.candidates?.length) throw new Error('Empty response');
-
-        // Metni al, markdown fence varsa temizle, JSON bul
-        let raw = data.candidates[0]?.content?.parts?.[0]?.text || '';
-        raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
+        let raw = (data.candidates[0]?.content?.parts?.[0]?.text || '').replace(/```json|```/g,'').trim();
         const match = raw.match(/\{[\s\S]*\}/);
-        if (!match) throw new Error('No JSON found: ' + raw.slice(0,60));
-
+        if (!match) throw new Error('No JSON: ' + raw.slice(0,60));
         const obj = JSON.parse(match[0]);
         aiCacheSet(satName, obj);
-        opEl.innerText   = obj.operator    || 'Unknown';
-        descEl.innerText = obj.description || '-';
-
+        DOM.satOperator.innerText = obj.operator    || 'Unknown';
+        DOM.satDesc.innerText     = obj.description || '-';
     } catch (e) {
-        opEl.innerText   = '-';
-        descEl.innerText = '⚠️ ' + e.message;
-        console.error('Gemini AI error [' + satName + ']:', e);
+        DOM.satOperator.innerText = '-';
+        DOM.satDesc.innerText     = '⚠️ ' + e.message;
+        console.error('Gemini error [' + satName + ']:', e);
     }
-
     aiInflight.delete(satName);
-    section.classList.remove('loading');
+    DOM.aiDescSection.classList.remove('loading');
 }
 
 function updateSatellitePosition() {
     if (!selectedSat) return;
     const p = getPos(selectedSat.satrec, simulationTime);
-    if (p) {
-        document.getElementById('satLat').innerText = p.lat.toFixed(4) + '°';
-        document.getElementById('satLng').innerText = p.lng.toFixed(4) + '°';
-        const pv = satellite.propagate(selectedSat.satrec, simulationTime);
-        if (pv.position) {
-            const alt = Math.sqrt(pv.position.x ** 2 + pv.position.y ** 2 + pv.position.z ** 2) - 6371;
-            document.getElementById('satAlt').innerText = alt.toFixed(2);
-            document.getElementById('satOrbit').innerText = getOrbitName(alt);
-            if (pv.velocity) {
-                const vel = Math.sqrt(pv.velocity.x ** 2 + pv.velocity.y ** 2 + pv.velocity.z ** 2);
-                document.getElementById('satVel').innerText = vel.toFixed(2);
-            }
+    if (!p) return;
+    DOM.satLat.innerText = p.lat.toFixed(4) + '°';
+    DOM.satLng.innerText = p.lng.toFixed(4) + '°';
+    const pv = satellite.propagate(selectedSat.satrec, simulationTime);
+    if (pv.position) {
+        const { x, y, z } = pv.position;
+        const alt = Math.sqrt(x*x + y*y + z*z) - 6371;
+        DOM.satAlt.innerText   = alt.toFixed(2);
+        DOM.satOrbit.innerText = getOrbitName(alt);
+        if (pv.velocity) {
+            const { x: vx, y: vy, z: vz } = pv.velocity;
+            DOM.satVel.innerText = Math.sqrt(vx*vx + vy*vy + vz*vz).toFixed(2);
         }
     }
 }
 
-// ============================================
-// NIGHT LAYER
-// ============================================
-
+// ── Night Layer (throttled) ───────────────────────────────
 const NightLayer = L.Layer.extend({
     onAdd(m) {
         this._c = L.DomUtil.create('canvas', 'leaflet-layer');
         this._c.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none';
         m.getPanes().overlayPane.appendChild(this._c);
-        m.on('moveend zoomend viewreset', () => this._reset());
+        m.on('moveend zoomend viewreset', () => { nightDirty = true; });
         this._reset();
     },
     _reset() {
-        const s = map.getSize();
-        const tl = map.containerPointToLayerPoint([0, 0]);
+        const s  = map.getSize();
+        const tl = map.containerPointToLayerPoint([0,0]);
         this._c.style.transform = `translate(${tl.x}px,${tl.y}px)`;
-        this._c.width = s.x;
+        this._c.width  = s.x;
         this._c.height = s.y;
         this._draw();
     },
     _draw() {
-        const s = map.getSize();
+        const s   = map.getSize();
         const ctx = this._c.getContext('2d');
         ctx.clearRect(0, 0, s.x, s.y);
-        for (let y = 0; y < s.y; y += 6) {
-            for (let x = 0; x < s.x; x += 6) {
+        // Step=12 (was 6) → ~4× fewer SunCalc calls
+        for (let y = 0; y < s.y; y += 12) {
+            for (let x = 0; x < s.x; x += 12) {
                 const ll = map.containerPointToLatLng([x, y]);
                 if (!ll || ll.lat > 85 || ll.lat < -85) continue;
-                const pos = SunCalc.getPosition(simulationTime, ll.lat, ll.lng);
-                const alt = pos.altitude * 180 / Math.PI;
+                const alt = SunCalc.getPosition(simulationTime, ll.lat, ll.lng).altitude * 180 / Math.PI;
                 let d = 0;
-                if (alt < -18) d = 0.5;
-                else if (alt < -12) d = 0.35 + ((alt + 12) / -6) * 0.15;
-                else if (alt < -6) d = 0.2 + ((alt + 6) / -6) * 0.15;
-                else if (alt < 0) d = (alt / -6) * 0.2;
-                if (d > 0) {
-                    ctx.fillStyle = `rgba(10,14,39,${d})`;
-                    ctx.fillRect(x, y, 6, 6);
-                }
+                if      (alt < -18) d = 0.5;
+                else if (alt < -12) d = 0.35 + (alt + 12) / -6 * 0.15;
+                else if (alt <  -6) d = 0.2  + (alt +  6) / -6 * 0.15;
+                else if (alt <   0) d = alt  / -6 * 0.2;
+                if (d > 0) { ctx.fillStyle = `rgba(10,14,39,${d})`; ctx.fillRect(x, y, 12, 12); }
             }
         }
-        ctx.filter = 'blur(12px)';
+        ctx.filter = 'blur(14px)';
         ctx.drawImage(this._c, 0, 0);
         ctx.filter = 'none';
     }
 });
 
-new NightLayer().addTo(map);
+const nightLayerInst = new NightLayer();
+nightLayerInst.addTo(map);
 console.log('✅ Night layer added');
 
-// ============================================
-// SATELLITE LAYER
-// ============================================
-
+// ── Satellite Canvas Layer ────────────────────────────────
 const Layer = L.Layer.extend({
     onAdd(m) {
         this._c = L.DomUtil.create('canvas', 'leaflet-layer');
         this._c.style.cssText = 'position:absolute;top:0;left:0;cursor:pointer';
         m.getPanes().overlayPane.appendChild(this._c);
         m.on('moveend zoomend viewreset', () => this._reset());
-        this._c.addEventListener('click', e => this._onClick(e));
-        this._c.addEventListener('mousemove', e => this._onMouseMove(e));
-        this._c.addEventListener('mouseout', () => document.getElementById('tooltip').style.display = 'none');
+        this._c.addEventListener('click',     e => this._onClick(e));
+        // throttled mousemove via RAF
+        this._c.addEventListener('mousemove', e => {
+            this._pendingMouse = e;
+            if (!mouseRafPending) {
+                mouseRafPending = true;
+                requestAnimationFrame(() => {
+                    if (this._pendingMouse) this._onMouseMove(this._pendingMouse);
+                    mouseRafPending = false;
+                });
+            }
+        }, { passive: true });
+        this._c.addEventListener('mouseout', () => { DOM.tooltip.style.display = 'none'; }, { passive: true });
         this._reset();
     },
     _reset() {
-        const s = map.getSize();
-        const tl = map.containerPointToLayerPoint([0, 0]);
+        const s  = map.getSize();
+        const tl = map.containerPointToLayerPoint([0,0]);
         this._c.style.transform = `translate(${tl.x}px,${tl.y}px)`;
-        this._c.width = s.x;
+        this._c.width  = s.x;
         this._c.height = s.y;
         this._draw();
     },
     _onMouseMove(e) {
         if (!this._d || !showLabels) return;
         const rect = this._c.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
         let found = null;
-        this._d.forEach(sat => {
-            // FIX: UFO haritada tıklanamaz
-            if (sat.type === 'ufo') return;
+        for (const sat of this._d) {
+            if (sat.type === 'ufo') continue;
             const pos = satPositions.get(sat.name);
-            if (pos && Math.sqrt((pos.x - x) ** 2 + (pos.y - y) ** 2) < (sat.type !== 'normal' ? 20 : 6)) {
-                found = { name: sat.name, mx: e.clientX, my: e.clientY };
-            }
-        });
-        const tooltip = document.getElementById('tooltip');
+            if (!pos) continue;
+            const r = sat.type !== 'normal' ? 20 : 6;
+            const dx = pos.x - mx, dy = pos.y - my;
+            if (dx*dx + dy*dy < r*r) { found = sat.name; break; }
+        }
         if (found) {
-            tooltip.innerText = found.name;
-            tooltip.style.left = (found.mx + 15) + 'px';
-            tooltip.style.top = (found.my - 10) + 'px';
-            tooltip.style.display = 'block';
+            DOM.tooltip.innerText = found;
+            DOM.tooltip.style.cssText = `display:block;left:${e.clientX+15}px;top:${e.clientY-10}px`;
         } else {
-            tooltip.style.display = 'none';
+            DOM.tooltip.style.display = 'none';
         }
     },
     _onClick(e) {
         if (!this._d) return;
         const rect = this._c.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        this._d.forEach(sat => {
-            // FIX: UFO haritada tıklanamaz
-            if (sat.type === 'ufo') return;
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        for (const sat of this._d) {
+            if (sat.type === 'ufo') continue;
             const pos = satPositions.get(sat.name);
-            if (pos && Math.sqrt((pos.x - x) ** 2 + (pos.y - y) ** 2) < (sat.type !== 'normal' ? 20 : 6)) {
-                openSatelliteInfo(sat);
-            }
-        });
+            if (!pos) continue;
+            const r = sat.type !== 'normal' ? 20 : 6;
+            const dx = pos.x - mx, dy = pos.y - my;
+            if (dx*dx + dy*dy < r*r) { openSatelliteInfo(sat); return; }
+        }
     },
     _draw() {
         if (!this._d) return;
-        const s = map.getSize();
+        const s   = map.getSize();
         const ctx = this._c.getContext('2d');
         ctx.clearRect(0, 0, s.x, s.y);
         satPositions.clear();
 
-        this._d.forEach(sat => {
-            // FIX: UFO haritada çizilmez
-            if (sat.type === 'ufo') return;
-
+        for (const sat of this._d) {
+            if (sat.type === 'ufo') continue;
             const p = getPos(sat.satrec, simulationTime);
-            if (!p) return;
+            if (!p) continue;
 
             let lng = p.lng;
-            while (lng > 180) lng -= 360;
+            while (lng > 180)  lng -= 360;
             while (lng < -180) lng += 360;
 
             const pt = map.latLngToContainerPoint([p.lat, lng]);
-            if (pt.x < -50 || pt.x > s.x + 50 || pt.y < -50 || pt.y > s.y + 50) return;
+            if (pt.x < -50 || pt.x > s.x+50 || pt.y < -50 || pt.y > s.y+50) continue;
 
             satPositions.set(sat.name, { x: pt.x, y: pt.y });
 
@@ -653,30 +567,18 @@ const Layer = L.Layer.extend({
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.shadowBlur = 15;
-
-                if (sat.type === 'iss') {
-                    ctx.shadowColor = 'rgba(167,139,250,0.8)';
-                    ctx.fillText('🛰️', 0, 0);
-                } else if (sat.type === 'tiangong') {
-                    ctx.shadowColor = 'rgba(192,132,252,0.8)';
-                    ctx.fillText('🛰️', 0, 0);
-                } else if (sat.type === 'hubble') {
-                    ctx.shadowColor = 'rgba(129,140,248,0.8)';
-                    ctx.fillText('🛰️', 0, 0);
-                } else if (sat.type === 'santasat') {
-                    ctx.shadowColor = 'rgba(255,0,0,0.9)';
-                    ctx.fillText('🎅🎄', 0, 0);
-                }
-
+                if      (sat.type === 'iss')      { ctx.shadowColor = 'rgba(167,139,250,0.8)'; ctx.fillText('🛰️', 0, 0); }
+                else if (sat.type === 'tiangong') { ctx.shadowColor = 'rgba(192,132,252,0.8)'; ctx.fillText('🛰️', 0, 0); }
+                else if (sat.type === 'hubble')   { ctx.shadowColor = 'rgba(129,140,248,0.8)'; ctx.fillText('🛰️', 0, 0); }
+                else if (sat.type === 'santasat') { ctx.shadowColor = 'rgba(255,0,0,0.9)';     ctx.fillText('🎅🎄',0, 0); }
                 ctx.restore();
             } else {
-                const alt = satAltitudes.get(sat.name) || 0;
                 ctx.beginPath();
-                ctx.arc(pt.x, pt.y, 1, 0, Math.PI * 2);
-                ctx.fillStyle = getOrbitColor(alt);
+                ctx.arc(pt.x, pt.y, 1, 0, 6.2832);
+                ctx.fillStyle = getOrbitColor(satAltitudes.get(sat.name) || 0);
                 ctx.fill();
             }
-        });
+        }
     }
 });
 
@@ -684,31 +586,19 @@ layer = new Layer();
 layer.addTo(map);
 console.log('✅ Satellite layer added');
 
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
+// ── Helper: get lat/lng position ──────────────────────────
 function getPos(satrec, date) {
     try {
         const pv = satellite.propagate(satrec, date);
         if (!pv.position) return null;
         const g = satellite.eciToGeodetic(pv.position, satellite.gstime(date));
-        return {
-            lat: satellite.degreesLat(g.latitude),
-            lng: satellite.degreesLong(g.longitude)
-        };
-    } catch (e) {
-        return null;
-    }
+        return { lat: satellite.degreesLat(g.latitude), lng: satellite.degreesLong(g.longitude) };
+    } catch { return null; }
 }
 
-// ============================================
-// LOAD TLE DATA
-// ============================================
+// ── TLE Fetch ─────────────────────────────────────────────
+console.log('📡 Fetching TLE data…');
 
-console.log('📡 Fetching TLE data...');
-
-// FIX: Easter egg TLE verisini önceden hazırla
 const easterEggTLE = `
 SANTASAT
 1 99999U 24001A   24001.50000000  .00000000  00000-0  00000-0 0    10
@@ -720,83 +610,69 @@ UFO-UNKNOWN
 fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
     .then(r => r.text())
     .then(tle => {
-        console.log('📡 TLE data received, parsing...');
-
-        // Easter egg'leri ekle
-        const fullTLE = tle + '\n' + easterEggTLE;
-        const lines = fullTLE.split('\n');
-        const data = [];
+        const lines = (tle + '\n' + easterEggTLE).split('\n');
+        const data  = [];
+        const now   = new Date();
 
         for (let i = 0; i < lines.length; i += 3) {
-            if (!lines[i + 2]) continue;
-
+            if (!lines[i+2]) continue;
             const n = lines[i].trim();
             if (!n) continue;
 
-            let type = 'normal';
+            let type    = 'normal';
             let isTrain = false;
+            if      (n === 'ISS (ZARYA)')                    type = 'iss';
+            else if (n === 'CSS (MENGTIAN)')                 type = 'tiangong';
+            else if (n === 'HST')                            type = 'hubble';
+            else if (n.includes('STARLINK') && n.match(/STARLINK-\d{4,}/)) isTrain = true;
+            else if (n.includes('SANTASAT'))                 type = 'santasat';
+            else if (n.includes('UFO'))                      type = 'ufo';
 
-            // Kesin isim eşleşmesi (kullanıcı doğruladı)
-            if (n === 'ISS (ZARYA)') {
-                type = 'iss';
-            } else if (n === 'CSS (MENGTIAN)') {
-                type = 'tiangong';
-            } else if (n === 'HST') {
-                type = 'hubble';
-            } else if (n.includes('STARLINK') && n.match(/STARLINK-\d{4,}/)) {
-                isTrain = true;
-            } else if (n.includes('SANTASAT')) {
-                type = 'santasat';
-            } else if (n.includes('UFO')) {
-                type = 'ufo';
-            }
-
-            const satrec = satellite.twoline2satrec(lines[i + 1].trim(), lines[i + 2].trim());
-            if (satrec) {
-                data.push({ satrec, type, name: n, isTrain });
-
-                const pv = satellite.propagate(satrec, new Date());
-                if (pv.position) {
-                    const alt = Math.sqrt(pv.position.x ** 2 + pv.position.y ** 2 + pv.position.z ** 2) - 6371;
-                    satAltitudes.set(n, alt);
-                }
+            const satrec = satellite.twoline2satrec(lines[i+1].trim(), lines[i+2].trim());
+            if (!satrec) continue;
+            data.push({ satrec, type, name: n, isTrain });
+            const pv = satellite.propagate(satrec, now);
+            if (pv.position) {
+                const { x, y, z } = pv.position;
+                satAltitudes.set(n, Math.sqrt(x*x + y*y + z*z) - 6371);
             }
         }
 
-        layer._d = data;
+        layer._d    = data;
         allSatellites = data;
+        const visible = data.filter(s => s.type !== 'ufo').length;
+        DOM.info.innerText = visible;
+        console.log(`✅ Loaded ${data.length} satellites (${visible} visible)`);
 
-        // FIX: Sayım - UFO'yu hariç tut
-        const visibleCount = data.filter(s => s.type !== 'ufo').length;
-        document.getElementById('info').innerText = visibleCount;
+        // ── Main animation loop (RAF) ──────────────────────
+        let lastTime = performance.now();
+        function tick(now) {
+            const dt = now - lastTime;
+            lastTime = now;
 
-        console.log(`✅ Loaded ${data.length} satellites (${visibleCount} visible on map)`);
-        console.log(`   - ISS: ${data.filter(s => s.type === 'iss').map(s => s.name).join(', ') || 'not found'}`);
-        console.log(`   - Tiangong: ${data.filter(s => s.type === 'tiangong').map(s => s.name).join(', ') || 'not found'}`);
-        console.log(`   - Hubble: ${data.filter(s => s.type === 'hubble').length}`);
-        console.log(`   - Starlink trains: ${data.filter(s => s.isTrain).length}`);
-
-        // Start animation loop
-        setInterval(() => {
             if (timeWarp > 0) {
-                const elapsed = new Date().getTime() - realStartTime.getTime();
-                simulationTime = new Date(realStartTime.getTime() + elapsed * timeWarp);
+                simulationTime = new Date(realStartTime.getTime() + (Date.now() - realStartTime.getTime()) * timeWarp);
                 updateTimeDisplay();
             }
             layer._draw();
             updateSatellitePosition();
-        }, 150);
 
-        console.log('✅ Animation loop started');
+            // Night layer: only redraw when dirty or interval elapsed
+            const realNow = Date.now();
+            if (nightDirty || (realNow - lastNightRedraw) > NIGHT_INTERVAL) {
+                nightLayerInst._reset();
+                lastNightRedraw = realNow;
+                nightDirty = false;
+            }
+
+            rafId = requestAnimationFrame(tick);
+        }
+        rafId = requestAnimationFrame(tick);
+        console.log('✅ RAF animation loop started');
     })
-    .catch(err => {
-        console.error('❌ TLE fetch error:', err);
-    });
+    .catch(err => console.error('❌ TLE fetch error:', err));
 
-// ============================================
-// GITHUB AUTH
-// ============================================
-
+// ── GitHub Auth ───────────────────────────────────────────
 const GITHUB_CLIENT_ID = 'Ov23liGR0rMbfspzNYrn';
 const REDIRECT_URI = window.location.origin + window.location.pathname;
 
@@ -807,88 +683,59 @@ function githubLogin() {
             localStorage.removeItem('github_user');
             localStorage.removeItem('github_token');
             updateGitHubButton();
-            console.log('👋 GitHub signed out');
         }
     } else {
-        const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=user:email`;
-        window.location.href = authUrl;
-        console.log('🔐 Redirecting to GitHub OAuth...');
+        window.location.href = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=user:email`;
     }
 }
 
 function updateGitHubButton() {
-    const btn = document.getElementById('githubBtn');
+    const btn  = document.getElementById('githubBtn');
     const user = localStorage.getItem('github_user');
     if (user) {
         btn.classList.add('logged-in');
-        const userData = JSON.parse(user);
-        btn.title = `Signed in as ${userData.login}`;
-        console.log(`✅ GitHub user: ${userData.login}`);
+        btn.title = `Signed in as ${JSON.parse(user).login}`;
     } else {
         btn.classList.remove('logged-in');
         btn.title = 'Sign in with GitHub';
     }
 }
 
+// ── Dynamic Light (passive) ───────────────────────────────
+document.addEventListener('mousemove', e => {
+    if (DOM.dynamicLight) {
+        DOM.dynamicLight.style.left = `${e.clientX - 350}px`;
+        DOM.dynamicLight.style.top  = `${e.clientY - 350}px`;
+    }
+}, { passive: true });
+
+// ── Theme ─────────────────────────────────────────────────
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('mapsat_theme', theme);
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
+}
+
+(function applyTheme() {
+    const saved = localStorage.getItem('mapsat_theme') || 'mission';
+    document.documentElement.setAttribute('data-theme', saved);
+    window.addEventListener('DOMContentLoaded', () => {
+        initDOM();
+        initSearch();
+        document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === saved));
+        updateTimeDisplay();
+    });
+})();
+
+// ── OAuth callback ────────────────────────────────────────
 window.addEventListener('load', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
+    const code = new URLSearchParams(window.location.search).get('code');
     if (code) {
-        console.log('🔐 GitHub OAuth code received');
-        const mockUser = {
-            login: 'user_' + Math.random().toString(36).substr(2, 5),
-            id: Date.now(),
-            avatar_url: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'
-        };
+        const mockUser = { login:'user_'+Math.random().toString(36).substr(2,5), id:Date.now(), avatar_url:'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png' };
         localStorage.setItem('github_user', JSON.stringify(mockUser));
-        updateGitHubButton();
         window.history.replaceState({}, document.title, window.location.pathname);
-        console.log('✅ GitHub auth completed (simulated)');
     }
     updateGitHubButton();
 });
 
-// Dynamic Light Effect
-document.addEventListener('mousemove', (e) => {
-    const light = document.getElementById('dynamicLight');
-    if (light) {
-        light.style.left = `${e.clientX - 300}px`;
-        light.style.top = `${e.clientY - 300}px`;
-    }
-});
-
-// Initialize time display
-updateTimeDisplay();
-
-console.log('🎉 Satellite Tracker v0.4 fully initialized!');
-console.log('✅ Dynamic Light Active');
-console.log('✅ Orbit Path Ready');
-console.log('🎅 SantaSat Loaded (map only)');
-console.log('🛸 UFO Loaded (sidebar only, hidden on map)');
-
-// ============================================
-// TEMA YÖNETİMİ
-// ============================================
-
-function setTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('mapsat_theme', theme);
-
-    // Aktif butonu güncelle
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.theme === theme);
-    });
-    console.log(`🎨 Theme set: ${theme}`);
-}
-
-// Kaydedilmiş temayı uygula
-(function() {
-    const saved = localStorage.getItem('mapsat_theme') || 'mission';
-    document.documentElement.setAttribute('data-theme', saved);
-    // DOM hazır olunca butonları güncelle
-    window.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.theme-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.theme === saved);
-        });
-    });
-})();
+console.log('🎉 Satellite Tracker fully initialized (optimized build)');
