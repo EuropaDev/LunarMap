@@ -81,6 +81,13 @@ const EARTH_RADIUS_KM = 6371;
 const ANIMATION_INTERVAL_MS = 150;
 const ORBIT_PATH_MINUTES    = 90;
 
+// FIX: Maximum safe warp factor to prevent Date overflow and runaway computation
+const MAX_WARP = 10_000;
+
+// FIX: Orbit path is expensive — only recalculate when sim time has jumped
+// more than this many milliseconds since the last build.
+const ORBIT_PATH_REBUILD_THRESHOLD_MS = 5_000;
+
 const SATELLITE_IMAGES: Record<SatType | 'starlink', string> = {
     iss:      'https://upload.wikimedia.org/wikipedia/commons/0/04/International_Space_Station_after_undocking_of_STS-132.jpg',
     tiangong: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Chinese_Tiangong_Space_Station.jpg/1280px-Chinese_Tiangong_Space_Station.jpg',
@@ -120,11 +127,11 @@ export function getOrbitColor(altKm: number): string {
  * Returns the orbit regime name for a given altitude.
  */
 export function getOrbitName(altKm: number): OrbitName {
-    if (altKm < 400)                     return 'VLEO';
-    if (altKm < 2000)                    return 'LEO';
-    if (altKm < 35700)                   return 'MEO';
+    if (altKm < 400)                      return 'VLEO';
+    if (altKm < 2000)                     return 'LEO';
+    if (altKm < 35700)                    return 'MEO';
     if (altKm >= 35700 && altKm <= 35900) return 'GEO';
-    if (altKm > 35900)                   return 'Beyond GEO';
+    if (altKm > 35900)                    return 'Beyond GEO';
     return 'HEO';
 }
 
@@ -167,20 +174,35 @@ export function parseTLE(rawTLE: string): SatelliteEntry[] {
 
 // ── Propagation ───────────────────────────────
 
+// FIX: Helper — returns false if any component of a vector is NaN or non-finite.
+function isValidVector(v: EciVector): boolean {
+    return isFinite(v.x) && isFinite(v.y) && isFinite(v.z);
+}
+
 /**
  * Computes the geodetic position of a satellite at the given time.
- * Returns null if propagation fails (decayed orbit, invalid TLE, etc.)
+ * Returns null if propagation fails (decayed orbit, invalid TLE, NaN result, etc.)
  */
 export function getSatPosition(satrec: SatRec, date: Date): GeoPosition | null {
+    // FIX: Guard against invalid dates (e.g. from extreme warp overflow)
+    if (!isFinite(date.getTime())) return null;
+
     try {
         const pv = satellite.propagate(satrec, date);
-        if (!pv.position) return null;
+        // FIX: Also validate that position vectors are finite, not just truthy
+        if (!pv.position || !isValidVector(pv.position)) return null;
+
         const gmst = satellite.gstime(date);
-        const geo  = satellite.eciToGeodetic(pv.position, gmst);
-        return {
-            lat: satellite.degreesLat(geo.latitude),
-            lng: satellite.degreesLong(geo.longitude)
-        };
+        if (!isFinite(gmst)) return null;
+
+        const geo = satellite.eciToGeodetic(pv.position, gmst);
+        const lat = satellite.degreesLat(geo.latitude);
+        const lng = satellite.degreesLong(geo.longitude);
+
+        // FIX: Reject NaN coordinates before they propagate downstream
+        if (!isFinite(lat) || !isFinite(lng)) return null;
+
+        return { lat, lng };
     } catch {
         return null;
     }
@@ -191,22 +213,32 @@ export function getSatPosition(satrec: SatRec, date: Date): GeoPosition | null {
  * Returns null on propagation failure.
  */
 export function getSatelliteState(satrec: SatRec, date: Date): SatelliteState | null {
+    // FIX: Guard against invalid dates
+    if (!isFinite(date.getTime())) return null;
+
     try {
         const pv = satellite.propagate(satrec, date);
-        if (!pv.position) return null;
+        // FIX: Validate position vector
+        if (!pv.position || !isValidVector(pv.position)) return null;
 
-        const gmst    = satellite.gstime(date);
-        const geo     = satellite.eciToGeodetic(pv.position, gmst);
-        const altKm   = Math.hypot(pv.position.x, pv.position.y, pv.position.z) - EARTH_RADIUS_KM;
-        const velKms  = pv.velocity
+        const gmst = satellite.gstime(date);
+        if (!isFinite(gmst)) return null;
+
+        const geo   = satellite.eciToGeodetic(pv.position, gmst);
+        const lat   = satellite.degreesLat(geo.latitude);
+        const lng   = satellite.degreesLong(geo.longitude);
+
+        if (!isFinite(lat) || !isFinite(lng)) return null;
+
+        const altKm  = Math.hypot(pv.position.x, pv.position.y, pv.position.z) - EARTH_RADIUS_KM;
+        if (!isFinite(altKm) || altKm < 0) return null;  // FIX: Negative alt = decayed
+
+        const velKms = pv.velocity && isValidVector(pv.velocity)
             ? Math.hypot(pv.velocity.x, pv.velocity.y, pv.velocity.z)
             : 0;
 
         return {
-            position: {
-                lat: satellite.degreesLat(geo.latitude),
-                lng: satellite.degreesLong(geo.longitude)
-            },
+            position: { lat, lng },
             altKm,
             velKms,
             orbit: getOrbitName(altKm)
@@ -227,11 +259,18 @@ export function buildAltitudeCache(
     date: Date = new Date()
 ): Map<string, number> {
     const cache = new Map<string, number>();
+
+    // FIX: Don't compute anything with an invalid date
+    if (!isFinite(date.getTime())) return cache;
+
     for (const entry of entries) {
         const pv = satellite.propagate(entry.satrec, date);
-        if (pv.position) {
+        // FIX: Validate vector before using it
+        if (pv.position && isValidVector(pv.position)) {
             const alt = Math.hypot(pv.position.x, pv.position.y, pv.position.z) - EARTH_RADIUS_KM;
-            cache.set(entry.name, alt);
+            if (isFinite(alt) && alt >= 0) {
+                cache.set(entry.name, alt);
+            }
         }
     }
     return cache;
@@ -241,12 +280,14 @@ export function buildAltitudeCache(
 
 /**
  * Wraps a longitude value into the [-180, 180] range.
+ *
+ * FIX: The original while-loop version hangs forever on NaN / ±Infinity.
+ *      Use modulo arithmetic instead — O(1) and safe for any finite input.
  */
 export function normalizeLng(lng: number): number {
-    let n = lng;
-    while (n > 180)  n -= 360;
-    while (n < -180) n += 360;
-    return n;
+    // FIX: Reject non-finite values immediately
+    if (!isFinite(lng)) return 0;
+    return ((lng + 180) % 360 + 360) % 360 - 180;
 }
 
 // ── Orbit Path Builder ────────────────────────
@@ -254,19 +295,58 @@ export function normalizeLng(lng: number): number {
 /**
  * Generates a sequence of future [lat, lng] pairs to visualise the
  * predicted orbit ground track over the next `minutes` steps.
+ *
+ * FIX: Skips invalid propagation results instead of passing NaN into Leaflet.
  */
 export function buildOrbitPath(
-    satrec: SatRec,
-    from:   Date,
+    satrec:  SatRec,
+    from:    Date,
     minutes: number = ORBIT_PATH_MINUTES
 ): [number, number][] {
+    // FIX: Guard against invalid start date
+    if (!isFinite(from.getTime())) return [];
+
     const points: [number, number][] = [];
     for (let i = 0; i < minutes; i++) {
         const t   = new Date(from.getTime() + i * 60_000);
         const pos = getSatPosition(satrec, t);
+        // FIX: getSatPosition already returns null for bad values — just skip
         if (pos) points.push([pos.lat, pos.lng]);
     }
     return points;
+}
+
+/**
+ * Cache entry for throttled orbit-path rebuilding.
+ * Stores the last build time so we can skip redundant rebuilds.
+ */
+export interface OrbitPathCache {
+    points:    [number, number][];
+    builtAtMs: number;   // simulated time (ms) when path was last built
+}
+
+/**
+ * Returns a (possibly cached) orbit path.
+ * Only rebuilds when the simulated time has advanced beyond the threshold.
+ *
+ * FIX: Prevents `buildOrbitPath` from being called every animation frame,
+ *      which caused a cascade of expensive propagations at high warp.
+ */
+export function getOrbitPathCached(
+    satrec:    SatRec,
+    simNow:    Date,
+    existing:  OrbitPathCache | null,
+    minutes:   number = ORBIT_PATH_MINUTES,
+    threshMs:  number = ORBIT_PATH_REBUILD_THRESHOLD_MS
+): OrbitPathCache {
+    const nowMs = simNow.getTime();
+    if (existing && Math.abs(nowMs - existing.builtAtMs) < threshMs) {
+        return existing;   // still fresh
+    }
+    return {
+        points:    buildOrbitPath(satrec, simNow, minutes),
+        builtAtMs: nowMs
+    };
 }
 
 // ── Simulation Clock ──────────────────────────
@@ -280,9 +360,9 @@ export function buildOrbitPath(
  * setInterval(() => console.log(clock.now()), 100);
  */
 export class SimulationClock {
-    private _warp:      number = 1;
-    private _simBase:   Date;
-    private _realBase:  number;
+    private _warp:     number = 1;
+    private _simBase:  Date;
+    private _realBase: number;
 
     constructor(startTime: Date = new Date()) {
         this._simBase  = startTime;
@@ -292,14 +372,23 @@ export class SimulationClock {
     /** Returns the current simulated time. */
     now(): Date {
         const elapsed = (Date.now() - this._realBase) * this._warp;
-        return new Date(this._simBase.getTime() + elapsed);
+        const ms      = this._simBase.getTime() + elapsed;
+
+        // FIX: Clamp to safe JS Date range to prevent overflow/NaN propagation
+        const SAFE_MAX = 8_640_000_000_000_000; // ±100M days from epoch
+        const clamped  = Math.max(-SAFE_MAX, Math.min(SAFE_MAX, ms));
+        return new Date(clamped);
     }
 
-    /** Adjusts the warp factor without discontinuity. */
+    /**
+     * Adjusts the warp factor without discontinuity.
+     * FIX: Clamp warp to MAX_WARP to prevent runaway computation.
+     */
     setTimeWarp(warp: number): void {
         this._simBase  = this.now();
         this._realBase = Date.now();
-        this._warp     = warp;
+        // FIX: Enforce bounds — allow reverse time but cap magnitude
+        this._warp = Math.max(-MAX_WARP, Math.min(MAX_WARP, warp));
     }
 
     /** Resets the clock to real current time at 1× speed. */
@@ -411,6 +500,9 @@ export function nightOpacity(
     date: Date,
     cfg:  Pick<NightLayerConfig, 'maxOpacity'> = { maxOpacity: 0.5 }
 ): number {
+    // FIX: Don't feed invalid dates to SunCalc
+    if (!isFinite(date.getTime())) return 0;
+
     const sunPos = SunCalc.getPosition(date, lat, lng);
     const altDeg = sunPos.altitude * (180 / Math.PI);
 
@@ -427,7 +519,7 @@ export function nightOpacity(
  * Returns the best-match image URL for a given satellite entry.
  */
 export function resolveSatelliteImage(entry: Pick<SatelliteEntry, 'type' | 'isTrain'>): string {
-    if (entry.isTrain)            return SATELLITE_IMAGES.starlink;
+    if (entry.isTrain) return SATELLITE_IMAGES.starlink;
     return SATELLITE_IMAGES[entry.type] ?? SATELLITE_IMAGES.normal;
 }
 
@@ -463,6 +555,8 @@ const TIME_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
  * Formats a Date for the HUD time display.
  */
 export function formatSimTime(date: Date, locale = 'en-US'): string {
+    // FIX: Guard against invalid Date objects (e.g. from extreme warp)
+    if (!isFinite(date.getTime())) return 'Invalid time';
     return date.toLocaleString(locale, TIME_FORMAT_OPTIONS);
 }
 
@@ -500,6 +594,8 @@ export class AnimationLoop {
         if (this._id !== null) return;
         this._id = setInterval(() => {
             const now = this._clock.now();
+            // FIX: Skip tick entirely if the clock has produced an invalid time
+            if (!isFinite(now.getTime())) return;
             this._onTick(now);
             this._renderer.draw();
             this._renderer.updateSidebarPosition();
