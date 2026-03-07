@@ -67,6 +67,42 @@ declare const SunCalc: {
 };
 declare const L: LeafletStatic; // Leaflet
 
+// Three.js runtime stub — resolved from CDN
+declare const THREE: {
+    Scene: new () => ThreeScene;
+    PerspectiveCamera: new (fov: number, aspect: number, near: number, far: number) => ThreeCamera;
+    WebGLRenderer: new (opts: { antialias: boolean; alpha: boolean }) => ThreeRenderer;
+    SphereGeometry: new (radius: number, widthSeg: number, heightSeg: number) => ThreeGeometry;
+    BufferGeometry: new () => ThreeBufferGeometry;
+    BufferAttribute: new (arr: Float32Array, itemSize: number) => ThreeBufferAttribute;
+    Float32BufferAttribute: new (arr: number[], itemSize: number) => ThreeBufferAttribute;
+    PointsMaterial: new (opts: object) => ThreeMaterial;
+    MeshPhongMaterial: new (opts: object) => ThreeMaterial;
+    Points: new (geo: ThreeBufferGeometry, mat: ThreeMaterial) => ThreeObject3D;
+    Mesh: new (geo: ThreeGeometry, mat: ThreeMaterial) => ThreeObject3D;
+    AmbientLight: new (color: number) => ThreeObject3D;
+    DirectionalLight: new (color: number, intensity: number) => ThreeDirectionalLight;
+    TextureLoader: new () => { load(url: string): ThreeTexture };
+    Vector3: new (x: number, y: number, z: number) => ThreeVector3;
+    Quaternion: new () => ThreeQuaternion;
+    Color: new (c: string | number) => { r: number; g: number; b: number };
+    BackSide: number;
+};
+
+// Minimal Three.js type stubs
+interface ThreeScene    { add(o: object): void; remove(o: object): void; }
+interface ThreeCamera   { position: ThreeVector3; aspect: number; updateProjectionMatrix(): void; }
+interface ThreeRenderer { domElement: HTMLCanvasElement; setSize(w: number, h: number): void; setPixelRatio(r: number): void; setClearColor(c: number, a: number): void; render(s: ThreeScene, c: ThreeCamera): void; }
+interface ThreeGeometry {}
+interface ThreeBufferGeometry { setAttribute(name: string, attr: ThreeBufferAttribute): void; }
+interface ThreeBufferAttribute {}
+interface ThreeMaterial {}
+interface ThreeTexture {}
+interface ThreeObject3D { quaternion: ThreeQuaternion; position: ThreeVector3; }
+interface ThreeDirectionalLight extends ThreeObject3D {}
+interface ThreeVector3  { x: number; y: number; z: number; set(x: number, y: number, z: number): ThreeVector3; }
+interface ThreeQuaternion { setFromAxisAngle(axis: ThreeVector3, angle: number): ThreeQuaternion; multiply(q: ThreeQuaternion): ThreeQuaternion; copy(q: ThreeQuaternion): void; }
+
 // Opaque type stubs
 type SatRec      = object & { _brand: 'SatRec' };
 type EciVector   = { x: number; y: number; z: number };
@@ -647,6 +683,8 @@ export function setTheme(theme: string): void {
     });
 }
 
+// ── Satellite Tracker ─────────────────────────
+
 /**
  * Restores the previously saved theme, or falls back to the default.
  * Call this once at startup, before the DOM renders visible content.
@@ -656,4 +694,389 @@ export function restoreTheme(): void {
     document.documentElement.setAttribute('data-theme', saved);
     // Defer button sync until the DOM is fully ready
     window.addEventListener('DOMContentLoaded', () => setTheme(saved));
+}
+
+// ── Satellite Tracking ────────────────────────
+
+/** Represents a satellite currently being tracked on the 2D map. */
+export interface TrackingState {
+    sat:    SatelliteEntry;
+    active: boolean;
+}
+
+/**
+ * Manages map-pan tracking of a single satellite.
+ * Integrates with the AnimationLoop via its onTick callback.
+ */
+export class SatelliteTracker {
+    private _tracked: SatelliteEntry | null = null;
+    private readonly _panFn: (lat: number, lng: number) => void;
+
+    /**
+     * @param panFn  Called every tick while tracking is active.
+     *               Should pan/centre the map to the given coordinates.
+     */
+    constructor(panFn: (lat: number, lng: number) => void) {
+        this._panFn = panFn;
+    }
+
+    /** Start tracking a satellite. Replaces any currently tracked sat. */
+    track(sat: SatelliteEntry): void {
+        this._tracked = sat;
+        this._syncUI(true);
+    }
+
+    /** Stop tracking without selecting a different satellite. */
+    stop(): void {
+        this._tracked = null;
+        this._syncUI(false);
+    }
+
+    /** Toggle tracking on the given sat; stops if it's already the tracked one. */
+    toggle(sat: SatelliteEntry): void {
+        if (this._tracked === sat) this.stop();
+        else this.track(sat);
+    }
+
+    /** Called every animation frame. Pans the map if tracking is active. */
+    tick(simNow: Date): void {
+        if (!this._tracked || !isFinite(simNow.getTime())) return;
+        const pos = getSatPosition(this._tracked.satrec, simNow);
+        if (pos) this._panFn(pos.lat, normalizeLng(pos.lng));
+    }
+
+    get tracked(): SatelliteEntry | null { return this._tracked; }
+    get isTracking(): boolean            { return this._tracked !== null; }
+
+    private _syncUI(active: boolean): void {
+        const btn   = document.getElementById('trackBtn');
+        const icon  = btn?.querySelector('.track-btn-icon');
+        const label = btn?.querySelector('.track-btn-label');
+        if (!btn) return;
+        btn.classList.toggle('active', active);
+        if (icon)  icon.textContent  = active ? '⏹' : '🎯';
+        if (label) label.textContent = active ? 'STOP TRACKING' : 'TRACK SATELLITE';
+    }
+}
+
+// ── 3D Globe ──────────────────────────────────
+
+/** Configuration for the 3D globe renderer. */
+export interface GlobeConfig {
+    earthRadius:   number;   // scene units (default 2)
+    fov:           number;   // camera FOV degrees
+    initialCamZ:   number;   // initial camera distance
+    leoZoomCamZ:   number;   // camera distance in LEO-zoom mode
+    leoAltScale:   number;   // exaggeration factor for LEO orbit heights
+    starCount:     number;
+    updateIntervalMs: number; // satellite point cloud refresh rate
+}
+
+const DEFAULT_GLOBE_CONFIG: GlobeConfig = {
+    earthRadius:      2,
+    fov:              45,
+    initialCamZ:      7,
+    leoZoomCamZ:      3.8,
+    leoAltScale:      9,
+    starCount:        6000,
+    updateIntervalMs: 600,
+};
+
+/**
+ * Converts geodetic coordinates + altitude to a 3D scene position.
+ *
+ * @param lat       Degrees latitude
+ * @param lng       Degrees longitude
+ * @param altKm     Altitude above Earth surface in km
+ * @param altScale  Exaggeration factor (1 = realistic, >1 = spread out)
+ * @param earthR    Earth sphere radius in scene units
+ */
+export function latLngAltToVector3(
+    lat:      number,
+    lng:      number,
+    altKm:    number,
+    altScale: number,
+    earthR:   number
+): ThreeVector3 {
+    const r   = earthR + (altKm / 6371) * earthR * altScale;
+    const phi = (90 - lat) * (Math.PI / 180);
+    const tht = (lng + 180) * (Math.PI / 180);
+    return new THREE.Vector3(
+        -r * Math.sin(phi) * Math.cos(tht),
+         r * Math.cos(phi),
+         r * Math.sin(phi) * Math.sin(tht)
+    );
+}
+
+/**
+ * Generates star field geometry.
+ */
+export function buildStarGeometry(count: number): ThreeBufferGeometry {
+    const geo = new THREE.BufferGeometry();
+    const pos: number[] = [];
+    for (let i = 0; i < count; i++) {
+        const phi = Math.acos(2 * Math.random() - 1);
+        const tht = Math.random() * Math.PI * 2;
+        const r   = 80 + Math.random() * 20;
+        pos.push(
+            r * Math.sin(phi) * Math.cos(tht),
+            r * Math.cos(phi),
+            r * Math.sin(phi) * Math.sin(tht)
+        );
+    }
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    return geo;
+}
+
+/**
+ * Builds the coloured satellite point-cloud geometry for the globe.
+ *
+ * @param entries      All loaded satellites
+ * @param altCache     Precomputed altitude map
+ * @param simNow       Current simulated time
+ * @param altScale     LEO exaggeration factor
+ * @param earthR       Earth sphere radius in scene units
+ */
+export function buildSatellitePointCloud(
+    entries:   SatelliteEntry[],
+    altCache:  Map<string, number>,
+    simNow:    Date,
+    altScale:  number,
+    earthR:    number
+): { geometry: ThreeBufferGeometry; material: ThreeMaterial } {
+    const positions: number[] = [];
+    const colors:    number[] = [];
+
+    const palette: Record<string, { r: number; g: number; b: number }> = {
+        vleo:   new THREE.Color('#ef4444'),
+        leo:    new THREE.Color('#f97316'),
+        meo:    new THREE.Color('#eab308'),
+        geo:    new THREE.Color('#3b82f6'),
+        beyond: new THREE.Color('#a855f7'),
+    };
+
+    for (const sat of entries) {
+        const pos = getSatPosition(sat.satrec, simNow);
+        if (!pos) continue;
+        const alt = altCache.get(sat.name) ?? 400;
+        const v   = latLngAltToVector3(pos.lat, pos.lng, alt, altScale, earthR);
+        positions.push(v.x, v.y, v.z);
+        const col = alt < 400 ? palette.vleo : alt < 2000 ? palette.leo : alt < 35700 ? palette.meo : alt <= 35900 ? palette.geo : palette.beyond;
+        colors.push(col.r, col.g, col.b);
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute('color',    new THREE.Float32BufferAttribute(colors,    3));
+    const mat = new THREE.PointsMaterial({ size: 0.035, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.95 });
+    return { geometry: geo, material: mat };
+}
+
+/**
+ * Full 3D globe view manager.
+ *
+ * Lifecycle:
+ *   const globe = new GlobeView(container, config);
+ *   globe.init(allSatellites, altCache, getClock);
+ *   globe.show();
+ *   globe.setLeoZoom(true);
+ *   globe.hide();
+ */
+export class GlobeView {
+    private _scene:       ThreeScene   | null = null;
+    private _camera:      ThreeCamera  | null = null;
+    private _renderer:    ThreeRenderer | null = null;
+    private _earth:       ThreeObject3D | null = null;
+    private _atm:         ThreeObject3D | null = null;
+    private _satPoints:   ThreeObject3D | null = null;
+    private _animFrame:   number | null = null;
+    private _lastUpdate:  number = 0;
+    private _rotX:        number = 0.3;
+    private _rotY:        number = 0;
+    private _mouseDown:   boolean = false;
+    private _lastMouse:   { x: number; y: number } = { x: 0, y: 0 };
+    private _leoZoom:     boolean = false;
+    private _visible:     boolean = false;
+
+    private _entries:   SatelliteEntry[]     = [];
+    private _altCache:  Map<string, number>  = new Map();
+    private _getClock:  () => Date = () => new Date();
+
+    readonly cfg: GlobeConfig;
+    private readonly _container: HTMLElement;
+
+    constructor(container: HTMLElement, cfg: Partial<GlobeConfig> = {}) {
+        this._container = container;
+        this.cfg        = { ...DEFAULT_GLOBE_CONFIG, ...cfg };
+    }
+
+    /** Provide satellite data + clock. Call before show(). */
+    init(
+        entries:  SatelliteEntry[],
+        altCache: Map<string, number>,
+        getClock: () => Date
+    ): void {
+        this._entries  = entries;
+        this._altCache = altCache;
+        this._getClock = getClock;
+        if (!this._scene) this._build();
+    }
+
+    show(): void {
+        this._container.style.display = 'block';
+        this._visible = true;
+        this._scheduleFrame();
+    }
+
+    hide(): void {
+        this._visible = false;
+        this._container.style.display = 'none';
+        if (this._animFrame !== null) { cancelAnimationFrame(this._animFrame); this._animFrame = null; }
+    }
+
+    /** Toggle LEO altitude exaggeration and animate camera zoom. */
+    setLeoZoom(enabled: boolean): void {
+        this._leoZoom = enabled;
+        const targetZ = enabled ? this.cfg.leoZoomCamZ : this.cfg.initialCamZ;
+        this._animateCamZ(targetZ);
+        this._rebuildSatPoints();
+    }
+
+    get leoZoom(): boolean  { return this._leoZoom; }
+    get visible(): boolean  { return this._visible; }
+
+    // ── Private ──────────────────────────────────
+
+    private _build(): void {
+        const { earthRadius: R, fov, initialCamZ, starCount } = this.cfg;
+        const w = window.innerWidth, h = window.innerHeight;
+
+        this._scene    = new THREE.Scene();
+        this._camera   = new THREE.PerspectiveCamera(fov, w / h, 0.1, 1000);
+        this._camera.position.set(0, 0, initialCamZ);
+
+        this._renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        this._renderer.setSize(w, h);
+        this._renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this._renderer.setClearColor(0x000000, 0);
+        this._container.appendChild(this._renderer.domElement);
+
+        // Stars
+        const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.25 });
+        this._scene.add(new THREE.Points(buildStarGeometry(starCount), starMat));
+
+        // Earth
+        const loader   = new THREE.TextureLoader();
+        const earthMat = new THREE.MeshPhongMaterial({
+            map:       loader.load('https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Land_ocean_ice_cloud_hires.jpg/1024px-Land_ocean_ice_cloud_hires.jpg'),
+            specular:  new THREE.Color(0x111111),
+            shininess: 8,
+        });
+        this._earth = new THREE.Mesh(new THREE.SphereGeometry(R, 64, 64), earthMat);
+        this._scene.add(this._earth);
+
+        // Atmosphere
+        const atmMat = new THREE.MeshPhongMaterial({ color: 0x0088ff, transparent: true, opacity: 0.08, side: THREE.BackSide });
+        this._atm = new THREE.Mesh(new THREE.SphereGeometry(R * 1.04, 32, 32), atmMat);
+        this._scene.add(this._atm);
+
+        // Lights
+        this._scene.add(new THREE.AmbientLight(0x222244));
+        const sun = new THREE.DirectionalLight(0xfff5ee, 1.3);
+        sun.position.set(8, 4, 6);
+        this._scene.add(sun);
+        const fill = new THREE.DirectionalLight(0x4466aa, 0.3);
+        fill.position.set(-8, -4, -6);
+        this._scene.add(fill);
+
+        this._attachInputHandlers();
+        window.addEventListener('resize', () => this._onResize());
+    }
+
+    private _attachInputHandlers(): void {
+        const c = this._renderer!.domElement;
+        c.addEventListener('mousedown',  e => { this._mouseDown = true;  this._lastMouse = { x: e.clientX, y: e.clientY }; });
+        c.addEventListener('mouseup',    () => { this._mouseDown = false; });
+        c.addEventListener('mouseleave', () => { this._mouseDown = false; });
+        c.addEventListener('mousemove',  e => {
+            if (!this._mouseDown) return;
+            this._rotY += (e.clientX - this._lastMouse.x) * 0.006;
+            this._rotX += (e.clientY - this._lastMouse.y) * 0.006;
+            this._rotX  = Math.max(-1.4, Math.min(1.4, this._rotX));
+            this._lastMouse = { x: e.clientX, y: e.clientY };
+        });
+        c.addEventListener('wheel', e => {
+            e.preventDefault();
+            const cam = this._camera!;
+            cam.position.z = Math.max(2.8, Math.min(18, cam.position.z + (e as WheelEvent).deltaY * 0.012));
+        }, { passive: false });
+
+        let touchLast: Touch | null = null;
+        c.addEventListener('touchstart',  e => { touchLast = e.touches[0]; }, { passive: true });
+        c.addEventListener('touchend',    () => { touchLast = null; });
+        c.addEventListener('touchmove',   e => {
+            if (!touchLast) return;
+            const t = e.touches[0];
+            this._rotY += (t.clientX - touchLast.clientX) * 0.006;
+            this._rotX += (t.clientY - touchLast.clientY) * 0.006;
+            this._rotX  = Math.max(-1.4, Math.min(1.4, this._rotX));
+            touchLast   = t;
+        }, { passive: true });
+    }
+
+    private _onResize(): void {
+        if (!this._camera || !this._renderer) return;
+        this._camera.aspect = window.innerWidth / window.innerHeight;
+        this._camera.updateProjectionMatrix();
+        this._renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    private _rebuildSatPoints(): void {
+        if (!this._scene) return;
+        if (this._satPoints) { this._scene.remove(this._satPoints); this._satPoints = null; }
+        const now = this._getClock();
+        if (!isFinite(now.getTime())) return;
+        const altScale = this._leoZoom ? this.cfg.leoAltScale : 1;
+        const { geometry, material } = buildSatellitePointCloud(this._entries, this._altCache, now, altScale, this.cfg.earthRadius);
+        this._satPoints = new THREE.Points(geometry, material);
+        this._scene.add(this._satPoints);
+    }
+
+    private _scheduleFrame(): void {
+        if (!this._visible) return;
+        this._animFrame = requestAnimationFrame(() => {
+            this._render();
+            this._scheduleFrame();
+        });
+    }
+
+    private _render(): void {
+        if (!this._scene || !this._camera || !this._renderer) return;
+        const now = Date.now();
+        if (now - this._lastUpdate > this.cfg.updateIntervalMs) {
+            this._rebuildSatPoints();
+            this._lastUpdate = now;
+        }
+
+        const qX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this._rotX);
+        const qY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), this._rotY);
+        const q  = qY.multiply(qX);
+
+        if (this._earth)     this._earth.quaternion.copy(q);
+        if (this._atm)       this._atm.quaternion.copy(q);
+        if (this._satPoints) this._satPoints.quaternion.copy(q);
+
+        this._renderer.render(this._scene, this._camera);
+    }
+
+    private _animateCamZ(targetZ: number): void {
+        const step = (): void => {
+            if (!this._camera) return;
+            const diff = targetZ - this._camera.position.z;
+            if (Math.abs(diff) < 0.01) { this._camera.position.z = targetZ; return; }
+            this._camera.position.z += diff * 0.12;
+            requestAnimationFrame(step);
+        };
+        step();
+    }
 }
