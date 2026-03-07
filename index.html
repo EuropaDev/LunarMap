@@ -68,7 +68,7 @@
         </button>
         <div class="menu-section" id="contactSection">
             <div class="contact-info">
-                <a href="mailto:contact.mapsat@gmail.com" class="contact-link"><span>📧</span><span>contact.mapsat@gmail.com</span></a>
+                <a href="/cdn-cgi/l/email-protection#3b5854554f5a584f15565a4b485a4f7b5c565a525715585456" class="contact-link"><span>📧</span><span><span class="__cf_email__" data-cfemail="15767a7b617476613b787465667461557278747c793b767a78">[email&#160;protected]</span></span></a>
                 <a href="https://github.com/EuropaDev/LunarMap" target="_blank" class="contact-link"><span>💻</span><span>GitHub Repository</span></a>
             </div>
         </div>
@@ -118,6 +118,9 @@
     <button class="control-btn" id="borderBtn" onclick="toggleBorders()" title="Toggle Borders">🗺️</button>
     <button class="control-btn" id="mapBtn" onclick="cycleMapStyle()" title="Map Style">🎨</button>
     <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+    <div class="controls-divider"></div>
+    <button class="control-btn" id="btn3D" onclick="toggle3DMode()" title="3D Globe View">🌍</button>
+    <button class="control-btn" id="leoZoomBtn" onclick="toggleLeoZoom()" title="LEO Zoom (3D only)" disabled>🔭</button>
 </div>
 
 <div class="search-panel">
@@ -151,6 +154,11 @@
             </div>
             <div class="ai-desc-text" id="satDesc">-</div>
         </div>
+        <button class="track-btn" id="trackBtn" onclick="toggleTracking()">
+            <span class="track-btn-icon">🎯</span>
+            <span class="track-btn-label">TRACK SATELLITE</span>
+            <span class="track-pulse" id="trackPulse"></span>
+        </button>
     </div>
 </div>
 
@@ -185,10 +193,14 @@
 <div class="tooltip" id="tooltip"></div>
 <div id="map"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="script.js"></script>
+
+<!-- 3D Globe Container -->
+<div id="globe-container"></div>
 
 <div id="custom-header-unique">
     <img src="logo120x120.png" alt="Logo" class="header-logo-unique">
@@ -241,12 +253,4 @@
     }
 </style>
 <script>
-// Restore saved API key into input on load
-window.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem('anthropic_api_key');
-    const input = document.getElementById('apiKeyInput');
-    if (saved && input) input.value = saved;
-});
-</script>
-</body>
-</html>
+// Restore saved API key into input o
