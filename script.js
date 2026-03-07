@@ -59,8 +59,6 @@ baseLayers[1] = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/
 baseLayers[2] = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',                                           { noWrap:true, bounds:[[-85,-180],[85,180]] });
 currentBaseLayer = baseLayers[0];
 currentBaseLayer.addTo(map);
-const _tooltipEl = document.getElementById('tooltip');
-
 console.log('✅ Map initialized');
 
 // ── i18n ─────────────────────────────────────
@@ -235,10 +233,7 @@ function drawOrbitPath(sat) {
     if (_orbitPathSat === sat && Math.abs(nowMs - _orbitPathBuiltAt) < 5000) return;
     if (orbitPathLayer) { map.removeLayer(orbitPathLayer); orbitPathLayer = null; }
     const points = [];
-    // Use cached position as starting point if available
-    const cached = posCache.get(sat.name);
-    if (cached) points.push([cached.lat, cached.lng]);
-    for (let i = (cached ? 1 : 0); i < 90; i++) {
+    for (let i = 0; i < 90; i++) {
         const pos = getPos(sat.satrec, new Date(nowMs + i * 60_000));
         if (pos) points.push([pos.lat, pos.lng]);
     }
@@ -336,8 +331,7 @@ function updateSatellitePosition() {
     if (!selectedSat) return;
     const now = getSimTime();
     if (!isFinite(now.getTime())) return;
-    // Use position cache first — avoids redundant propagation
-    const p = posCache.get(selectedSat.name) || getPos(selectedSat.satrec, now);
+    const p = getPos(selectedSat.satrec, now);
     if (!p) return;
     document.getElementById('satLat').innerText = p.lat.toFixed(4) + '°';
     document.getElementById('satLng').innerText = p.lng.toFixed(4) + '°';
@@ -402,7 +396,6 @@ const NightLayer = L.Layer.extend({
         setTimeout(() => { this._pending = false; if (!_mapDragging) this._reset(); }, 120);
     },
     _reset() {
-        if (is3DMode) return;  // skip night layer update during 3D mode
         const s = map.getSize(), tl = map.containerPointToLayerPoint([0,0]);
         this._c.style.transform = `translate(${tl.x}px,${tl.y}px)`;
         this._c.width = s.x; this._c.height = s.y;
@@ -413,68 +406,27 @@ const NightLayer = L.Layer.extend({
         if (!isFinite(now.getTime())) return;
         const nowMs = Date.now(), simMs = now.getTime();
         const simJumped = Math.abs(simMs - this._lastSimMs) > 60_000;
-        if (nowMs - this._lastDrawMs < 800 && !simJumped) return;
+        if (nowMs - this._lastDrawMs < 1000 && !simJumped) return;
         this._lastDrawMs = nowMs; this._lastSimMs = simMs;
 
-        const s   = map.getSize();
-        const ctx = this._c.getContext('2d');
+        const s = map.getSize(), ctx = this._c.getContext('2d');
         ctx.clearRect(0, 0, s.x, s.y);
-
-        // STEP 24px: 1,600 SunCalc calls vs original 57,600 (36x fewer)
-        // Blur 22px smooths the blocky pixels perfectly
-        const STEP = 24;
-
-        // Pre-compute sun position on a reduced lat/lng grid
-        // and bucket rect draws — minimise fillStyle changes too
-        const opMap = new Float32Array(Math.ceil(s.x/STEP) * Math.ceil(s.y/STEP));
-        let hasNight = false;
-        let idx = 0;
+        const STEP = 20; // was 6 — 11x faster, blur hides pixel size
         for (let y = 0; y < s.y; y += STEP) {
             for (let x = 0; x < s.x; x += STEP) {
-                const ll = map.containerPointToLatLng([x + STEP/2, y + STEP/2]);
-                if (ll && ll.lat >= -85 && ll.lat <= 85) {
-                    const alt = SunCalc.getPosition(now, ll.lat, ll.lng).altitude * 57.296;
-                    let d = 0;
-                    if      (alt < -18) d = 0.5;
-                    else if (alt < -12) d = 0.35 + ((alt+12)/-6)*0.15;
-                    else if (alt <  -6) d = 0.2  + ((alt+6) /-6)*0.15;
-                    else if (alt <   0) d = (alt/-6)*0.2;
-                    opMap[idx] = d;
-                    if (d > 0) hasNight = true;
-                }
-                idx++;
+                const ll = map.containerPointToLatLng([x, y]);
+                if (!ll || ll.lat > 85 || ll.lat < -85) continue;
+                const pos = SunCalc.getPosition(now, ll.lat, ll.lng);
+                const alt = pos.altitude * 180 / Math.PI;
+                let d = 0;
+                if      (alt < -18) d = 0.5;
+                else if (alt < -12) d = 0.35 + ((alt+12)/-6)*0.15;
+                else if (alt <  -6) d = 0.2  + ((alt+6) /-6)*0.15;
+                else if (alt <   0) d = (alt/-6)*0.2;
+                if (d > 0) { ctx.fillStyle = `rgba(10,14,39,${d})`; ctx.fillRect(x,y,STEP,STEP); }
             }
         }
-
-        if (!hasNight) return;  // full daylight — skip blur entirely
-
-        // Draw all night pixels in one pass with fixed opacity buckets
-        // Reduces fillStyle changes from ~1600 to ~5
-        const opBuckets = [[0.5,'rgba(10,14,39,0.5)'], [0.4,'rgba(10,14,39,0.4)'],
-                           [0.3,'rgba(10,14,39,0.3)'], [0.2,'rgba(10,14,39,0.2)'],
-                           [0.05,'rgba(10,14,39,0.1)']];
-
-        for (const [threshold, style] of opBuckets) {
-            let drawn = false;
-            idx = 0;
-            for (let y = 0; y < s.y; y += STEP) {
-                for (let x = 0; x < s.x; x += STEP) {
-                    const op = opMap[idx++];
-                    // Draw this bucket range
-                    const prev = opBuckets[opBuckets.indexOf(opBuckets.find(b=>b[1]===style))-1];
-                    const lower = prev ? prev[0] : 0;
-                    if (op > lower && op <= threshold) {
-                        if (!drawn) { ctx.fillStyle = style; drawn = true; }
-                        ctx.fillRect(x, y, STEP, STEP);
-                    }
-                }
-            }
-        }
-
-        // Offscreen blur — blur on copy to avoid self-drawImage artifact
-        ctx.filter = 'blur(22px)';
-        ctx.drawImage(this._c, 0, 0);
-        ctx.filter = 'none';
+        ctx.filter = 'blur(18px)'; ctx.drawImage(this._c, 0, 0); ctx.filter = 'none';
     }
 });
 nightLayerRef = new NightLayer();
@@ -483,52 +435,6 @@ nightLayerRef.addTo(map);
 // ============================================
 // SATELLITE CANVAS LAYER
 // ============================================
-// ── Position Cache (separate from render) ────
-// Updated in chunks so no single frame computes all 10k sats
-const posCache    = new Map();  // name → {lat, lng}
-let   posChunkIdx = 0;
-const POS_CHUNK   = 600;        // sats updated per tick
-
-function updatePosChunk() {
-    if (!layer._d || !layer._d.length) return;
-    const now  = getSimTime();
-    if (!isFinite(now.getTime())) return;
-    const total = layer._d.length;
-    const start = posChunkIdx * POS_CHUNK;
-    const end   = Math.min(start + POS_CHUNK, total);
-    for (let i = start; i < end; i++) {
-        const sat = layer._d[i];
-        const p   = getPos(sat.satrec, now);
-        if (p) { posCache.set(sat.name, p); satGeoCache.set(sat.name, p); }
-    }
-    posChunkIdx = (end >= total) ? 0 : posChunkIdx + 1;
-}
-
-// ── Position Cache (separate from render) ────────────────
-// Chunked updates: only POS_CHUNK sats propagated per tick
-// Draw loop reads from cache — zero propagation during render
-const posCache    = new Map();  // name → {lat, lng}
-let   posChunkIdx = 0;
-const POS_CHUNK   = 600;
-
-function updatePosChunk() {
-    if (!layer._d || !layer._d.length) return;
-    const now = getSimTime();
-    if (!isFinite(now.getTime())) return;
-    const total = layer._d.length;
-    const start = posChunkIdx * POS_CHUNK;
-    const end   = Math.min(start + POS_CHUNK, total);
-    for (let i = start; i < end; i++) {
-        const sat = layer._d[i];
-        const p   = getPos(sat.satrec, now);
-        if (p) {
-            posCache.set(sat.name, p);
-            satGeoCache.set(sat.name, p);
-        }
-    }
-    posChunkIdx = (end >= total) ? 0 : posChunkIdx + 1;
-}
-
 const SatLayer = L.Layer.extend({
     onAdd(m) {
         this._c = L.DomUtil.create('canvas', 'leaflet-layer');
@@ -537,11 +443,11 @@ const SatLayer = L.Layer.extend({
         m.on('moveend zoomend viewreset', () => this._reset());
         this._c.addEventListener('click',     e => this._onClick(e));
         this._c.addEventListener('mousemove', e => this._onMouseMove(e));
-        this._c.addEventListener('mouseout',  () => _tooltipEl.style.display = 'none');
+        this._c.addEventListener('mouseout',  () => document.getElementById('tooltip').style.display = 'none');
         this._reset();
     },
     _reset() {
-        const s = map.getSize(), tl = map.containerPointToLayerPoint([0, 0]);
+        const s = map.getSize(), tl = map.containerPointToLayerPoint([0,0]);
         this._c.style.transform = `translate(${tl.x}px,${tl.y}px)`;
         this._c.width = s.x; this._c.height = s.y;
         this._draw();
@@ -551,97 +457,62 @@ const SatLayer = L.Layer.extend({
         for (const sat of this._d) {
             const pos = satPositions.get(sat.name);
             const r   = sat.type !== 'normal' ? 20 : 6;
-            if (pos && Math.hypot(pos.x - x, pos.y - y) < r) return sat;
+            if (pos && Math.hypot(pos.x-x, pos.y-y) < r) return sat;
         }
         return null;
     },
     _onMouseMove(e) {
         if (!showLabels) return;
-        const rect    = this._c.getBoundingClientRect();
-        const found   = this._hitTest(e.clientX - rect.left, e.clientY - rect.top);
-        const tooltip = _tooltipEl;
+        const rect = this._c.getBoundingClientRect();
+        const found = this._hitTest(e.clientX-rect.left, e.clientY-rect.top);
+        const tooltip = document.getElementById('tooltip');
         if (found) {
-            tooltip.innerText  = found.name;
-            tooltip.style.left = (e.clientX + 15) + 'px';
-            tooltip.style.top  = (e.clientY - 10) + 'px';
+            tooltip.innerText = found.name;
+            tooltip.style.left = (e.clientX+15)+'px';
+            tooltip.style.top  = (e.clientY-10)+'px';
             tooltip.style.display = 'block';
-        } else {
-            tooltip.style.display = 'none';
-        }
+        } else tooltip.style.display = 'none';
     },
     _onClick(e) {
         const rect  = this._c.getBoundingClientRect();
-        const found = this._hitTest(e.clientX - rect.left, e.clientY - rect.top);
+        const found = this._hitTest(e.clientX-rect.left, e.clientY-rect.top);
         if (found) openSatelliteInfo(found);
     },
     _draw() {
         if (!this._d) return;
-        const s   = map.getSize();
-        const ctx = this._c.getContext('2d');
+        const now = getSimTime();
+        if (!isFinite(now.getTime())) return;
+        const s   = map.getSize(), ctx = this._c.getContext('2d');
         ctx.clearRect(0, 0, s.x, s.y);
         satPositions.clear();
-
-        const PAD = 60, W = s.x, H = s.y;
-
-        // ── BATCHED RENDERING ──────────────────────────────────────────
-        // Before: 10,000 × (fillStyle + arc + fill) = ~30,000 canvas ops
-        // After:  6 × (fillStyle + N×fillRect)      = ~6 state changes
-        // fillRect is also ~3x faster than arc for 1-2px dots
-        const buckets = {
-            '#ef4444': [], '#f97316': [], '#eab308': [],
-            '#3b82f6': [], '#a855f7': [], '#22c55e': []
-        };
-        const special = [];
-
+        satGeoCache.clear();
+        const PAD = 60;
         for (const sat of this._d) {
-            const geo = posCache.get(sat.name);
-            if (!geo) continue;
-            const pt = map.latLngToContainerPoint([geo.lat, normalizeLng(geo.lng)]);
-            const x  = pt.x | 0;   // bitwise floor — faster than Math.floor
-            const y  = pt.y | 0;
-            if (x < -PAD || x > W + PAD || y < -PAD || y > H + PAD) continue;
-            satPositions.set(sat.name, { x, y });
+            const p = getPos(sat.satrec, now);
+            if (!p) continue;
+            const lng = normalizeLng(p.lng);
+            const pt  = map.latLngToContainerPoint([p.lat, lng]);
+            if (pt.x < -PAD || pt.x > s.x+PAD || pt.y < -PAD || pt.y > s.y+PAD) continue;
+            satPositions.set(sat.name, { x:pt.x, y:pt.y });
+            satGeoCache.set(sat.name, { lat:p.lat, lng });  // share with 3D
             if (sat.type !== 'normal') {
-                special.push({ sat, x, y });
+                ctx.save(); ctx.translate(pt.x, pt.y);
+                ctx.font = '28px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.shadowBlur = 15;
+                const colors = { iss:'rgba(167,139,250,0.8)', tiangong:'rgba(192,132,252,0.8)', hubble:'rgba(129,140,248,0.8)' };
+                ctx.shadowColor = colors[sat.type] || 'rgba(255,255,255,0.5)';
+                ctx.fillText('🛰️', 0, 0); ctx.restore();
             } else {
-                const col = getOrbitColor(satAltitudes.get(sat.name) || 0);
-                (buckets[col] || (buckets[col] = [])).push(x, y);
-            }
-        }
-
-        // Draw orbit-color groups — 1 fillStyle per group
-        for (const [color, pts] of Object.entries(buckets)) {
-            if (!pts.length) continue;
-            ctx.fillStyle = color;
-            for (let i = 0; i < pts.length; i += 2) {
-                ctx.fillRect(pts[i], pts[i + 1], 2, 2);
-            }
-        }
-
-        // Draw special satellites (max 3: ISS, Tiangong, Hubble)
-        if (special.length) {
-            const sColors = {
-                iss: 'rgba(167,139,250,0.8)',
-                tiangong: 'rgba(192,132,252,0.8)',
-                hubble: 'rgba(129,140,248,0.8)'
-            };
-            ctx.font = '26px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            for (const { sat, x, y } of special) {
-                ctx.save();
-                ctx.translate(x, y);
-                ctx.shadowBlur  = 14;
-                ctx.shadowColor = sColors[sat.type] || 'rgba(255,255,255,0.5)';
-                ctx.fillText('\u{1F6F0}', 0, 0);
-                ctx.restore();
+                const alt = satAltitudes.get(sat.name) || 0;
+                ctx.beginPath(); ctx.arc(pt.x, pt.y, 1, 0, Math.PI*2);
+                ctx.fillStyle = getOrbitColor(alt); ctx.fill();
             }
         }
     }
 });
 layer = new SatLayer();
 layer.addTo(map);
-console.log('\u2705 Satellite layer added');
+console.log('✅ Satellite layer added');
 
 // ============================================
 // TLE LOADING — localStorage cache (4h TTL)
@@ -657,61 +528,26 @@ const TLE_SOURCES   = [
 
 function parseTLE(tle) {
     const lines = tle.split('\n'), data = [];
-    const now   = new Date();
     for (let i = 0; i < lines.length - 2; i += 3) {
         const n = lines[i].trim();
         if (!n || !lines[i+2]) continue;
         let type = 'normal', isTrain = false;
-        if      (n === 'ISS (ZARYA)')         type    = 'iss';
-        else if (n === 'CSS (MENGTIAN)')       type    = 'tiangong';
-        else if (n === 'HST')                  type    = 'hubble';
+        if      (n === 'ISS (ZARYA)')        type    = 'iss';
+        else if (n === 'CSS (MENGTIAN)')      type    = 'tiangong';
+        else if (n === 'HST')                 type    = 'hubble';
         else if (/^STARLINK-\d{4,}$/.test(n)) isTrain = true;
         const satrec = satellite.twoline2satrec(lines[i+1].trim(), lines[i+2].trim());
         if (!satrec) continue;
-        data.push({ satrec, type, name: n, isTrain });
-    }
-    // Build altitude + position cache in idle time after UI is ready
-    // This unblocks the first render — sats appear immediately
-    const BATCH = 500;
-    let idx = 0;
-    function buildCacheBatch() {
-        const now2 = new Date();
-        const end  = Math.min(idx + BATCH, data.length);
-        for (let i = idx; i < end; i++) {
-            const sat = data[i];
-            const pv  = satellite.propagate(sat.satrec, now2);
-            if (pv.position) {
-                const { x,y,z } = pv.position;
-                if (isFinite(x)&&isFinite(y)&&isFinite(z)) {
-                    const r   = Math.sqrt(x*x+y*y+z*z);
-                    const alt = r - 6371;
-                    if (isFinite(alt) && alt >= 0) {
-                        satAltitudes.set(sat.name, alt);
-                        // Prime position cache immediately
-                        const gmst = satellite.gstime(now2);
-                        if (isFinite(gmst)) {
-                            const g = satellite.eciToGeodetic(pv.position, gmst);
-                            const lat = satellite.degreesLat(g.latitude);
-                            const lng = satellite.degreesLong(g.longitude);
-                            if (isFinite(lat) && isFinite(lng)) {
-                                posCache.set(sat.name, { lat, lng });
-                                satGeoCache.set(sat.name, { lat, lng });
-                            }
-                        }
-                    }
-                }
+        data.push({ satrec, type, name:n, isTrain });
+        const pv = satellite.propagate(satrec, new Date());
+        if (pv.position) {
+            const { x,y,z } = pv.position;
+            if (isFinite(x)&&isFinite(y)&&isFinite(z)) {
+                const alt = Math.sqrt(x*x+y*y+z*z) - 6371;
+                if (isFinite(alt)&&alt>=0) satAltitudes.set(n, alt);
             }
         }
-        idx = end;
-        if (idx < data.length) {
-            // Yield to browser between batches — keeps UI responsive during initial load
-            setTimeout(buildCacheBatch, 0);
-        } else {
-            console.log(`✅ Position cache primed (${posCache.size} entries)`);
-        }
     }
-    // Start cache build after a short delay so map renders first
-    setTimeout(buildCacheBatch, 200);
     return data;
 }
 
@@ -765,56 +601,33 @@ fetchTLE()
         document.getElementById('info').innerText = data.length;
         console.log(`✅ ${data.length} satellites loaded`);
 
-        // ── DECOUPLED LOOP ARCHITECTURE ────────────────────────────
-        // Heavy work (propagation) and light work (render) are now separated:
-        //
-        //  setInterval(50ms) → updatePosChunk()
-        //    Updates 600 satellites per tick.
-        //    Full cache refresh: 10,000 / 600 ≈ 17 ticks × 50ms = ~850ms
-        //    CPU cost per tick: 600 propagations (was 10,000 every 200ms)
-        //
-        //  requestAnimationFrame → layer._draw()
-        //    Reads from posCache — zero propagation, just canvas ops
-        //    Smooth 30fps render regardless of how many sats exist
-        //
-        //  setInterval(1000ms) → sidebar + tracking + orbit path + time display
+        let _lastOrbitRefresh = 0, _nightTick = 0;
 
-        // 1. Position updater — runs every 50ms, updates one chunk
-        setInterval(() => {
-            updatePosChunk();
-        }, 50);
-
-        // 2. Render loop — rAF at ~30fps cap
-        let _lastRafDraw = 0;
-        function rafDraw(ts) {
-            requestAnimationFrame(rafDraw);
-            if (ts - _lastRafDraw < 32) return;  // 30fps cap
-            _lastRafDraw = ts;
-            layer._draw();
-        }
-        requestAnimationFrame(rafDraw);
-
-        // 3. Slow loop — sidebar, tracking, orbit, time display
-        let _lastOrbitRefresh = 0;
+        // Animation loop — 200ms interval
         setInterval(() => {
             const now = getSimTime();
             if (!isFinite(now.getTime())) return;
             updateTimeDisplay();
+            layer._draw();
             updateSatellitePosition();
 
-            // Tracking: pan map
+            // Tracking: pan to satellite
             if (trackingSat) {
-                const pos = posCache.get(trackingSat.name) || getPos(trackingSat.satrec, now);
+                const pos = getPos(trackingSat.satrec, now);
                 if (pos) map.panTo([pos.lat, normalizeLng(pos.lng)], { animate:true, duration:0.4, easeLinearity:0.5 });
             }
 
-            // Orbit path refresh: max once per 5s
+            // Orbit path: max 1 refresh per 5s
             const rNow = Date.now();
             if (selectedSat && rNow - _lastOrbitRefresh > 5000) {
-                drawOrbitPath(selectedSat);
-                _lastOrbitRefresh = rNow;
+                drawOrbitPath(selectedSat); _lastOrbitRefresh = rNow;
             }
-        }, 1000);
+
+            // Night layer: trigger every 30s real-time (1x warp)
+            _nightTick++;
+            if (_nightTick % 150 === 0) nightLayerRef?._scheduleDraw();
+
+        }, 200);
     })
     .catch(err => {
         console.error('❌ TLE error:', err);
@@ -1055,7 +868,7 @@ function renderGlobe() {
     const now = Date.now();
     if (now - _lastGlobeFrame < 33) return; // 30fps cap — halves GPU load
     _lastGlobeFrame = now;
-    if (now - lastGlobeUpdate > 1000) { updateGlobeSats(); lastGlobeUpdate = now; }
+    if (now - lastGlobeUpdate > 300) { updateGlobeSats(); lastGlobeUpdate = now; }
     const qX=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),globeRotX);
     const qY=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),globeRotY);
     const q=qY.multiply(qX);
