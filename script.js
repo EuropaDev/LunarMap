@@ -350,6 +350,12 @@ function closeSidebar() {
     document.getElementById('sidebarOverlay').classList.remove('active');
     selectedSat = null;
     if (orbitPathLayer) { map.removeLayer(orbitPathLayer); orbitPathLayer = null; }
+    // Stop tracking when sidebar is closed
+    if (trackingSat) {
+        trackingSat = null;
+        const btn = document.getElementById('trackBtn');
+        if (btn) { btn.classList.remove('active'); btn.querySelector('.track-btn-icon').textContent = '🎯'; btn.querySelector('.track-btn-label').textContent = 'TRACK SATELLITE'; }
+    }
 }
 
 function openSatelliteInfo(sat) {
@@ -686,6 +692,12 @@ fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle')
             updateTimeDisplay();
             layer._draw();
             updateSatellitePosition();
+
+            // Follow tracked satellite
+            if (trackingSat) {
+                const pos = getPos(trackingSat.satrec, now);
+                if (pos) map.panTo([pos.lat, normalizeLng(pos.lng)], { animate: true, duration: 0.45, easeLinearity: 0.5 });
+            }
         }, 150);
     })
     .catch(err => console.error('❌ TLE fetch error:', err));
@@ -766,5 +778,252 @@ function setTheme(theme) {
         });
     });
 })();
+
+// ============================================
+// SATELLITE TRACKING
+// ============================================
+
+let trackingSat = null;
+
+function toggleTracking() {
+    if (!selectedSat) return;
+
+    if (trackingSat === selectedSat) {
+        // Stop tracking
+        trackingSat = null;
+        const btn = document.getElementById('trackBtn');
+        btn.classList.remove('active');
+        btn.querySelector('.track-btn-icon').textContent = '🎯';
+        btn.querySelector('.track-btn-label').textContent = 'TRACK SATELLITE';
+    } else {
+        // Start tracking
+        trackingSat = selectedSat;
+        const btn = document.getElementById('trackBtn');
+        btn.classList.add('active');
+        btn.querySelector('.track-btn-icon').textContent = '⏹';
+        btn.querySelector('.track-btn-label').textContent = 'STOP TRACKING';
+    }
+}
+
+// ============================================
+// 3D GLOBE
+// ============================================
+
+let is3DMode = false;
+let isLeoZoom = false;
+let globeScene, globeCamera, globeRenderer;
+let globeEarth, globeAtm, globeSatPoints, globeStars;
+let globeMouseDown = false;
+let globeLastMouse = { x: 0, y: 0 };
+let globeRotX = 0.3, globeRotY = 0;
+let globeAnimFrame = null;
+let lastGlobeUpdate = 0;
+const EARTH_R = 2;
+
+function toggle3DMode() {
+    is3DMode = !is3DMode;
+    const btn = document.getElementById('btn3D');
+    const leoBtn = document.getElementById('leoZoomBtn');
+    const container = document.getElementById('globe-container');
+
+    btn.classList.toggle('active', is3DMode);
+    container.style.display = is3DMode ? 'block' : 'none';
+    leoBtn.disabled = !is3DMode;
+    leoBtn.classList.toggle('leo-available', is3DMode);
+
+    if (is3DMode) {
+        if (!globeScene) initGlobe();
+        if (globeAnimFrame) cancelAnimationFrame(globeAnimFrame);
+        renderGlobe();
+    } else {
+        if (globeAnimFrame) { cancelAnimationFrame(globeAnimFrame); globeAnimFrame = null; }
+        // Reset LEO zoom when leaving 3D
+        if (isLeoZoom) {
+            isLeoZoom = false;
+            leoBtn.classList.remove('active');
+        }
+    }
+}
+
+function latLngAltTo3D(lat, lng, alt, altScale) {
+    const r   = EARTH_R + (alt / 6371) * EARTH_R * altScale;
+    const phi = (90 - lat) * Math.PI / 180;
+    const tht = (lng + 180) * Math.PI / 180;
+    return new THREE.Vector3(
+        -r * Math.sin(phi) * Math.cos(tht),
+         r * Math.cos(phi),
+         r * Math.sin(phi) * Math.sin(tht)
+    );
+}
+
+function initGlobe() {
+    const container = document.getElementById('globe-container');
+
+    globeScene  = new THREE.Scene();
+    globeCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    globeCamera.position.z = 7;
+
+    globeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    globeRenderer.setSize(window.innerWidth, window.innerHeight);
+    globeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    globeRenderer.setClearColor(0x000000, 0);
+    container.appendChild(globeRenderer.domElement);
+
+    // Stars background
+    const starGeo = new THREE.BufferGeometry();
+    const starPos = [];
+    for (let i = 0; i < 6000; i++) {
+        const phi = Math.acos(2 * Math.random() - 1);
+        const tht = Math.random() * Math.PI * 2;
+        const r   = 80 + Math.random() * 20;
+        starPos.push(r * Math.sin(phi) * Math.cos(tht), r * Math.cos(phi), r * Math.sin(phi) * Math.sin(tht));
+    }
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+    globeStars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.25 }));
+    globeScene.add(globeStars);
+
+    // Earth
+    const earthGeo  = new THREE.SphereGeometry(EARTH_R, 64, 64);
+    const loader     = new THREE.TextureLoader();
+    const earthMat   = new THREE.MeshPhongMaterial({
+        map: loader.load('https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Land_ocean_ice_cloud_hires.jpg/1024px-Land_ocean_ice_cloud_hires.jpg'),
+        specular: new THREE.Color(0x111111),
+        shininess: 8
+    });
+    globeEarth = new THREE.Mesh(earthGeo, earthMat);
+    globeScene.add(globeEarth);
+
+    // Atmosphere glow
+    const atmMat = new THREE.MeshPhongMaterial({ color: 0x0088ff, transparent: true, opacity: 0.08, side: THREE.BackSide });
+    globeAtm = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R * 1.04, 32, 32), atmMat);
+    globeScene.add(globeAtm);
+
+    // Lights
+    globeScene.add(new THREE.AmbientLight(0x222244));
+    const sun = new THREE.DirectionalLight(0xfff5ee, 1.3);
+    sun.position.set(8, 4, 6);
+    globeScene.add(sun);
+    const fill = new THREE.DirectionalLight(0x4466aa, 0.3);
+    fill.position.set(-8, -4, -6);
+    globeScene.add(fill);
+
+    // Mouse/touch rotation
+    const c = globeRenderer.domElement;
+    c.addEventListener('mousedown',  e => { globeMouseDown = true;  globeLastMouse = { x: e.clientX, y: e.clientY }; });
+    c.addEventListener('mouseup',    ()  => { globeMouseDown = false; });
+    c.addEventListener('mouseleave', ()  => { globeMouseDown = false; });
+    c.addEventListener('mousemove',  e  => {
+        if (!globeMouseDown) return;
+        globeRotY += (e.clientX - globeLastMouse.x) * 0.006;
+        globeRotX += (e.clientY - globeLastMouse.y) * 0.006;
+        globeRotX  = Math.max(-1.4, Math.min(1.4, globeRotX));
+        globeLastMouse = { x: e.clientX, y: e.clientY };
+    });
+    c.addEventListener('wheel', e => {
+        e.preventDefault();
+        globeCamera.position.z = Math.max(2.8, Math.min(18, globeCamera.position.z + e.deltaY * 0.012));
+    }, { passive: false });
+
+    // Touch events
+    let touchLast = null;
+    c.addEventListener('touchstart',  e => { touchLast = e.touches[0]; }, { passive: true });
+    c.addEventListener('touchend',    ()  => { touchLast = null; });
+    c.addEventListener('touchmove',   e  => {
+        if (!touchLast) return;
+        const t = e.touches[0];
+        globeRotY += (t.clientX - touchLast.clientX) * 0.006;
+        globeRotX += (t.clientY - touchLast.clientY) * 0.006;
+        globeRotX  = Math.max(-1.4, Math.min(1.4, globeRotX));
+        touchLast  = t;
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+        if (!globeCamera || !globeRenderer) return;
+        globeCamera.aspect = window.innerWidth / window.innerHeight;
+        globeCamera.updateProjectionMatrix();
+        globeRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    updateGlobeSats();
+}
+
+function updateGlobeSats() {
+    if (!globeScene || !allSatellites.length) return;
+    if (globeSatPoints) { globeScene.remove(globeSatPoints); globeSatPoints = null; }
+
+    const now = getSimTime();
+    if (!isFinite(now.getTime())) return;
+
+    const altScale = isLeoZoom ? 9 : 1;
+    const positions = [], colors = [];
+
+    const C = {
+        vleo:   new THREE.Color('#ef4444'),
+        leo:    new THREE.Color('#f97316'),
+        meo:    new THREE.Color('#eab308'),
+        geo:    new THREE.Color('#3b82f6'),
+        beyond: new THREE.Color('#a855f7')
+    };
+
+    for (const sat of allSatellites) {
+        const p = getPos(sat.satrec, now);
+        if (!p) continue;
+        const alt = satAltitudes.get(sat.name) || 400;
+        const v   = latLngAltTo3D(p.lat, p.lng, alt, altScale);
+        positions.push(v.x, v.y, v.z);
+        let col = alt < 400 ? C.vleo : alt < 2000 ? C.leo : alt < 35700 ? C.meo : alt <= 35900 ? C.geo : C.beyond;
+        colors.push(col.r, col.g, col.b);
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute('color',    new THREE.Float32BufferAttribute(colors,    3));
+    const mat = new THREE.PointsMaterial({ size: 0.035, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.95 });
+    globeSatPoints = new THREE.Points(geo, mat);
+    globeScene.add(globeSatPoints);
+}
+
+function renderGlobe() {
+    if (!is3DMode) return;
+    globeAnimFrame = requestAnimationFrame(renderGlobe);
+
+    // Update satellites every 600ms
+    const now = Date.now();
+    if (now - lastGlobeUpdate > 600) { updateGlobeSats(); lastGlobeUpdate = now; }
+
+    // Apply rotation
+    const qX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), globeRotX);
+    const qY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), globeRotY);
+    const q  = qY.multiply(qX);
+
+    globeEarth.quaternion.copy(q);
+    globeAtm.quaternion.copy(q);
+    if (globeSatPoints) globeSatPoints.quaternion.copy(q);
+
+    globeRenderer.render(globeScene, globeCamera);
+}
+
+function toggleLeoZoom() {
+    if (!is3DMode) return;
+    isLeoZoom = !isLeoZoom;
+    const btn = document.getElementById('leoZoomBtn');
+    btn.classList.toggle('active', isLeoZoom);
+
+    // Smooth camera zoom
+    const targetZ = isLeoZoom ? 3.8 : 7;
+    animateCameraZ(targetZ);
+    updateGlobeSats();
+}
+
+function animateCameraZ(targetZ) {
+    const step = () => {
+        if (!globeCamera) return;
+        const diff = targetZ - globeCamera.position.z;
+        if (Math.abs(diff) < 0.01) { globeCamera.position.z = targetZ; return; }
+        globeCamera.position.z += diff * 0.12;
+        requestAnimationFrame(step);
+    };
+    step();
+}
 
 console.log('🎉 Satellite Tracker v0.5 ready!');
