@@ -698,15 +698,12 @@ html, body {
 }
 .track-btn-icon { font-size: 16px; line-height: 1; }
 .track-btn-label { flex: 1; text-align: center; }
-
-/* Pulsing dot when tracking active */
 .track-pulse {
     width: 8px; height: 8px; border-radius: 50%;
     background: var(--accent-green); opacity: 0; transition: opacity 0.3s;
 }
 .track-btn.active .track-pulse {
-    opacity: 1;
-    animation: trackPulse 1.2s ease-in-out infinite;
+    opacity: 1; animation: trackPulse 1.2s ease-in-out infinite;
 }
 @keyframes trackPulse {
     0%,100% { box-shadow: 0 0 0 0 rgba(34,211,160,0.7); }
@@ -740,8 +737,6 @@ html, body {
     background: radial-gradient(ellipse at center, #030814 0%, #000205 100%);
 }
 #globe-container canvas { display: block; width: 100% !important; height: 100% !important; }
-
-/* Globe legend overlay */
 #globe-container::after {
     content: '3D — drag to rotate · scroll to zoom';
     position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
