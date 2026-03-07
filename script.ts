@@ -230,6 +230,70 @@ export function buildAltitudeCache(entries: SatelliteEntry[], date = new Date())
 export type SatGeoCache = Map<string, GeoPosition>;
 
 /**
+ * Chunked position cache manager.
+ * Decouples propagation from rendering by updating satellite positions
+ * in small batches (POS_CHUNK per tick) rather than all at once.
+ *
+ * Architecture:
+ *   setInterval(50ms)  → updateChunk() — propagates POS_CHUNK satellites
+ *   requestAnimationFrame → draw()    — reads from cache, zero propagation
+ *
+ * Full cache refresh: totalSats / POS_CHUNK × 50ms ≈ 850ms for 10,000 sats
+ */
+export class PositionCacheManager {
+    private readonly _cache:  Map<string, GeoPosition> = new Map();
+    private readonly _altCache: Map<string, number>;
+    private _entries: SatelliteEntry[] = [];
+    private _chunkIdx = 0;
+    readonly chunkSize: number;
+
+    constructor(altCache: Map<string, number>, chunkSize = 600) {
+        this._altCache = altCache;
+        this.chunkSize = chunkSize;
+    }
+
+    setEntries(entries: SatelliteEntry[]): void {
+        this._entries = entries;
+        this._chunkIdx = 0;
+    }
+
+    /** Update one chunk of satellite positions. Call every ~50ms. */
+    updateChunk(simNow: Date): void {
+        if (!this._entries.length || !isFinite(simNow.getTime())) return;
+        const total = this._entries.length;
+        const start = this._chunkIdx * this.chunkSize;
+        const end   = Math.min(start + this.chunkSize, total);
+        for (let i = start; i < end; i++) {
+            const sat = this._entries[i];
+            const p   = getSatPosition(sat.satrec, simNow);
+            if (p) this._cache.set(sat.name, p);
+        }
+        this._chunkIdx = end >= total ? 0 : this._chunkIdx + 1;
+    }
+
+    /** Prime the cache for all satellites in deferred batches (called once on load). */
+    primeCacheAsync(entries: SatelliteEntry[], batchSize = 500, delayMs = 200): void {
+        this._entries = entries;
+        let idx = 0;
+        const run = (): void => {
+            const now = new Date();
+            const end = Math.min(idx + batchSize, entries.length);
+            for (let i = idx; i < end; i++) {
+                const p = getSatPosition(entries[i].satrec, now);
+                if (p) this._cache.set(entries[i].name, p);
+            }
+            idx = end;
+            if (idx < entries.length) setTimeout(run, 0);
+        };
+        setTimeout(run, delayMs);
+    }
+
+    get(name: string): GeoPosition | undefined { return this._cache.get(name); }
+    get size(): number { return this._cache.size; }
+    get cache(): ReadonlyMap<string, GeoPosition> { return this._cache; }
+}
+
+/**
  * Builds a fresh geo cache by propagating all satellites.
  * Used as fallback when the 2D layer hasn't populated the cache yet.
  */
@@ -819,6 +883,57 @@ const SAT_LABELS: Record<SatType, string> = {
     iss: 'International Space Station', tiangong: 'Tiangong Space Station',
     hubble: 'Hubble Space Telescope', normal: 'Satellite',
 };
+
+/**
+ * Batched canvas satellite renderer.
+ *
+ * Groups satellites by orbit color and issues a single fillStyle change
+ * per color group, then draws all satellites of that color with fillRect.
+ *
+ * Performance: ~30,000 canvas ops → ~6 canvas ops (one per orbit tier)
+ * fillRect is also ~3x faster than arc for 1-2px dots.
+ *
+ * Color buckets (by altitude):
+ *   VLEO  <400km    #ef4444
+ *   LEO   <2000km   #f97316
+ *   MEO   <35700km  #eab308
+ *   GEO   ~35800km  #3b82f6
+ *   HEO   >35900km  #a855f7
+ */
+export interface DrawBuckets { [color: string]: number[]; }  // flat [x0,y0,x1,y1,...]
+export interface SpecialSat   { sat: SatelliteEntry; x: number; y: number; }
+
+export function buildDrawBuckets(
+    entries:   SatelliteEntry[],
+    posCache:  ReadonlyMap<string, GeoPosition>,
+    altCache:  ReadonlyMap<string, number>,
+    latLngToXY: (lat: number, lng: number) => { x: number; y: number } | null,
+    viewW: number, viewH: number, pad = 60
+): { buckets: DrawBuckets; special: SpecialSat[]; screenPositions: Map<string, ScreenPoint> } {
+    const buckets: DrawBuckets = {
+        '#ef4444': [], '#f97316': [], '#eab308': [],
+        '#3b82f6': [], '#a855f7': [], '#22c55e': []
+    };
+    const special: SpecialSat[] = [];
+    const screenPositions = new Map<string, ScreenPoint>();
+
+    for (const sat of entries) {
+        const geo = posCache.get(sat.name);
+        if (!geo) continue;
+        const pt = latLngToXY(geo.lat, normalizeLng(geo.lng));
+        if (!pt) continue;
+        const x = pt.x | 0, y = pt.y | 0;  // fast integer floor
+        if (x < -pad || x > viewW + pad || y < -pad || y > viewH + pad) continue;
+        screenPositions.set(sat.name, { x, y });
+        if (sat.type !== 'normal') {
+            special.push({ sat, x, y });
+        } else {
+            const color = getOrbitColor(altCache.get(sat.name) ?? 0);
+            (buckets[color] ??= []).push(x, y);
+        }
+    }
+    return { buckets, special, screenPositions };
+}
 
 export function resolveSatelliteImage(e: Pick<SatelliteEntry, 'type' | 'isTrain'>): string {
     return e.isTrain ? SAT_IMAGES.starlink : (SAT_IMAGES[e.type] ?? SAT_IMAGES.normal);
