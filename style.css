@@ -674,3 +674,77 @@ html, body {
     .controls       { gap: 4px; padding: 6px 4px; }
     .control-btn    { width: 32px; height: 32px; font-size: 14px; }
 }
+
+/* ══ TRACK BUTTON ══════════════════════════════════════ */
+.track-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; margin-top: 14px; padding: 12px 16px;
+    background: var(--bg-surface); border: 1px solid var(--border-sub);
+    border-radius: var(--radius-md); color: var(--text-secondary);
+    font-family: var(--font-display); font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden;
+}
+[data-theme="modern"] .track-btn { font-size: 12px; letter-spacing: 0.5px; }
+.track-btn:hover {
+    border-color: var(--border-main); color: var(--accent-main);
+    background: color-mix(in srgb,var(--accent-main) 8%,var(--bg-surface));
+    box-shadow: var(--glow-main);
+}
+.track-btn.active {
+    border-color: var(--accent-green); color: var(--accent-green);
+    background: color-mix(in srgb,var(--accent-green) 12%,var(--bg-surface));
+    box-shadow: 0 0 12px rgba(34,211,160,0.4), 0 0 30px rgba(34,211,160,0.1);
+}
+.track-btn-icon { font-size: 16px; line-height: 1; }
+.track-btn-label { flex: 1; text-align: center; }
+
+/* Pulsing dot when tracking active */
+.track-pulse {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent-green); opacity: 0; transition: opacity 0.3s;
+}
+.track-btn.active .track-pulse {
+    opacity: 1;
+    animation: trackPulse 1.2s ease-in-out infinite;
+}
+@keyframes trackPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(34,211,160,0.7); }
+    50%      { box-shadow: 0 0 0 6px rgba(34,211,160,0); }
+}
+
+/* ══ CONTROLS DIVIDER ═══════════════════════════════════ */
+.controls-divider {
+    width: 24px; height: 1px; margin: 2px auto;
+    background: var(--border-sub);
+}
+
+/* ══ 3D / LEO ZOOM BUTTONS ══════════════════════════════ */
+#leoZoomBtn { opacity: 0.35; cursor: not-allowed; font-size: 15px; }
+#leoZoomBtn.leo-available { opacity: 1; cursor: pointer; }
+#leoZoomBtn.leo-available:hover,
+#leoZoomBtn.active {
+    background: color-mix(in srgb,var(--accent-alt) 12%,transparent);
+    border-color: rgba(168,85,247,0.5); color: var(--accent-alt);
+    box-shadow: var(--glow-alt);
+}
+#btn3D.active {
+    background: color-mix(in srgb,var(--accent-main) 15%,transparent);
+    border-color: var(--border-main); color: var(--accent-main);
+    box-shadow: var(--glow-main);
+}
+
+/* ══ 3D GLOBE CONTAINER ═════════════════════════════════ */
+#globe-container {
+    position: fixed; inset: 0; z-index: 600; display: none;
+    background: radial-gradient(ellipse at center, #030814 0%, #000205 100%);
+}
+#globe-container canvas { display: block; width: 100% !important; height: 100% !important; }
+
+/* Globe legend overlay */
+#globe-container::after {
+    content: '3D — drag to rotate · scroll to zoom';
+    position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
+    color: rgba(255,255,255,0.3); pointer-events: none; white-space: nowrap;
+}
