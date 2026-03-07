@@ -17,6 +17,7 @@ let layer            = null;
 let selectedSat      = null;
 let satPositions     = new Map();
 let satAltitudes     = new Map();
+let satGeoCache      = new Map(); // lat/lng cache shared between 2D and 3D
 let showLabels       = true;
 let showGrid         = false;
 let showBorders      = false;
@@ -71,10 +72,7 @@ function applyTranslations(t) {
         if (t[key]) el.placeholder = t[key];
     });
 }
-window.addEventListener('message', (e) => {
-    if (e.data?.type === 'langChange' && e.data.translations)
-        applyTranslations(e.data.translations);
-});
+// langChange listener consolidated below with tracking support
 
 // ── Menu ─────────────────────────────────────
 function toggleMenu() {
@@ -487,6 +485,7 @@ const SatLayer = L.Layer.extend({
         const s   = map.getSize(), ctx = this._c.getContext('2d');
         ctx.clearRect(0, 0, s.x, s.y);
         satPositions.clear();
+        satGeoCache.clear();
         const PAD = 60;
         for (const sat of this._d) {
             const p = getPos(sat.satrec, now);
@@ -495,6 +494,7 @@ const SatLayer = L.Layer.extend({
             const pt  = map.latLngToContainerPoint([p.lat, lng]);
             if (pt.x < -PAD || pt.x > s.x+PAD || pt.y < -PAD || pt.y > s.y+PAD) continue;
             satPositions.set(sat.name, { x:pt.x, y:pt.y });
+            satGeoCache.set(sat.name, { lat:p.lat, lng });  // share with 3D
             if (sat.type !== 'normal') {
                 ctx.save(); ctx.translate(pt.x, pt.y);
                 ctx.font = '28px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -678,6 +678,9 @@ function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('mapsat_theme', theme);
     document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme===theme));
+    // Notify lang.html iframe of theme change
+    const iframe = document.querySelector('.lang-selector iframe');
+    if (iframe?.contentWindow) iframe.contentWindow.postMessage({ type:'themeChange', theme }, '*');
 }
 (function() {
     const saved = localStorage.getItem('mapsat_theme') || 'mission';
@@ -690,20 +693,33 @@ function setTheme(theme) {
 // ============================================
 // SATELLITE TRACKING
 // ============================================
+// Store current translations for track button labels
+let _currentTranslations = {};
+window.addEventListener('message', (e) => {
+    if (e.data?.type === 'langChange' && e.data.translations) {
+        _currentTranslations = e.data.translations;
+        applyTranslations(e.data.translations);
+        // Update track button if currently tracking
+        if (trackingSat) {
+            const lbl = document.querySelector('#trackBtn .track-btn-label');
+            if (lbl && _currentTranslations.stopTracking) lbl.textContent = _currentTranslations.stopTracking;
+        }
+    }
+});
+
 function toggleTracking() {
     if (!selectedSat) return;
+    const btn = document.getElementById('trackBtn');
     if (trackingSat === selectedSat) {
         trackingSat = null;
-        const btn = document.getElementById('trackBtn');
         btn.classList.remove('active');
         btn.querySelector('.track-btn-icon').textContent = '🎯';
-        btn.querySelector('.track-btn-label').textContent = 'TRACK SATELLITE';
+        btn.querySelector('.track-btn-label').textContent = _currentTranslations.trackSat || 'TRACK SATELLITE';
     } else {
         trackingSat = selectedSat;
-        const btn = document.getElementById('trackBtn');
         btn.classList.add('active');
         btn.querySelector('.track-btn-icon').textContent = '⏹';
-        btn.querySelector('.track-btn-label').textContent = 'STOP TRACKING';
+        btn.querySelector('.track-btn-label').textContent = _currentTranslations.stopTracking || 'STOP TRACKING';
     }
 }
 
@@ -811,36 +827,48 @@ function initGlobe() {
 }
 
 function updateGlobeSats() {
-    if (!globeScene||!allSatellites.length) return;
-    if (globeSatPoints) { globeScene.remove(globeSatPoints); globeSatPoints=null; }
+    if (!globeScene || !allSatellites.length) return;
+    if (globeSatPoints) { globeScene.remove(globeSatPoints); globeSatPoints = null; }
+
+    // OPTIMIZATION: reuse 2D position cache — zero extra propagation calls
+    // Fall back to getPos() only for satellites not visible in 2D (off-screen)
     const now = getSimTime();
     if (!isFinite(now.getTime())) return;
     const altScale = isLeoZoom ? 9 : 1;
-    const positions=[], colors=[];
+    const positions = [], colors = [];
     const C = {
-        vleo:new THREE.Color('#ef4444'), leo:new THREE.Color('#f97316'),
-        meo:new THREE.Color('#eab308'), geo:new THREE.Color('#3b82f6'), beyond:new THREE.Color('#a855f7')
+        vleo: new THREE.Color('#ef4444'), leo: new THREE.Color('#f97316'),
+        meo:  new THREE.Color('#eab308'), geo: new THREE.Color('#3b82f6'),
+        beyond: new THREE.Color('#a855f7')
     };
+    const useCache = satGeoCache.size > 100; // use 2D cache if populated
     for (const sat of allSatellites) {
-        const p = getPos(sat.satrec, now); if (!p) continue;
-        const alt = satAltitudes.get(sat.name)||400;
-        const v = latLngAltTo3D(p.lat,p.lng,alt,altScale);
-        positions.push(v.x,v.y,v.z);
-        const col=alt<400?C.vleo:alt<2000?C.leo:alt<35700?C.meo:alt<=35900?C.geo:C.beyond;
-        colors.push(col.r,col.g,col.b);
+        let p = useCache ? satGeoCache.get(sat.name) : null;
+        if (!p) p = getPos(sat.satrec, now); // fallback for off-screen sats
+        if (!p) continue;
+        const alt = satAltitudes.get(sat.name) || 400;
+        const v   = latLngAltTo3D(p.lat, p.lng, alt, altScale);
+        positions.push(v.x, v.y, v.z);
+        const col = alt < 400 ? C.vleo : alt < 2000 ? C.leo : alt < 35700 ? C.meo : alt <= 35900 ? C.geo : C.beyond;
+        colors.push(col.r, col.g, col.b);
     }
-    const geo=new THREE.BufferGeometry();
-    geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-    geo.setAttribute('color',   new THREE.Float32BufferAttribute(colors,3));
-    globeSatPoints=new THREE.Points(geo,new THREE.PointsMaterial({size:0.035,vertexColors:true,sizeAttenuation:true,transparent:true,opacity:0.95}));
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute('color',    new THREE.Float32BufferAttribute(colors, 3));
+    globeSatPoints = new THREE.Points(geo, new THREE.PointsMaterial({
+        size: 0.035, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.95
+    }));
     globeScene.add(globeSatPoints);
 }
 
+let _lastGlobeFrame = 0;
 function renderGlobe() {
     if (!is3DMode) return;
     globeAnimFrame = requestAnimationFrame(renderGlobe);
     const now = Date.now();
-    if (now-lastGlobeUpdate>600) { updateGlobeSats(); lastGlobeUpdate=now; }
+    if (now - _lastGlobeFrame < 33) return; // 30fps cap — halves GPU load
+    _lastGlobeFrame = now;
+    if (now - lastGlobeUpdate > 300) { updateGlobeSats(); lastGlobeUpdate = now; }
     const qX=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),globeRotX);
     const qY=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),globeRotY);
     const q=qY.multiply(qX);
